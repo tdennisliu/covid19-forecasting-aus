@@ -25,7 +25,7 @@ class Forecast:
     def __init__(self,current, state,start_date, people, 
         Reff=2.2,k=0.1,alpha_i=1,alpha_a_list=[0.5],alpha_s_list=[1],qi_list=[1], qa=0.05, qs_list=[0.8],
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
-        forecast_date='2020-06-15', cross_border_state=None,cases_file_date=('25Jun','0835'),
+        forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
         ps_list=[0.7]
         ):
         import numpy as np
@@ -293,7 +293,7 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-06-30.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-01.h5',
             key='Reff')
 
             if self.R_I is not None:

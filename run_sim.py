@@ -26,14 +26,14 @@ if R_I is not None:
 
 
 local_detection = {
-            'NSW':0.65,#0.556,#0.65,
-            'QLD':0.74,#0.353,#0.493,#0.74,
+            'NSW':0.556,#0.556,#0.65,
+            'QLD':0.493,#0.353,#0.493,#0.74,
             'SA':0.75,#0.597,#0.75,
             'TAS':0.48,#0.598,#0.48,
-            'VIC':0.77,#0.558,#0.77,
-            'WA':0.66,#0.409,#0.509,#0.66,
+            'VIC':0.558,#0.558,#0.77,
+            'WA':0.8,#0.409,#0.509,#0.66,
             'ACT':0.65,#0.557,#0.65,
-            'NT':0.71,#0.555,#0.71
+            'NT':0.81,#0.555,#0.71
         }
 
 qi_d = {
@@ -81,9 +81,10 @@ for state in states:
     else:
         qi_prior = [qi_d[state]]
         qs_prior = [local_detection[state]]
-        gam =1/2
-        ps_prior = [0.8]
+        gam =1/3
+        ps_prior = 0.7
         alpha_s_prior = [1/(ps_prior + (1- ps_prior)*gam)]
+        ps_prior= [ps_prior]
         alpha_a_prior = [gam*alpha_s_prior[0]]
     for i,cat in enumerate(initial_people):
         people[i] = Person(0,0,0,0,cat)
@@ -91,7 +92,7 @@ for state in states:
     if state in ['VIC']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.5, k =0.3,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
+        alpha_i= 1, k =0.1,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
@@ -101,7 +102,7 @@ for state in states:
     elif state in ['NSW']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.5, k =0.3,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
+        alpha_i= 1, k =0.1,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
@@ -111,7 +112,7 @@ for state in states:
     elif state in ['ACT','NT']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.01, k =0.3,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
+        alpha_i= 0.5, k =0.1,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',

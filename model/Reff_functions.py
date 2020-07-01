@@ -262,7 +262,7 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                 X1 = df_state[value_vars]/100
                 logodds = X1 @ post_values # N by K times (Nsamples by K )^T = N by Nsamples
             if gamma:
-                if R=='state':
+                if type(R)==str: #'state'
                     try:
                         sim_R = samples_sim['R_'+states_initials[state]]
                     except KeyError:
@@ -341,3 +341,36 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
     plt.legend()
     return ax
 
+def read_in_cases(case_file_date=['29Jun','0900']):
+    """
+    Read in NNDSS data
+    """
+    #from data, find rho
+    from datetime import timedelta
+    df_NNDSS = pd.read_excel("../data/COVID-19 UoM "+case_file_date[0]+"2020 "+case_file_date[1]+".xlsx",
+                       parse_dates=['SPECIMEN_DATE','NOTIFICATION_DATE','NOTIFICATION_RECEIVE_DATE','TRUE_ONSET_DATE'],
+                       dtype= {'PLACE_OF_ACQUISITION':str})
+    df_NNDSS.PLACE_OF_ACQUISITION.fillna('00038888',inplace=True) #Fill blanks with simply unknown
+
+    df_NNDSS['date_inferred'] = df_NNDSS.TRUE_ONSET_DATE
+    df_NNDSS.loc[df_NNDSS.TRUE_ONSET_DATE.isna(),'date_inferred'] = df_NNDSS.loc[df_NNDSS.TRUE_ONSET_DATE.isna()].NOTIFICATION_DATE - timedelta(days=5)
+    df_NNDSS.loc[df_NNDSS.date_inferred.isna(),'date_inferred'] = df_NNDSS.loc[df_NNDSS.date_inferred.isna()].NOTIFICATION_RECEIVE_DATE - timedelta(days=1)
+
+    df_NNDSS['imported'] = df_NNDSS.PLACE_OF_ACQUISITION.apply(lambda x: 1 if x[-4:]=='8888' and x != '00038888' else 0)
+    df_NNDSS['local'] = 1 - df_NNDSS.imported
+
+
+    df_state = df_NNDSS[['date_inferred','STATE','imported','local']].groupby(['STATE','date_inferred']).sum()
+
+    df_state['rho'] = [ 0 if (i+l == 0) else i/(i+l) for l,i in zip(df_state.local,df_state.imported)  ]
+    
+    return df_state
+
+
+def read_in_LSHTM():
+    """
+    Read in new LSHTM Reff csv from David Price et al
+    """
+    import pandas as pd
+    path = "../data/LSHTM_Reff_estimates/Reff_LSHTM.csv"
+    return pd.read_csv(path,parse_dates=['date','date_of_analysis'])

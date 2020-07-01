@@ -1,3 +1,9 @@
+#sensitive data
+*.xlsx
+/data/md/*
+/data/Dennis*/*
+/data/LSHTM_Reff_estimates/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

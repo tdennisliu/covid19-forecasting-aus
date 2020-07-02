@@ -23,7 +23,7 @@ class Forecast:
     """
     
     def __init__(self,current, state,start_date, people, 
-        Reff=2.2,k=0.1,alpha_i=1,alpha_a_list=[0.5],alpha_s_list=[1],qi_list=[1], qa=0.05, qs_list=[0.8],
+        Reff=2.2,k=0.1,alpha_i=1,alpha_s_list=[1],qi_list=[1], qa=0.05, qs_list=[0.8],
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
         forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
         ps_list=[0.7]
@@ -39,7 +39,6 @@ class Forecast:
         self.initial_people = people.copy() #detected people only
         self.Reff = Reff
         self.alpha_i = alpha_i
-        self.alpha_a_list = alpha_a_list
         self.alpha_s_list = alpha_s_list
         self.ps_list = ps_list#beta.rvs(7,3,size=1000)
         self.qi_list =qi_list
@@ -189,10 +188,10 @@ class Forecast:
             #grab a sample from parameter lists
             self.qs = self.choose_random_item(self.qs_list)
             self.qi = self.choose_random_item(self.qi_list)
-            self.alpha_a = self.choose_random_item(self.alpha_a_list)
             self.alpha_s = self.choose_random_item(self.alpha_s_list)
+            
             self.ps = self.choose_random_item(self.ps_list)
-
+            self.alpha_a = (1-self.alpha_s*self.ps)/(1 - self.ps)
 
             self.current = self.initial_state.copy()
             self.people = self.initial_people.copy()

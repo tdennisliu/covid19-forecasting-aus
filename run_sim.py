@@ -74,10 +74,10 @@ for state in states:
         #qi_prior = beta(17, 3, size=10000)
         qi_prior = [qi_d[state]]
         qs_prior = [local_detection[state]]
-        gam =np.minimum(3,gamma(4,0.25, size=1000))
+        gam =np.minimum(2,gamma(4,0.25, size=1000))
         ps_prior = beta(5,5,size=1000)
         alpha_s_prior = 1/(ps_prior + (1- ps_prior)*gam)
-        alpha_a_prior = gam*alpha_s_prior[0]
+
     else:
         qi_prior = [qi_d[state]]
         qs_prior = [local_detection[state]]
@@ -92,7 +92,7 @@ for state in states:
     if state in ['VIC']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 1, k =0.1,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
+        alpha_i= 1, k =0.1,alpha_s_list=alpha_s_prior,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
@@ -102,7 +102,7 @@ for state in states:
     elif state in ['NSW']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 1, k =0.1,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
+        alpha_i= 1, k =0.1,alpha_s_list=alpha_s_prior,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
@@ -112,7 +112,7 @@ for state in states:
     elif state in ['ACT','NT']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.5, k =0.1,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
+        alpha_i= 0.5, k =0.1,alpha_s_list=alpha_s_prior,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
@@ -122,7 +122,7 @@ for state in states:
     else:
         forecast_dict[state] = Forecast(current[state],state,
         start_date,people,
-        alpha_i= 0.5, k =0.1,alpha_a_list=alpha_a_prior,alpha_s_list=alpha_s_prior,
+        alpha_i= 0.5, k =0.1,alpha_s_list=alpha_s_prior,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1, 
         forecast_R = forecast_type , R_I = R_I,forecast_date='2020-06-29',

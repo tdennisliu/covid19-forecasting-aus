@@ -823,6 +823,7 @@ class Forecast:
                 alpha_s[n] = self.alpha_s
                 accept[n] = int(self.metric>=0.8)
                 cases_after[n] = self.cases_after
+                ps[n] =self.ps
             
             
 

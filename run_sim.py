@@ -26,11 +26,11 @@ if R_I is not None:
 
 
 local_detection = {
-            'NSW':0.556,#0.556,#0.65,
-            'QLD':0.493,#0.353,#0.493,#0.74,
+            'NSW':0.85,#0.556,#0.65,
+            'QLD':0.553,#0.353,#0.493,#0.74,
             'SA':0.75,#0.597,#0.75,
             'TAS':0.48,#0.598,#0.48,
-            'VIC':0.558,#0.558,#0.77,
+            'VIC':0.88,#0.558,#0.77,
             'WA':0.8,#0.409,#0.509,#0.66,
             'ACT':0.65,#0.557,#0.65,
             'NT':0.81,#0.555,#0.71
@@ -70,17 +70,17 @@ for state in states:
             ['S']*current[state][2]
     people = {}
     if abc:
-        #qs_prior = beta(10,10,size=10000)
-        #qi_prior = beta(17, 3, size=10000)
-        qi_prior = [qi_d[state]]
-        qs_prior = [local_detection[state]]
-        gam =np.maximum(0.1,np.minimum(2,gamma(4,0.25, size=1000)))
+        qs_prior = beta(10,10,size=10000)
+        qi_prior = beta(17, 3, size=10000)
+        #qi_prior = [qi_d[state]]
+        #qs_prior = [local_detection[state]]
+        gam =np.minimum(3,gamma(4,0.25, size=1000))
         ps_prior = beta(10,10,size=1000)
 
     else:
         qi_prior = [qi_d[state]]
         qs_prior = [local_detection[state]]
-        gam =[1/3]
+        gam =[1]
         ps_prior = 0.7
         ps_prior= [ps_prior]
 
@@ -92,7 +92,7 @@ for state in states:
         state,start_date,people,
         alpha_i= 1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,
-        qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
+        qua_ai=1,qua_qi_factor=1,qua_qs_factor=0.5,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
         cross_border_state=None,cases_file_date=case_file_date,
         ps_list = ps_prior,
@@ -102,7 +102,7 @@ for state in states:
         state,start_date,people,
         alpha_i= 1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,
-        qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
+        qua_ai=1,qua_qi_factor=1,qua_qs_factor=0.5,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
         cross_border_state=None,cases_file_date=case_file_date,
         ps_list = ps_prior,
@@ -110,7 +110,7 @@ for state in states:
     elif state in ['ACT','NT']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.5, k =0.1,gam_list=gam,
+        alpha_i= 1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date='2020-06-29',
@@ -120,7 +120,7 @@ for state in states:
     else:
         forecast_dict[state] = Forecast(current[state],state,
         start_date,people,
-        alpha_i= 0.5, k =0.1,gam_list=gam,
+        alpha_i= 1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1, 
         forecast_R = forecast_type , R_I = R_I,forecast_date='2020-06-29',

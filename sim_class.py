@@ -35,7 +35,7 @@ class Forecast:
         #start date sets day 0 in script to start_date
         self.start_date = pd.to_datetime(start_date,format='%Y-%m-%d')
         self.quarantine_change_date = pd.to_datetime(
-            '2020-04-01',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
+            '2020-03-16',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
         self.initial_people = people.copy() #detected people only
         self.Reff = Reff
         self.alpha_i = alpha_i
@@ -144,8 +144,6 @@ class Forecast:
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.datapath = os.path.join(dir_path,'data/')
 
-        # Read in actual cases from NNDSS
-        self.read_in_cases()
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
@@ -772,6 +770,8 @@ class Forecast:
         Simulate multiple times 
         """
         self.end_time = end_time
+        # Read in actual cases from NNDSS
+        self.read_in_cases()
         import_sims = np.zeros(shape=(end_time, n_sims), dtype=float)
         import_sims_obs = np.zeros_like(import_sims)
         
@@ -940,12 +940,12 @@ class Forecast:
         """
 
         ##missing dates
-
-        missed_dates = [day for day in range(end_time) 
-            if day not in self.actual.keys()]
+        #Deprecated now (DL 03/07/2020)
+        #missed_dates = [day for day in range(end_time) 
+        #    if day not in self.actual.keys()]
 
         self.actual_array = np.array([self.actual[day]
-        if day not in missed_dates else 0 
+        #if day not in missed_dates else 0 
         for day in range(end_time) ])
 
         #calculate case differences
@@ -967,9 +967,9 @@ class Forecast:
             #cumulative diff passes, calculate metric
 
             #sum over days number of times within omega of actual
-        self.metric = sum(np.less_equal(
-            cases_diff,np.maximum(omega* actual_cum,7)
-            ))
+        self.metric = sum(
+            cases_diff#,np.maximum(omega* actual_cum,7)
+            )
         
         self.metric = self.metric/(end_time-window) #max is end_time
 
@@ -1001,7 +1001,10 @@ class Forecast:
         df.reset_index(inplace=True)
         df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
         df = df.sort_values(by='date')
-        self.actual = pd.Series(df.local.values, index =df.date.values).to_dict()
+        df = df.set_index('date')
+        #fill missing dates with 0 up to end_time
+        df = df.reindex(range(self.end_time), fill_value=0)
+        self.actual = df.local.to_dict()
        
         return None
 

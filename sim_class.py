@@ -968,7 +968,7 @@ class Forecast:
 
             #sum over days number of times within omega of actual
         self.metric = sum(
-            cases_diff#,np.maximum(omega* actual_cum,7)
+            np.square(cases_diff)#,np.maximum(omega* actual_cum,7)
             )
         
         self.metric = self.metric/(end_time-window) #max is end_time

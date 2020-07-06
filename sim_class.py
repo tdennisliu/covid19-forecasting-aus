@@ -23,7 +23,7 @@ class Forecast:
     """
     
     def __init__(self,current, state,start_date, people, 
-        Reff=2.2,k=0.1,alpha_i=1,gam_list=[0.8],qi_list=[1], qa=0.05, qs_list=[0.8],
+        Reff=2.2,k=0.1,alpha_i=1,gam_list=[0.8],qi_list=[1], qa_list=[1/8], qs_list=[0.8],
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
         forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
         ps_list=[0.7]
@@ -35,14 +35,14 @@ class Forecast:
         #start date sets day 0 in script to start_date
         self.start_date = pd.to_datetime(start_date,format='%Y-%m-%d')
         self.quarantine_change_date = pd.to_datetime(
-            '2020-03-16',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
+            '2020-04-01',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
         self.initial_people = people.copy() #detected people only
         self.Reff = Reff
         self.alpha_i = alpha_i
         self.gam_list = gam_list
         self.ps_list = ps_list#beta.rvs(7,3,size=1000)
-        self.qi_list =qi_list
-        self.qa = qa
+        self.qi_list = qi_list
+        self.qa_list = qa_list
         self.qs_list = qs_list
         self.k = k
         self.qua_ai = qua_ai
@@ -52,7 +52,7 @@ class Forecast:
         self.forecast_R = forecast_R
         self.R_I = R_I
         np.random.seed(1)
-        self.max_cases = 100000
+        #self.max_cases = 100000
 
         self.forecast_date = pd.to_datetime(
             forecast_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
@@ -147,13 +147,13 @@ class Forecast:
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
-    def generate_times(self,  i=3.5, j=0.5, m=3, n=1,size=10000):
+    def generate_times(self,  i=2, j=2, m=2, n=2, size=10000):
         """
         Generate large amount of gamma draws to save on simulation time later
         """
 
         self.inf_times = 1 + np.random.gamma(i/j, j, size =size) #shape and scale
-        self.detect_times = 1 + np.random.gamma(m/n,n, size = size)
+        self.detect_times = 2 + np.random.gamma(m/n,n, size = size)
 
         return None
     
@@ -185,6 +185,7 @@ class Forecast:
             
             #grab a sample from parameter lists
             self.qs = self.choose_random_item(self.qs_list)
+            self.qa = self.choose_random_item(self.qa_list)
             self.qi = self.choose_random_item(self.qi_list)
             self.gam = self.choose_random_item(self.gam_list)
             
@@ -290,7 +291,7 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-01.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-06.h5',
             key='Reff')
 
             if self.R_I is not None:
@@ -646,6 +647,14 @@ class Forecast:
                 print("Sim "+str(self.num_of_sim
                 )+" in "+self.state+" has >"+str(self.max_cases)+" cases, ending")
                 self.num_too_many+=1
+                day_end = self.infected_queue[0]].infection_time
+                if day_end > self.forecast_date:
+                    #hold vlaue forever
+                    self.cases[ceil(day_end):,2] = self.cases[ceil(day_end),2]
+                    self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end),2]
+                else:
+                    #if before forecast date, then make bad_sim and throw out.
+                    self.bad_sim = True
                 break
 
             
@@ -790,6 +799,7 @@ class Forecast:
         #ABC parameters
         metrics = np.zeros(shape=(n_sims),dtype=float)
         qs = np.zeros(shape=(n_sims),dtype=float)
+        qa = np.zeros_like(qs)
         qi = np.zeros_like(qs)
         alpha_a = np.zeros_like(qs)
         alpha_s = np.zeros_like(qs)
@@ -817,6 +827,7 @@ class Forecast:
                 ## record all parameters and metric
                 metrics[n] = self.metric
                 qs[n] = self.qs
+                qa[n] = self.qa
                 qi[n] = self.qi
                 alpha_a[n] = self.alpha_a
                 alpha_s[n] = self.alpha_s
@@ -850,6 +861,7 @@ class Forecast:
             'metrics': metrics,
             'accept': accept,
             'qs':qs,
+            'qa':qa,
             'qi':qi,
             'alpha_a':alpha_a,
             'alpha_s':alpha_s,
@@ -877,7 +889,7 @@ class Forecast:
         n_sims = results['symp_inci'].shape[1]
         days = results['symp_inci'].shape[0]
 
-        sim_vars=['bad_sim','metrics','qs','qi',
+        sim_vars=['bad_sim','metrics','qs','qa','qi',
         'accept','cases_after','alpha_a','alpha_s','ps'] 
 
         for key, item in results.items():
@@ -1001,6 +1013,9 @@ class Forecast:
         df.reset_index(inplace=True)
         df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
         df = df.sort_values(by='date')
+
+        #Set max_cases to 100 times total cases
+        self.max_cases = 100*sum(df.local.values + df.imported.values)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time
         df = df.reindex(range(self.end_time), fill_value=0)

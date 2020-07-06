@@ -75,11 +75,11 @@ class Forecast:
             },
             'NSW': {
                 1: 90,
-                2: 406,
-                3: 693*1.3,
+                2: 407,
+                3: 694*1.3,
                 4: 380,
                 5: 314,
-                6: 128,
+                6: 185,
             },
             'NT': {
                 1: 3,
@@ -101,9 +101,9 @@ class Forecast:
                 1:13,
                 2:68,
                 3:115*1.3,
-                4:68,
-                5:26,
-                6:2
+                4:67,
+                5:27,
+                6:5
             },
             'TAS':{
                 1:6,
@@ -118,16 +118,16 @@ class Forecast:
                 2:209,
                 3:255*1.3,
                 4:157,
-                5:85,
-                6:169,
+                5:86,
+                6:183,
             },
             'WA': {
                 1:15,
-                2:70,
-                3:151*1.3,
-                4:117,
-                5:112,
-                6:44
+                2:73,
+                3:152*1.3,
+                4:116,
+                5:110,
+                6:47
             },
         }
         #changes below also need to be changed in simulate
@@ -137,7 +137,7 @@ class Forecast:
             3: 5.2,
             4: 5.2,
             5: 22.2,
-            6: 145.2 ## this needs to change for
+            6: 152.2 ## this needs to change for
                     # each change in forecast date
         }
 
@@ -650,7 +650,7 @@ class Forecast:
                 day_end = self.people[self.infected_queue[0]].infection_time
                 if day_end > self.forecast_date:
                     #hold vlaue forever
-                    if day_end < self.cases.shape[0]:
+                    if day_end < self.cases.shape[0]-1:
                         self.cases[ceil(day_end):,2] = self.cases[ceil(day_end),2]
                         self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end),2]
                     else:
@@ -1018,7 +1018,8 @@ class Forecast:
         df = df.sort_values(by='date')
 
         #Set max_cases to 100 times total cases
-        self.max_cases = min(100000,100*sum(df.local.values + df.imported.values))
+        self.max_cases = min(100000,10*sum(df.local.values + df.imported.values))
+        self.max_cases = max(self.max_cases, 10000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time
         df = df.reindex(range(self.end_time), fill_value=0)

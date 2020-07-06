@@ -647,7 +647,7 @@ class Forecast:
                 print("Sim "+str(self.num_of_sim
                 )+" in "+self.state+" has >"+str(self.max_cases)+" cases, ending")
                 self.num_too_many+=1
-                day_end = self.infected_queue[0]].infection_time
+                day_end = self.people[self.infected_queue[0]].infection_time
                 if day_end > self.forecast_date:
                     #hold vlaue forever
                     self.cases[ceil(day_end):,2] = self.cases[ceil(day_end),2]
@@ -815,7 +815,7 @@ class Forecast:
         self.num_too_many = 0
         for n in range(n_sims):
             if n%(n_sims//10)==0:
-                print("Simulation number %i of %i" % (n,n_sims))
+                print("{} simulation number %i of %i".format(self.state) % (n,n_sims))
             self.num_of_sim = n
             inci, inci_obs = self.simulate(end_time, seed= n)
             if self.bad_sim:
@@ -1015,7 +1015,7 @@ class Forecast:
         df = df.sort_values(by='date')
 
         #Set max_cases to 100 times total cases
-        self.max_cases = 100*sum(df.local.values + df.imported.values)
+        self.max_cases = min(100000,100*sum(df.local.values + df.imported.values))
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time
         df = df.reindex(range(self.end_time), fill_value=0)

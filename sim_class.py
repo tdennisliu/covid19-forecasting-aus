@@ -650,8 +650,11 @@ class Forecast:
                 day_end = self.people[self.infected_queue[0]].infection_time
                 if day_end > self.forecast_date:
                     #hold vlaue forever
-                    self.cases[ceil(day_end):,2] = self.cases[ceil(day_end),2]
-                    self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end),2]
+                    if day_end < self.cases.shape[0]:
+                        self.cases[ceil(day_end):,2] = self.cases[ceil(day_end),2]
+                        self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end),2]
+                    else:
+                        self.cases_after +=1
                 else:
                     #if before forecast date, then make bad_sim and throw out.
                     self.bad_sim = True

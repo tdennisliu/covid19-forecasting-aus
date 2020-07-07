@@ -1,11 +1,14 @@
 import pandas as pd
+from sys import argv
 
 states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 start_date = '2020-03-01'
 
-forecast_type= 'R_L'
-n_sims = 20
-days = 80
+n_sims=int(argv[1]) #number of sims
+days = int(argv[2])
+
+forecast_type= argv[3]
+
 dic_states={
     'state':[],
     'date':[],

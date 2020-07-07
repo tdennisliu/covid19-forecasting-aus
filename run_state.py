@@ -2,6 +2,7 @@ from sim_class import *
 import pandas as pd
 from sys import argv
 from numpy.random import beta, gamma
+from tqdm import tqdm
 
 #from joblib import Parallel, delayed
 import multiprocessing as mp
@@ -15,6 +16,7 @@ time_end = int(argv[2])
 if len(argv)>=3:
     forecast_type = argv[3]
     states = [argv[4]]
+    print("Simulating state " +states[0])
 else:
     forecast_type = None
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
@@ -24,8 +26,6 @@ case_file_date = ['06Jul','0915']
 forecast_date = '2020-07-06'
 R_I='R_I'
 abc =False
-if R_I is not None:
-    print("Using model output for R_L and R_I")
 
 
 local_detection = {
@@ -146,25 +146,6 @@ for state in states:
 
 
 if __name__ =="__main__":
-
-    for key,item in forecast_dict.items():
-        item.read_in_Reff()
-        item.end_time = time_end
-        item.read_in_cases()
-        item.cross_border_seeds = np.zeros(shape=(time_end,n_sims),dtype=int)
-        item.cross_border_state_cases = np.zeros_like(item.cross_border_seeds)
-
-        item.num_bad_sims = 0
-        item.num_too_many = 0
-    pool = mp.Pool(8)
-    l_results =pool.map(worker,
-        [(forecast_dict[states[0]],'simulate',time_end,n) 
-        for n in range(n_sims)] #n is the seed
-    )
-    
-    pool.close()
-    pool.join()
-
     ##initialise arrays
 
     import_sims = np.zeros(shape=(time_end, n_sims), dtype=float)
@@ -197,38 +178,60 @@ if __name__ =="__main__":
     cases_after = np.zeros_like(bad_sim)
 
 
+    for key,item in forecast_dict.items():
+        item.read_in_Reff()
+        item.end_time = time_end
+        item.read_in_cases()
+        item.cross_border_seeds = np.zeros(shape=(time_end,n_sims),dtype=int)
+        item.cross_border_state_cases = np.zeros_like(item.cross_border_seeds)
 
-    for cases, obs_cases, param_dict in l_results:
-        #cycle through all results and record into arrays 
-        n = param_dict['num_of_sim']
-        if param_dict['bad_sim']:
-            #bad_sim True
-            bad_sim[n] = 1
-        else:
-            #good sims
-            ## record all parameters and metric
-            metrics[n] = param_dict['metric']
-            qs[n] = param_dict['qs']
-            qa[n] = param_dict['qa']
-            qi[n] = param_dict['qi']
-            alpha_a[n] = param_dict['alpha_a']
-            alpha_s[n] = param_dict['alpha_s']
-            accept[n] = param_dict['metric']>=0.8
-            cases_after[n] = param_dict['cases_after']
-            ps[n] =param_dict['ps']
-            travel_seeds[:,n] = param_dict['travel_seeds']
-            travel_induced_cases[:,n] = param_dict['travel_induced_cases'+str(XBstate)]
+        item.num_bad_sims = 0
+        item.num_too_many = 0
+    pool = mp.Pool(8)
+    with tqdm(total=n_sims) as pbar:
+        for cases, obs_cases, param_dict in pool.imap_unordered(worker,
+        [(forecast_dict[states[0]],'simulate',time_end,n) 
+        for n in range(n_sims)] #n is the seed
+                        ):
+            #cycle through all results and record into arrays 
+            n = param_dict['num_of_sim']
+            if param_dict['bad_sim']:
+                #bad_sim True
+                bad_sim[n] = 1
+            else:
+                #good sims
+                ## record all parameters and metric
+                metrics[n] = param_dict['metric']
+                qs[n] = param_dict['qs']
+                qa[n] = param_dict['qa']
+                qi[n] = param_dict['qi']
+                alpha_a[n] = param_dict['alpha_a']
+                alpha_s[n] = param_dict['alpha_s']
+                accept[n] = param_dict['metric']>=0.8
+                cases_after[n] = param_dict['cases_after']
+                ps[n] =param_dict['ps']
+                travel_seeds[:,n] = param_dict['travel_seeds']
+                travel_induced_cases[:,n] = param_dict['travel_induced_cases'+str(XBstate)]
 
 
-        
-        #record cases appropriately
-        import_inci[:,n] = cases[:,0]
-        asymp_inci[:,n] = cases[:,1]
-        symp_inci[:,n] = cases[:,2]
+            
+            #record cases appropriately
+            import_inci[:,n] = cases[:,0]
+            asymp_inci[:,n] = cases[:,1]
+            symp_inci[:,n] = cases[:,2]
 
-        import_inci_obs[:,n] = obs_cases[:,0]
-        asymp_inci_obs[:,n] = obs_cases[:,1]
-        symp_inci_obs[:,n] = obs_cases[:,2]
+            import_inci_obs[:,n] = obs_cases[:,0]
+            asymp_inci_obs[:,n] = obs_cases[:,1]
+            symp_inci_obs[:,n] = obs_cases[:,2]
+            pbar.update()
+    
+    pool.close()
+    pool.join()
+
+    
+
+
+    
 
     #convert arrays into df
     results = {
@@ -254,7 +257,10 @@ if __name__ =="__main__":
         'travel_induced_cases'+str(item.cross_border_state): travel_induced_cases,
         'ps':ps,
     }
-
+    print("Number of bad sims is %i" % sum(bad_sim))
+    #print("Number of sims in "+state\
+    #        +" exceeding "+\
+    #            "max cases is "+str(sum()) )
     #results recorded into parquet as dataframe
     df = item.to_df(results)
 

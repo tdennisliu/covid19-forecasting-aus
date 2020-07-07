@@ -335,7 +335,6 @@ class Forecast:
             Reff_lookupdist[state] = Reff_lookupstate
 
         if self.cross_border_state is not None:
-            print(Reff_lookupdist.keys())
             self.Reff_travel = Reff_lookupdist[self.cross_border_state]
         
         self.Reff = Reff_lookupdist[self.state]
@@ -771,7 +770,7 @@ class Forecast:
             self.metric = 0
             self.cumulative_cases = np.empty_like(self.cases)
             self.cumulative_cases[:] = np.nan
-            return [self.cumulative_cases]*2, {
+            return (self.cumulative_cases,self.cumulative_cases, {
                 'qs':self.qs,
                 'metric':self.metric,
                 'qa':self.qa,
@@ -786,6 +785,7 @@ class Forecast:
                 'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,
                 'num_of_sim':self.num_of_sim,
             }
+            )
         else:
             #good sim
 

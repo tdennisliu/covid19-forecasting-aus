@@ -63,6 +63,9 @@ class Forecast:
         if self.cross_border_state is not None:
             self.travel_prob = self.p_travel()
             self.travel_cases_after = 0
+            #placeholders for run_state script 
+            self.cross_border_seeds = np.zeros(shape=(1,2),dtype=int)
+            self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
         #import model parameters
         self.a_dict = {
             'ACT': {
@@ -534,7 +537,7 @@ class Forecast:
         else:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
-    def simulate(self, end_time,seed=1):
+    def simulate(self, end_time,seed):
         """
         Simulate forward until end_time
         """
@@ -542,6 +545,7 @@ class Forecast:
         from math import ceil
         import gc
         np.random.seed(seed)
+        self.num_of_sim = seed
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)
@@ -764,9 +768,24 @@ class Forecast:
         gc.collect()
         if self.bad_sim:
             #return NaN arrays for all bad_sims
+            self.metric = 0
             self.cumulative_cases = np.empty_like(self.cases)
             self.cumulative_cases[:] = np.nan
-            return [self.cumulative_cases]*2
+            return [self.cumulative_cases]*2, {
+                'qs':self.qs,
+                'metric':self.metric,
+                'qa':self.qa,
+                'qi':self.qi,
+                'alpha_a':self.alpha_a,
+                'alpha_s':self.alpha_s,
+                #'accept':self.accept,
+                'ps':self.ps,
+                'bad_sim':self.bad_sim,
+                'cases_after':self.cases_after,
+                'travel_seeds': self.cross_border_seeds[:,self.num_of_sim],
+                'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,
+                'num_of_sim':self.num_of_sim,
+            }
         else:
             #good sim
 
@@ -775,7 +794,22 @@ class Forecast:
 
             return (
                 self.cases.copy(), 
-                self.observed_cases.copy()) 
+                self.observed_cases.copy(), {
+                'qs':self.qs,
+                'metric':self.metric,
+                'qa':self.qa,
+                'qi':self.qi,
+                'alpha_a':self.alpha_a,
+                'alpha_s':self.alpha_s,
+                #'accept':self.metric>=0.8,
+                'ps':self.ps,
+                'bad_sim':self.bad_sim,
+                'cases_after':self.cases_after,
+                'travel_seeds': self.cross_border_seeds[:,self.num_of_sim],
+                'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases[:,self.num_of_sim],
+                'num_of_sim':self.num_of_sim,
+            }
+            ) 
     
     def simulate_many(self, end_time, n_sims):
         """
@@ -819,8 +853,8 @@ class Forecast:
         for n in range(n_sims):
             if n%(n_sims//10)==0:
                 print("{} simulation number %i of %i".format(self.state) % (n,n_sims))
-            self.num_of_sim = n
-            inci, inci_obs = self.simulate(end_time, seed= n)
+            
+            inci, inci_obs, param_dict = self.simulate(end_time, n)
             if self.bad_sim:
                 bad_sim[n] = 1
                 print("Sim "+str(n)+" of "+self.state+" is a bad sim")

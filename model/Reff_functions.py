@@ -31,7 +31,9 @@ def read_in_google(Aus_only=True,local=False,moving=False):
         mov_values = []
         for val in value_vars:
             mov_values.append(val[:-29]+'_7days')
-            df[mov_values[-1]]=df.groupby(['state'])[val].transform(lambda x: x[::-1].rolling(7,1).mean()[::-1]) #minimum number of 1
+            df[mov_values[-1]]=df.groupby(['state'])[val].transform(
+                lambda x: x[::-1].rolling(7,1).mean()[::-1]) #minimumnumber of 1
+
     #show latest date
     print("Latest date in Google indices " + str(df.date.values[-1]))
     return df

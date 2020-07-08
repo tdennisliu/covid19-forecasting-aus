@@ -211,15 +211,23 @@ class Forecast:
         else:
             #reinitialising, so actual people need times
             #assume all symptomatic
+            prob_symp_given_detect = self.qs*self.ps/(
+                self.qs*self.ps + self.qa*(1-self.ps)
+            )
+            num_symp = binom.rvs(n=int(self.current[2]), p=prob_symp_given_detect)
             for person in range(int(self.current[2])):
                 self.infected_queue.append(len(self.people))
                 
                 inf_time = next(self.get_inf_time)
                 detection_time = next(self.get_detect_time)
-                
-                new_person = Person(-1, 
-                curr_time-1*detection_time ,
-                 curr_time, 0, 'S')
+                if person <- num_symp:
+                    new_person = Person(-1, 
+                    curr_time-1*detection_time ,
+                    curr_time, 0, 'S')
+                else:
+                    new_person = Person(-1, 
+                    curr_time-1*detection_time ,
+                    curr_time, 0, 'A')
                 
                 self.people[len(self.people)] = new_person
                 
@@ -706,19 +714,37 @@ class Forecast:
                         #print("Local outbreak in "+self.state+" not simulated on day %i" % day)
                         #cases to add
                         #treat current like empty list
-                        self.current[2] = self.actual[day] - self.observed_cases[day,2] 
-                        self.current[2] += self.actual[day-1] - self.observed_cases[day-1,2]
-                        self.current[2] += self.actual[day-2] - self.observed_cases[day-2,2]
-                            #distribute observed cases over 3 days
-                            #Triangularly
-                        self.observed_cases[max(0,day),2] += self.current[2]//2
-                        self.cases[max(0,day),2] += self.current[2]//2
+                        self.current[2] = max(0,self.actual[day] - sum(self.observed_cases[day,1:])) 
+                        self.current[2] += max(0,self.actual[day-1] - sum(self.observed_cases[day-1,1:]))
+                        self.current[2] += max(0,self.actual[day-2] - sum(self.observed_cases[day-2,1:]))
 
-                        self.observed_cases[max(0,day-1),2] += self.current[2]//3
-                        self.cases[max(0,day-1),2] += self.current[2]//3
+                        #how many cases are symp to asymp
+                        prob_symp_given_detect = self.qs*self.ps/(
+                        self.qs*self.ps + self.qa*(1-self.ps)
+                        )
+                        num_symp = binom.rvs(n=int(self.current[2]), 
+                            p=prob_symp_given_detect)
+                        #distribute observed cases over 3 days
+                         #Triangularly
+                        self.observed_cases[max(0,day),2] += num_symp//2
+                        self.cases[max(0,day),2] += num_symp//2
 
-                        self.observed_cases[max(0,day-2),2] += self.current[2]//6
-                        self.cases[max(0,day-2),2] += self.current[2]//6
+                        self.observed_cases[max(0,day-1),2] += num_symp//3
+                        self.cases[max(0,day-1),2] += num_symp//3
+
+                        self.observed_cases[max(0,day-2),2] += num_symp//6
+                        self.cases[max(0,day-2),2] +=num_symp//6
+
+                        #add asymptomatic
+                        num_asymp = self.current[2] - num_symp
+                        self.observed_cases[max(0,day),2] += num_asymp//2
+                        self.cases[max(0,day),2] += num_asymp//2
+
+                        self.observed_cases[max(0,day-1),2] += num_asymp//3
+                        self.cases[max(0,day-1),2] += num_asymp//3
+
+                        self.observed_cases[max(0,day-2),2] += num_asymp//6
+                        self.cases[max(0,day-2),2] +=num_asymp//6
 
                         self.initialise_sim(curr_time=day)
                         #print("Reinitialising with %i new cases "  % self.current[2] )
@@ -971,7 +997,12 @@ class Forecast:
             actual_3_day_total = 0
             for i in range(3):
                 actual_3_day_total += self.actual[max(0,day-i)]
-            threshold = 10*max(1,sum(self.observed_cases[max(0,day-2):day+1,2]))
+            threshold = 10*max(1,sum(
+                self.observed_cases[
+                    max(0,day-2):day+1,2] + self.observed_cases[
+                        max(0,day-2):day+1,1]
+                )
+            )
             if  actual_3_day_total > threshold:
                 return min(3,actual_3_day_total/threshold)
             else:

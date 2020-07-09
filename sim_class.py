@@ -302,7 +302,7 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-06.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-09.h5',
             key='Reff')
 
             if self.R_I is not None:

@@ -33,7 +33,12 @@ def read_in_google(Aus_only=True,local=False,moving=False):
             mov_values.append(val[:-29]+'_7days')
             df[mov_values[-1]]=df.groupby(['state'])[val].transform(
                 lambda x: x[::-1].rolling(7,1).mean()[::-1]) #minimumnumber of 1
-
+            
+            #minimum of 7 days for std, forward fill the rest
+            df[mov_values[-1]+'_std'] = df.groupby(['state'])[val].transform(
+                lambda x: x[::-1].rolling(7,7).std()[::-1])
+            #fill final values as std doesn't work with single value
+            df[mov_values[-1]+'_std'] = df.groupby('state')[mov_values[-1]+'_std'].fillna(method='ffill')
     #show latest date
     print("Latest date in Google indices " + str(df.date.values[-1]))
     return df

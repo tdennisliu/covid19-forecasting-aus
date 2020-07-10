@@ -196,6 +196,9 @@ class Forecast:
             #grab a sample from parameter lists
             self.qs = self.choose_random_item(self.qs_list)
             self.qa = self.choose_random_item(self.qa_list)
+            #resample qa until it is less than self.qs
+            while self.qa>=self.qs:
+                self.qa = self.choose_random_item(self.qa_list)
             self.qi = self.choose_random_item(self.qi_list)
             self.gam = self.choose_random_item(self.gam_list)
             

@@ -22,29 +22,32 @@ else:
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 XBstate = None
 start_date = '2020-03-01'
-case_file_date = ['06Jul','0915']
-forecast_date = '2020-07-06'
+case_file_date = ['09Jul','1050']
+forecast_date = '2020-07-09'
+test_campaign_date = '2020-06-25'
+test_campaign_factor = 1.5
+
 R_I='R_I'
 abc =False
 
 
 local_detection = {
-            'NSW':0.5,#0.556,#0.65,
-            'QLD':0.4,#0.353,#0.493,#0.74,
-            'SA':0.38,#0.597,#0.75,
-            'TAS':0.3,#0.598,#0.48,
-            'VIC':0.56,#0.558,#0.77,
-            'WA':0.38,#0.409,#0.509,#0.66,
+            'NSW':0.6,#0.556,#0.65,
+            'QLD':0.5,#0.353,#0.493,#0.74,
+            'SA':0.6,#0.597,#0.75,
+            'TAS':0.4,#0.598,#0.48,
+            'VIC':0.6,#0.558,#0.77,
+            'WA':0.45,#0.409,#0.509,#0.66,
             'ACT':0.8,#0.557,#0.65,
             'NT':0.8,#0.555,#0.71
         }
 
 a_local_detection = {
-            'NSW':0.1,#0.556,#0.65,
+            'NSW':0.25,#0.556,#0.65,
             'QLD':0.05,#0.353,#0.493,#0.74,
             'SA':0.05,#0.597,#0.75,
-            'TAS':0.05,#0.598,#0.48,
-            'VIC':0.13,#0.558,#0.77,
+            'TAS':0.15,#0.598,#0.48,
+            'VIC':0.23,#0.558,#0.77,
             'WA':0.05,#0.409,#0.509,#0.66,
             'ACT':0.2,#0.557,#0.65,
             'NT':0.2,#0.555,#0.71
@@ -81,14 +84,14 @@ for state in states:
             ['S']*current[state][2]
     people = {}
     if abc:
-        #qs_prior = beta(10,10,size=10000)
-        #qi_prior = beta(17, 3, size=10000)
-        #qa_prior = beta(3,7, size=10000)
-        qi_prior = [qi_d[state]]
-        qs_prior = [local_detection[state]]
-        qa_prior = [a_local_detection[state]]
-        gam =np.maximum(0.1,np.minimum(2,gamma(4,0.25, size=1000)))
-        ps_prior = beta(10,10,size=1000)
+        qs_prior = beta(2,2,size=10000)
+        qi_prior = beta(2, 2, size=10000)
+        qa_prior = beta(2,2, size=10000)
+        #qi_prior = [qi_d[state]]
+        #qs_prior = [local_detection[state]]
+        #qa_prior = [a_local_detection[state]]
+        gam =beta(1.2,1.2)#np.maximum(0.1,np.minimum(2,gamma(4,0.25, size=1000)))
+        ps_prior = beta(2,2,size=1000)
 
     else:
         qi_prior = [qi_d[state]]
@@ -110,7 +113,8 @@ for state in states:
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
         cross_border_state=XBstate,cases_file_date=case_file_date,
-        ps_list = ps_prior,
+        ps_list = ps_prior, test_campaign_date=test_campaign_date, 
+        test_campaign_factor=test_campaign_factor,
         )
     elif state in ['NSW']:
         forecast_dict[state] = Forecast(current[state],

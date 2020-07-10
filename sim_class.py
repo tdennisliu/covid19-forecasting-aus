@@ -26,7 +26,7 @@ class Forecast:
         Reff=2.2,k=0.1,alpha_i=1,gam_list=[0.8],qi_list=[1], qa_list=[1/8], qs_list=[0.8],
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
         forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
-        ps_list=[0.7]
+        ps_list=[0.7], test_campaign_date=None, test_campaign_factor=1
         ):
         import numpy as np
         self.initial_state = current.copy() #Observed cases on start day
@@ -66,6 +66,13 @@ class Forecast:
             #placeholders for run_state script 
             self.cross_border_seeds = np.zeros(shape=(1,2),dtype=int)
             self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
+
+        if test_campaign_date is not None:
+            self.test_campaign_date = pd.to_datetime(
+                test_campaign_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
+            self.test_campaign_factor = test_campaign_factor
+        else:
+            self.test_campaign_date = None
         #import model parameters
         self.a_dict = {
             'ACT': {
@@ -302,7 +309,7 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-09.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-10.h5',
             key='Reff')
 
             if self.R_I is not None:
@@ -336,7 +343,7 @@ class Forecast:
                 newkey = key.dayofyear - self.start_date.dayofyear
 
                 Reff_lookupstate[newkey] = df.loc[(state,key),
-                [i for i in range(100)]].values
+                [i for i in range(1000)]].values
 
                 
             #Nested dict with key to state, then key to date
@@ -455,7 +462,15 @@ class Forecast:
                         category = 'S'
                         self.cases[max(0,ceil(inf_time)-1),2] += 1
                         
-                        if detection_rv < self.qs:
+                        if self.test_campaign_date is not None:
+                            #see if case is during a testing campaign
+                            if inf_time <self.test_campaign_date:
+                                detect_prob = self.qs
+                            else:
+                                detect_prob = min(0.95,self.qs*self.test_campaign_factor)
+                        else:
+                            detect_prob = self.qs
+                        if detection_rv < detect_prob:
                             #case detected
                             detect_time = inf_time + next(self.get_detect_time)
                             if detect_time < self.cases.shape[0]:
@@ -465,7 +480,15 @@ class Forecast:
                         category = 'A'
                         self.cases[max(0,ceil(inf_time)-1),1] += 1
                         detect_time = 0
-                        if detection_rv < self.qa:
+                        if self.test_campaign_date is not None:
+                        #see if case is during a testing campaign
+                            if inf_time <self.test_campaign_date:
+                                detect_prob = self.qa
+                            else:
+                                detect_prob = min(0.95,self.qa*self.test_campaign_factor)
+                        else:
+                            detect_prob=self.qa
+                        if detection_rv < detect_prob:
                             #case detected
                             detect_time = inf_time + next(self.get_detect_time)
                             if detect_time < self.cases.shape[0]:

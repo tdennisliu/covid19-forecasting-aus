@@ -17,6 +17,11 @@ if len(argv)>=3:
     forecast_type = argv[3]
     states = [argv[4]]
     print("Simulating state " +states[0])
+    if len(argv)>4:
+        if argv[5]=='None':
+            progress = True
+        else:
+            progress = False
 else:
     forecast_type = None
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
@@ -227,7 +232,8 @@ if __name__ =="__main__":
             import_inci_obs[:,n] = obs_cases[:,0]
             asymp_inci_obs[:,n] = obs_cases[:,1]
             symp_inci_obs[:,n] = obs_cases[:,2]
-            pbar.update()
+            if progress:
+                pbar.update()
     
     pool.close()
     pool.join()

@@ -1103,8 +1103,14 @@ class Forecast:
 
         df['imported'] = df.PLACE_OF_ACQUISITION.apply(lambda x: 1 if x[-4:]=='8888' and x != '00038888' else 0)
         df['local'] = 1 - df.imported
+                
+        if self.state=='VIC':
+            #data quality issue
+            df.loc[df.date_inferred=='2002-07-03','date_inferred'] = pd.to_datetime('2020-07-03')
         df = df.groupby(['date_inferred'])[['imported','local']].sum()
         df.reset_index(inplace=True)
+
+
         df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
         df = df.sort_values(by='date')
 

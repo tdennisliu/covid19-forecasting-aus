@@ -27,8 +27,8 @@ else:
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 XBstate = None
 start_date = '2020-03-01'
-case_file_date = ['09Jul','1050']
-forecast_date = '2020-07-09'
+case_file_date = ['13Jul','1155']
+forecast_date = '2020-07-13'
 test_campaign_date = '2020-06-25'
 test_campaign_factor = 1.5
 

@@ -145,7 +145,7 @@ def read_AddInsight():
 def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True, 
                  delta=1.0,R=2.2,sigma=1, md=None,
                  ban='2020-03-16',single=False,var=None,
-                rho=None, R_I =None):
+                rho=None, R_I =None, winter=False):
     """
     Produce posterior predictive plots for all states
     """
@@ -284,6 +284,8 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                 else:
                     sim_R = np.tile(samples_sim.R_L.values, (df_state.shape[0],1))
                 mu_hat = 2 *md*sim_R* expit(logodds)
+                if winter:
+                    mu_hat = (1+samples_sim['wintder'].values)*mu_hat
                 if rho:
                     if rho=='data':
                         rho_data = np.tile(df_state.rho_moving.values[np.newaxis].T,

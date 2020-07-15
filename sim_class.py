@@ -312,14 +312,15 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-13.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-15.h5',
             key='Reff')
-
+            num_days = df_forecast.loc[
+                (df_forecast.type=='R_L')&(df_forecast.state==self.state)].shape[0]
             if self.R_I is not None:
                 self.R_I = df_forecast.loc[
                     (df_forecast.type=='R_I')&
                     (df_forecast.state==self.state),
-                    [i for i in range(100)]].values[-1,:]
+                    [i for i in range(1000)]].values[0,:]
 
             #R_L here 
             df_forecast = df_forecast.loc[df_forecast.type==self.forecast_R]
@@ -338,17 +339,24 @@ class Forecast:
         Reff_lookupdist ={}
 
         for state in states:
-            dfReff_dict = df.loc[state,[0,1]].to_dict(orient='index')
             Reff_lookupstate = {}
-            for key, stats in dfReff_dict.items():
-                #instead of mean and std, take all columns as samples of Reff
-                #convert key to days since start date for easier indexing
-                newkey = key.dayofyear - self.start_date.dayofyear
+            if self.forecast_R =='R_L':
+                dfReff_dict = df.loc[state,[0,1]].to_dict(orient='index')
 
-                Reff_lookupstate[newkey] = df.loc[(state,key),
-                [i for i in range(1000)]].values
+                for key, stats in dfReff_dict.items():
+                    #instead of mean and std, take all columns as samples of Reff
+                    #convert key to days since start date for easier indexing
+                    newkey = key.dayofyear - self.start_date.dayofyear
 
-                
+                    Reff_lookupstate[newkey] = df.loc[(state,key),
+                    [i for i in range(1000)]].values
+
+            else:
+                #R_L0
+                for day in range(num_days):
+                    Reff_lookupstate[day] = df.loc[state, [i for i in range(1000)]].values[0]
+
+
             #Nested dict with key to state, then key to date
             Reff_lookupdist[state] = Reff_lookupstate
 
@@ -356,6 +364,7 @@ class Forecast:
             self.Reff_travel = Reff_lookupdist[self.cross_border_state]
         
         self.Reff = Reff_lookupdist[self.state]
+        print(self.Reff)
         return None
     
     def choose_random_item(self, items,weights=None):

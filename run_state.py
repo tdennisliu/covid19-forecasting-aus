@@ -17,11 +17,13 @@ if len(argv)>=3:
     forecast_type = argv[3]
     states = [argv[4]]
     print("Simulating state " +states[0])
-    if len(argv)>4:
+    if len(argv)>5:
         if argv[5]=='None':
             progress = True
         else:
             progress = False
+    else:
+        progress =True
 else:
     forecast_type = None
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']

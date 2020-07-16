@@ -143,9 +143,9 @@ def read_AddInsight():
     
     return df_json
 def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True, 
-                 delta=1.0,R=2.2,sigma=1, md=None,
+                 delta=1.0,R=2.2,sigma=1, md_arg=None,
                  ban='2020-03-16',single=False,var=None,
-                rho=None, R_I =None, winter=False):
+                rho=None, R_I =None, winter=False, prop=None):
     """
     Produce posterior predictive plots for all states
     """
@@ -236,10 +236,11 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
         states.remove('Australian Capital Territory')
          #no R_eff modelled for these states, skip
         for i,state in enumerate(states):
-
+            
             df_state = df.loc[df.sub_region_1==state]
             samples_sim = samples.sample(1000)
-            post_values = samples_sim[['bet['+str(i)+']' for i in range(1,1+len(value_vars))]].values.T      
+            post_values = samples_sim[['bet['+str(i)+']' for i in range(1,1+len(value_vars))]].values.T    
+            prop_sim = prop[states_initials[state]].values[:df_state.shape[0]]
             if split:
 
                 #split model with parameters pre and post policy
@@ -250,10 +251,25 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                 X2 = df2[value_vars]/100
                 logodds = X1 @ post_values # N by K times (Nsamples by K )^T = N by N
 
-                if md is None:
+                if md_arg is None:
                     post_alphas = samples_sim[['alpha['+str(i)+']' for i in range(1,1+len(value_vars))]].values.T
                     logodds = np.append(logodds, X2 @ (post_values + post_alphas),axis=0)
                     md=1
+                elif md_arg=='power':
+                    theta_md = samples_sim.theta_md.values #1 by samples shape
+                    theta_md = np.tile(theta_md, (df_state.shape[0],1)) #each row is a date, column a new sample
+                    md = ((1+theta_md).T**(-1* prop_sim)).T
+                    md[:logodds.shape[0]] = 1
+                    #make logodds by appending post ban values
+                    logodds = np.append(logodds, X2@ post_values, axis=0)
+                elif md_arg=='logistic':
+                    theta_md = samples_sim.theta_md.values #1 by samples shape
+                    theta_md = np.tile(theta_md, (df_state.shape[0],1)) #each row is a date, column a new sample
+                    md = 2*expit(-1*theta_md* prop_sim)
+                    md[:logodds.shape[0]] = 1
+                    #make logodds by appending post ban values
+                    logodds = np.append(logodds, X2@ post_values, axis=0)
+                    
                 else:
                     #take right size of md to be N by N
                     md = np.tile(samples_sim['md'].values, (df_state.shape[0],1))
@@ -264,10 +280,6 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                     #make logodds by appending post ban values
                     logodds = np.append(logodds, X2@ post_values, axis=0)
             
-            else:
-                #not split model
-                X1 = df_state[value_vars]/100
-                logodds = X1 @ post_values # N by K times (Nsamples by K )^T = N by Nsamples
             if gamma:
                 if type(R)==str: #'state'
                     try:
@@ -285,7 +297,7 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                     sim_R = np.tile(samples_sim.R_L.values, (df_state.shape[0],1))
                 mu_hat = 2 *md*sim_R* expit(logodds)
                 if winter:
-                    mu_hat = (1+samples_sim['wintder'].values)*mu_hat
+                    mu_hat = (1+samples_sim['winter'].values)*mu_hat
                 if rho:
                     if rho=='data':
                         rho_data = np.tile(df_state.rho_moving.values[np.newaxis].T,

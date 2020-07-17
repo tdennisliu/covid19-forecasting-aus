@@ -312,7 +312,7 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-15.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-17.h5',
             key='Reff')
             num_days = df_forecast.loc[
                 (df_forecast.type=='R_L')&(df_forecast.state==self.state)].shape[0]
@@ -364,7 +364,6 @@ class Forecast:
             self.Reff_travel = Reff_lookupdist[self.cross_border_state]
         
         self.Reff = Reff_lookupdist[self.state]
-        print(self.Reff)
         return None
     
     def choose_random_item(self, items,weights=None):

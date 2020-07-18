@@ -312,7 +312,7 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-17.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-18.h5',
             key='Reff')
             num_days = df_forecast.loc[
                 (df_forecast.type=='R_L')&(df_forecast.state==self.state)].shape[0]

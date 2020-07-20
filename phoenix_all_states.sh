@@ -16,7 +16,7 @@ source /fast/users/a1193089/virtualenvs/bin/activate
 
 states=("NSW" "VIC" "SA" "QLD" "TAS" "WA" "ACT" "NT")
 
-python run_state.py $1 $2 $3 ${states[$SLURM_ARRAY_TASK_ID]} $4
+python run_state.py $1 $2 $3 ${states[$SLURM_ARRAY_TASK_ID]} $4 p
 
 
 deactivate

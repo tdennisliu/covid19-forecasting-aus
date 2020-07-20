@@ -696,8 +696,14 @@ class Forecast:
                 if day_end > self.forecast_date:
                     #hold vlaue forever
                     if day_end < self.cases.shape[0]-1:
-                        self.cases[ceil(day_end):,2] = self.cases[ceil(day_end),2]
-                        self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end),2]
+                        self.cases[ceil(day_end):,2] = sum((
+                            self.cases[ceil(day_end),2],
+                            self.cases[ceil(day_end)-1,2]
+                        ))
+                        self.observed_cases[ceil(day_end):,2] = sum((
+                            self.observed_cases[ceil(day_end),2],
+                            self.observed_cases[ceil(day_end)-1,2]
+                        ))
                     else:
                         self.cases_after +=1
                 else:
@@ -797,6 +803,14 @@ class Forecast:
                     if self.infected_queue[0]> self.max_cases:
                         #had 1 mill cases, stop sim, but not bad sim
                         #print("Sim "+str(self.num_of_sim)+" has >500k cases, ending")
+                        self.cases[ceil(day_end):,2] = sum((
+                            self.cases[ceil(day_end),2],
+                            self.cases[ceil(day_end)-1,2]
+                        ))
+                        self.observed_cases[ceil(day_end):,2] = sum((
+                            self.observed_cases[ceil(day_end),2],
+                            self.observed_cases[ceil(day_end)-1,2]
+                        ))
                         break
                     ## stop if parent infection time greater than end time
                     if self.people[self.infected_queue[0]].infection_time >end_time:

@@ -29,8 +29,8 @@ else:
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 XBstate = None
 start_date = '2020-03-01'
-case_file_date = ['17Jul','1130']
-forecast_date = '2020-07-13'
+case_file_date = ['20Jul','0930']
+forecast_date = '2020-07-20'
 test_campaign_date = '2020-06-25'
 test_campaign_factor = 1.5
 
@@ -39,14 +39,14 @@ abc =False
 
 
 local_detection = {
-            'NSW':0.6,#0.556,#0.65,
-            'QLD':0.5,#0.353,#0.493,#0.74,
-            'SA':0.6,#0.597,#0.75,
+            'NSW':0.85,#0.556,#0.65,
+            'QLD':0.9,#0.353,#0.493,#0.74,
+            'SA':0.7,#0.597,#0.75,
             'TAS':0.4,#0.598,#0.48,
-            'VIC':0.6,#0.558,#0.77,
-            'WA':0.45,#0.409,#0.509,#0.66,
-            'ACT':0.8,#0.557,#0.65,
-            'NT':0.8,#0.555,#0.71
+            'VIC':0.7,#0.558,#0.77,
+            'WA':0.7,#0.409,#0.509,#0.66,
+            'ACT':0.95,#0.557,#0.65,
+            'NT':0.95,#0.555,#0.71
         }
 
 a_local_detection = {
@@ -56,8 +56,8 @@ a_local_detection = {
             'TAS':0.15,#0.598,#0.48,
             'VIC':0.23,#0.558,#0.77,
             'WA':0.05,#0.409,#0.509,#0.66,
-            'ACT':0.2,#0.557,#0.65,
-            'NT':0.2,#0.555,#0.71
+            'ACT':0.7,#0.557,#0.65,
+            'NT':0.7,#0.555,#0.71
         }
 
 qi_d = {
@@ -105,7 +105,7 @@ for state in states:
         qs_prior = [local_detection[state]]
         qa_prior = [a_local_detection[state]]
         gam =[1/2]
-        ps_prior = 0.2
+        ps_prior = 0.7
         ps_prior= [ps_prior]
 
     for i,cat in enumerate(initial_people):
@@ -126,17 +126,17 @@ for state in states:
     elif state in ['NSW']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 1, k =0.1,gam_list=gam,
+        alpha_i= 0.5, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
         cross_border_state=None,cases_file_date=case_file_date,
         ps_list = ps_prior,
         )
-    elif state in ['ACT','NT']:
+    elif state in ['ACT','NT','SA','WA']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.5, k =0.1,gam_list=gam,
+        alpha_i= 0.1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
@@ -201,7 +201,7 @@ if __name__ =="__main__":
     pool = mp.Pool(8)
     with tqdm(total=n_sims) as pbar:
         for cases, obs_cases, param_dict in pool.imap_unordered(worker,
-        [(forecast_dict[states[0]],'simulate',time_end,n) 
+        [(forecast_dict[states[0]],'simulate',time_end,n,n) 
         for n in range(n_sims)] #n is the seed
                         ):
             #cycle through all results and record into arrays 
@@ -239,7 +239,7 @@ if __name__ =="__main__":
         
         #repeat onces for bad sims
         for cases, obs_cases, param_dict in pool.imap_unordered(worker,
-        [(forecast_dict[states[0]],'simulate',time_end,n) 
+        [(forecast_dict[states[0]],'simulate',time_end,n, n+n_sims) 
         for n in np.nonzero(bad_sim)[0]] #n+n_sims is the seed is the seed
                         ):
             #cycle through all results and record into arrays 

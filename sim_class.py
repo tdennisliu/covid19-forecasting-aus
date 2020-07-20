@@ -157,13 +157,13 @@ class Forecast:
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
-    def generate_times(self,  i=2, j=2, m=2, n=2, size=10000):
+    def generate_times(self,  i=2.5, j=2, m=1, n=3, size=10000):
         """
         Generate large amount of gamma draws to save on simulation time later
         """
 
         self.inf_times = 1 + np.random.gamma(i/j, j, size =size) #shape and scale
-        self.detect_times = 2 + np.random.gamma(m/n,n, size = size)
+        self.detect_times = 1 + np.random.gamma(m/n,n, size = size)
 
         return None
     
@@ -578,15 +578,15 @@ class Forecast:
         else:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
-    def simulate(self, end_time,seed):
+    def simulate(self, end_time,sim,seed):
         """
         Simulate forward until end_time
         """
         from collections import deque
         from math import ceil
         import gc
-        #np.random.seed(seed)
-        self.num_of_sim = seed
+        np.random.seed(seed)
+        self.num_of_sim = sim
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)
@@ -696,14 +696,9 @@ class Forecast:
                 if day_end > self.forecast_date:
                     #hold vlaue forever
                     if day_end < self.cases.shape[0]-1:
-                        self.cases[ceil(day_end):,2] = sum((
-                            self.cases[ceil(day_end),2],
-                            self.cases[ceil(day_end)-1,2]
-                        ))
-                        self.observed_cases[ceil(day_end):,2] = sum((
-                            self.observed_cases[ceil(day_end),2],
-                            self.observed_cases[ceil(day_end)-1,2]
-                        ))
+                        self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-1,2]
+
+                        self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-1,2]
                     else:
                         self.cases_after +=1
                 else:
@@ -805,14 +800,10 @@ class Forecast:
                         #print("Sim "+str(self.num_of_sim)+" has >500k cases, ending")
                         
                         day_end = self.people[self.infected_queue[0]].infection_time
-                        self.cases[ceil(day_end):,2] = sum((
-                            self.cases[ceil(day_end),2],
-                            self.cases[ceil(day_end)-1,2]
-                        ))
-                        self.observed_cases[ceil(day_end):,2] = sum((
-                            self.observed_cases[ceil(day_end),2],
-                            self.observed_cases[ceil(day_end)-1,2]
-                        ))
+                        self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-1,2]
+
+                        self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-1,2]
+
                         break
                     ## stop if parent infection time greater than end time
                     if self.people[self.infected_queue[0]].infection_time >end_time:
@@ -840,6 +831,7 @@ class Forecast:
                         parent_key = self.infected_queue.popleft()
                         self.generate_new_cases(parent_key,Reff=Reff,k=self.k)
                         #missed_outbreak = max(1,missed_outbreak*0.9)
+        self.people.clear()
         gc.collect()
         if self.bad_sim:
             #return NaN arrays for all bad_sims
@@ -930,7 +922,7 @@ class Forecast:
             if n%(n_sims//10)==0:
                 print("{} simulation number %i of %i".format(self.state) % (n,n_sims))
             
-            inci, inci_obs, param_dict = self.simulate(end_time, n)
+            inci, inci_obs, param_dict = self.simulate(end_time, n,n)
             if self.bad_sim:
                 bad_sim[n] = 1
                 print("Sim "+str(n)+" of "+self.state+" is a bad sim")

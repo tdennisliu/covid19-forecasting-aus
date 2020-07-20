@@ -81,7 +81,7 @@ class Forecast:
                 3:31*1.3,
                 4:17,
                 5:15,
-                6:3,
+                6:6,
             },
             'NSW': {
                 1: 90,
@@ -89,7 +89,7 @@ class Forecast:
                 3: 694*1.3,
                 4: 380,
                 5: 314,
-                6: 185,
+                6: 256,
             },
             'NT': {
                 1: 3,
@@ -97,15 +97,15 @@ class Forecast:
                 3: 7*1.3,
                 4: 9,
                 5: 6,
-                6: 3,
+                6: 4,
             },
             'QLD': {
                 1:61,
                 2:190,
                 3:305*1.3,
-                4:163,
+                4:162,
                 5:87,
-                6:17,
+                6:21,
             },
             'SA': {
                 1:13,
@@ -113,7 +113,7 @@ class Forecast:
                 3:115*1.3,
                 4:67,
                 5:27,
-                6:5
+                6:6
             },
             'TAS':{
                 1:6,
@@ -124,20 +124,20 @@ class Forecast:
                 6:2,
             },
             'VIC': {
-                1:61,
-                2:209,
+                1:62,
+                2:208,
                 3:255*1.3,
                 4:157,
-                5:86,
-                6:183,
+                5:87,
+                6:188,
             },
             'WA': {
                 1:15,
                 2:73,
-                3:152*1.3,
-                4:116,
+                3:153*1.3,
+                4:115,
                 5:110,
-                6:47
+                6:74
             },
         }
         #changes below also need to be changed in simulate
@@ -147,7 +147,7 @@ class Forecast:
             3: 5.2,
             4: 5.2,
             5: 22.2,
-            6: 152.2 ## this needs to change for
+            6: 138.2 ## this needs to change for
                     # each change in forecast date
         }
 
@@ -312,7 +312,7 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-18.h5',
+            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-20.h5',
             key='Reff')
             num_days = df_forecast.loc[
                 (df_forecast.type=='R_L')&(df_forecast.state==self.state)].shape[0]
@@ -585,7 +585,7 @@ class Forecast:
         from collections import deque
         from math import ceil
         import gc
-        np.random.seed(seed)
+        #np.random.seed(seed)
         self.num_of_sim = seed
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
@@ -740,7 +740,7 @@ class Forecast:
                 parent_key = self.infected_queue.popleft()
                 #recorded within generate new cases
                 self.generate_new_cases(parent_key,Reff=Reff,k = self.k) 
-        self.people.clear()
+        #self.people.clear()
         if self.bad_sim ==False:
             #Check simulation for discrepancies
             for day in range(end_time):
@@ -803,6 +803,8 @@ class Forecast:
                     if self.infected_queue[0]> self.max_cases:
                         #had 1 mill cases, stop sim, but not bad sim
                         #print("Sim "+str(self.num_of_sim)+" has >500k cases, ending")
+                        
+                        day_end = self.people[self.infected_queue[0]].infection_time
                         self.cases[ceil(day_end):,2] = sum((
                             self.cases[ceil(day_end),2],
                             self.cases[ceil(day_end)-1,2]

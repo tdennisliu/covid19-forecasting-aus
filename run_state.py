@@ -32,7 +32,7 @@ start_date = '2020-03-01'
 case_file_date = ['20Jul','0930']
 forecast_date = '2020-07-20'
 test_campaign_date = '2020-06-25'
-test_campaign_factor = 1.5
+test_campaign_factor = 1.25
 
 R_I='R_I'
 abc =False
@@ -133,7 +133,7 @@ for state in states:
         cross_border_state=None,cases_file_date=case_file_date,
         ps_list = ps_prior,
         )
-    elif state in ['ACT','NT','SA','WA']:
+    elif state in ['ACT','NT','SA','WA','QLD']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
         alpha_i= 0.1, k =0.1,gam_list=gam,

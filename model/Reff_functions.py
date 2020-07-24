@@ -362,13 +362,18 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
     plt.legend()
     return ax
 
-def read_in_cases(case_file_date=['29Jun','0900']):
+def read_in_cases(case_file_date='29Jun'):
     """
     Read in NNDSS data
     """
     #from data, find rho
     from datetime import timedelta
-    df_NNDSS = pd.read_excel("../data/COVID-19 UoM "+case_file_date[0]+"2020 "+case_file_date[1]+".xlsx",
+    import glob
+    
+    path = "../data/COVID-19 UoM "+case_file_date+"*.xlsx"
+
+    for file in glob.glob(path):
+        df_NNDSS = pd.read_excel(file,
                        parse_dates=['SPECIMEN_DATE','NOTIFICATION_DATE','NOTIFICATION_RECEIVE_DATE','TRUE_ONSET_DATE'],
                        dtype= {'PLACE_OF_ACQUISITION':str})
     df_NNDSS.PLACE_OF_ACQUISITION.fillna('00038888',inplace=True) #Fill blanks with simply unknown

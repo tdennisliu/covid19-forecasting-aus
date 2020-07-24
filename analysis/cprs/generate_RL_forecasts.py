@@ -3,34 +3,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
+from scipy.special import expit
 from datetime import date, timedelta, datetime
 
-from Reff_functions import read_in_cases, read_in_google
 from Reff_constants import *
-
-def read_in_posterior(date='2020-07-18'):
-    """
-    read in samples from posterior from inference
-    """
-    df = pd.read_hdf("../data/soc_mob_posterior"+date+".h5", key='samples')
-    
-    return df
-
+from Reff_functions import *
 
 
 df_google_all = read_in_google(Aus_only=True,moving=True,local=True)
 states = ['NSW','QLD','SA','VIC','TAS','WA','ACT','NT']#,'AUS']
 plot_states = states.copy()
 #plot_states.remove('AUS')
-df_samples = read_in_posterior()
+df_samples = read_in_posterior(date = '2020-07-18')
 
 ## grab survey data
 
-surveys = pd.read_csv("../data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
-surveys = surveys.append(pd.read_csv("../data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
+surveys = pd.read_csv("data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
+surveys = surveys.append(pd.read_csv("data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
 
 for i in range(12,16):
-    surveys = surveys.append(pd.read_csv("../data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
+    surveys = surveys.append(pd.read_csv("data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
 
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
 surveys['proportion'] = surveys['count']/surveys.respondents
@@ -68,17 +60,16 @@ cprs_end_date = pd.to_datetime('2020-07-22')
 cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
 for data_date in cprs_dates:
-
+    print(data_date)
     cases = read_in_cases(data_date.strftime('%d%b%Y'))
     
-    one_month = data_date + timedelta(
-    days= 42)
+    one_month = data_date + timedelta(days= 28)
 
     days_from_March = one_month.dayofyear -pd.to_datetime('2020-03-01').dayofyear
 
     ##filter out future info
     prop = prop_all.loc[:data_date]
-    df_google = df_google_all.loc[df_google.date<=data_date]
+    df_google = df_google_all.loc[df_google_all.date<=data_date]
     
     #forecast time parameters
     n_training =28
@@ -168,7 +159,6 @@ for data_date in cprs_dates:
         
         for j, var in enumerate(predictors+['md_prop']):
             #Record data
-            axs = axes[j]
             if (state=='AUS') and (var=='md_prop'):
                 continue
 
@@ -190,3 +180,339 @@ for data_date in cprs_dates:
         state_Rmed[state] = Rmed_array
         state_sims[state] = sims
 
+    df_out = pd.DataFrame.from_dict(outdata)
+
+    df_md = df_out.loc[df_out.type=='md_prop']
+    df_out = df_out.loc[df_out.type!='md_prop']
+
+    df_forecast = pd.pivot_table(df_out, columns=['type'],index=['date','state'],values=['mean'])
+    df_std = pd.pivot_table(df_out, columns=['type'],index=['date','state'],values=['std'])
+
+    df_forecast_md = pd.pivot_table(df_md, columns=['state'],index=['date'],values=['mean']) 
+    df_forecast_md_std = pd.pivot_table(df_md, columns=['state'],index=['date'],values=['std']) 
+
+    #align with google order in columns
+    df_forecast = df_forecast.reindex([('mean',val) for val in predictors],axis=1)
+    df_std = df_std.reindex([('std',val) for val in predictors],axis=1) 
+    df_forecast.columns = predictors  #remove the tuple name of columns
+    df_std.columns = predictors
+
+
+    df_forecast_md = df_forecast_md.reindex([('mean',state) for state in states],axis=1)
+    df_forecast_md_std = df_forecast_md_std.reindex([('std',state) for state in states],axis=1)
+
+    df_forecast_md.columns = states
+    df_forecast_md_std.columns = states
+
+    df_forecast = df_forecast.reset_index() 
+    df_std = df_std.reset_index()
+
+    df_forecast_md = df_forecast_md.reset_index()
+    df_forecast_md_std = df_forecast_md_std.reset_index() 
+
+    df_forecast.date = pd.to_datetime(df_forecast.date)
+    df_std.date = pd.to_datetime(df_std.date)
+
+    df_forecast_md.date = pd.to_datetime(df_forecast_md.date)
+    df_forecast_md_std.date = pd.to_datetime(df_forecast_md_std.date)
+
+    df_R = df_google[['date','state']+mov_values + [val+'_std' for val in mov_values]] 
+    df_R = pd.concat([df_R,df_forecast],ignore_index=True,sort=False)
+    df_R['policy'] = (df_R.date>='2020-03-20').astype('int8')
+
+    
+    df_md = pd.concat([prop,df_forecast_md.set_index('date')])
+    #prop_std = pd.DataFrame(np.random.beta(1+survey_counts, 1+survey_respond), columns = survey_counts.columns, index = prop.index)
+
+    #df_md_std = pd.concat([prop_std,df_forecast_md_std.set_index('date')])
+
+    expo_decay=True
+    theta_md = np.tile(df_samples['theta_md'].values, (df_md['NSW'].shape[0],1))
+
+
+    df_R = df_R.sort_values('date')
+    n_samples = 100
+    samples = df_samples.sample(n_samples) #test on sample of 2
+    forecast_type = ['R_L','R_L0']
+    state_Rs = {
+        'state':[],
+        'date':[],
+        'type':[],
+        'median':[],
+        'lower':[],
+        'upper':[],
+        'bottom':[],
+        'top':[],
+        'mean':[],
+        'std':[],
+    }
+    ban = '2020-03-20'
+    new_pol = '2020-06-01' #VIC and NSW allow gatherings of up to 20 people, other jurisdictions allow for 
+
+    expo_decay=True
+
+    typ_state_R={}
+    mob_forecast_date = df_forecast.date.min()
+    mob_samples = 100
+
+    for typ in forecast_type:
+        state_R={}
+        for state in states:
+        #sort df_R by date so that rows are dates
+
+            #rows are dates, columns are predictors
+            df_state = df_R.loc[df_R.state==state]
+            dd = df_state.date
+            post_values = samples[predictors].values.T
+            prop_sim = df_md[state].values
+            
+                        #take right size of md to be N by N
+            theta_md = np.tile(samples['theta_md'].values, (df_state.shape[0],mob_samples))
+            if expo_decay:
+                md = ((1+theta_md).T**(-1* prop_sim)).T
+            else:
+                md = (2*expit(-1*theta_md*prop_sim[:,np.newaxis]))
+            
+            for n in range(mob_samples):
+                #add gaussian noise to predictors before forecast
+                df_state.loc[df_state.date<mob_forecast_date,predictors] = state_Rmed[state][:,:,n]/100#df_state.loc[
+                    #df_state.date<mob_forecast_date,predictors]/100 + np.random.normal(
+                    #loc= 0, scale = df_state.loc[
+                    #    (df_state.date<mob_forecast_date),
+                    #    [val+'_std' for val in predictors]].values/100)
+
+                
+                #add gaussian noise to predictors after forecast
+                df_state.loc[df_state.date>=mob_forecast_date,predictors] = state_sims[state][:,:,n]/100
+                #df_state.loc[
+                #   df_state.date>=mob_forecast_date,predictors]/100 + np.random.normal(
+                #   loc= 0, scale = df_std.loc[(df_std.state==state,predictors)].values/100)
+
+                
+                #dd = df_state.date
+
+                df1 =df_state.loc[df_state.date<=ban]
+                X1 = df1[predictors] #N by K
+                
+                
+                sim_R = np.tile(samples.R_L.values, (df_state.shape[0],mob_samples))
+
+
+                #set initial pre ban values of md to 1
+                md[:X1.shape[0],:] = 1
+
+                if n==0:
+                    #initialise arrays (loggodds)
+                    logodds = X1 @ post_values # N by K times (Nsamples by K )^T = Ndate by Nsamples
+                    
+                    if typ =='R_L':
+                        df2 = df_state.loc[(df_state.date>ban) & (df_state.date<new_pol)]
+                        df3 = df_state.loc[df_state.date>=new_pol]
+                        X2 = df2[predictors]
+                        X3 = df3[predictors]
+
+                        #halve effect of md
+                        #md[(X1.shape[0]+df2.shape[0]):,:] = 1- 0.5 *( 1 - md[(X1.shape[0]+df2.shape[0]):,:])
+                        
+                        logodds = np.append(logodds,X2 @ post_values,axis=0)
+                        logodds = np.append(logodds,X3 @ post_values,axis=0)
+                        
+                        #md = np.append(md, ((1+theta_md).T**(-1* prop2)).T, axis=0)
+                        #md = np.append(md, ((1+theta_md).T**(-1* prop3)).T, axis=0)
+
+                    elif typ=='R_L0':
+                        df2 = df_state.loc[(df_state.date>ban) & (df_state.date<new_pol)]
+                        df3 = df_state.loc[df_state.date>=new_pol]
+                        X2 = df2[predictors]
+                        X3 = np.zeros_like(df3[predictors])
+
+                        #social mobility all at baseline implies R_l = R_L0
+
+                        #md has no effect after June 1st
+                        md[(X1.shape[0]+df2.shape[0]):,:] = 1
+
+                        logodds = np.append(logodds,X2 @ post_values,axis=0)
+                        logodds = np.append(logodds,X3 @ post_values,axis=0)
+
+
+                    else:
+                        #forecast as before, no changes to md
+                        df2 = df_state.loc[df_state.date>ban]
+                        X2 = df2[predictors]
+
+                        logodds = np.append(logodds,X2 @ post_values,axis=0)
+                                        #df_state.loc[df_state.date>'2020-03-15',predictors].values/100 @ samples[predictors].values.T, axis = 0)
+
+                else:
+                    #concatenate to pre-existing logodds martrix
+                    logodds1 = X1 @ post_values
+                    
+                    if typ =='R_L':
+                        df2 = df_state.loc[(df_state.date>ban) & (df_state.date<new_pol)]
+                        df3 = df_state.loc[df_state.date>=new_pol]
+                        X2 = df2[predictors]
+                        X3 = df3[predictors]
+                        
+                        prop2 = df_md.loc[ban:new_pol,state].values
+                        prop3 = df_md.loc[new_pol:,state].values
+
+                        #halve effect of md
+                        #md[(X1.shape[0]+df2.shape[0]):,:] = 1- 0.5 *( 1 - md[(X1.shape[0]+df2.shape[0]):,:])
+
+                        logodds2 = X2 @ post_values
+                        logodds3 = X3 @ post_values
+                        
+                        logodds_sample = np.append(logodds1, logodds2, axis=0)
+                        logodds_sample = np.append(logodds_sample, logodds3, axis=0)
+
+                    elif typ=='R_L0':
+                        df2 = df_state.loc[(df_state.date>ban) & (df_state.date<new_pol)]
+                        df3 = df_state.loc[df_state.date>=new_pol]
+                        X2 = df2[predictors]
+                        X3 = np.zeros_like(df3[predictors])
+
+                        #social mobility all at baseline implies R_l = R_L0
+
+                        #md has no effect after June 1st
+                        
+                        md[(X1.shape[0]+df2.shape[0]):,:] = 1
+                        
+                        logodds2 = X2 @ post_values
+                        logodds3 = X3 @ post_values
+                        
+                        logodds_sample = np.append(logodds1, logodds2, axis=0)
+                        logodds_sample = np.append(logodds_sample, logodds3, axis=0)
+
+
+                    else:
+                        #forecast as before, no changes to md
+                        df2 = df_state.loc[df_state.date>ban]
+                        X2 = df2[predictors]
+
+                        logodds2 = X2 @ post_values
+                        
+                        logodds_sample = np.append(logodds1, logodds2, axis=0)
+                    
+                    ##concatenate to previous
+                    logodds = np.concatenate((logodds, logodds_sample ), axis =1)
+
+            R_L = 2* md *sim_R * expit( logodds ) 
+
+            R_L_lower = np.percentile(R_L,25,axis=1)
+            R_L_upper = np.percentile(R_L,75,axis=1)
+
+            R_L_bottom = np.percentile(R_L,5,axis=1)
+            R_L_top = np.percentile(R_L,95,axis=1)
+
+
+            R_L_med = np.median(R_L,axis=1)
+
+            #R_L
+            state_Rs['state'].extend([state]*df_state.shape[0])
+            state_Rs['type'].extend([typ]*df_state.shape[0])
+            state_Rs['date'].extend(dd.values) #repeat n_samples times?
+            state_Rs['lower'].extend(R_L_lower)
+            state_Rs['median'].extend(R_L_med)
+            state_Rs['upper'].extend(R_L_upper)
+            state_Rs['top'].extend(R_L_top)
+            state_Rs['bottom'].extend(R_L_bottom)
+            state_Rs['mean'].extend(np.mean(R_L,axis=1))
+            state_Rs['std'].extend(np.std(R_L,axis=1))
+            
+            state_R[state] = R_L
+        typ_state_R[typ] = state_R
+        
+    
+    
+    for state in states:
+        #R_I
+        R_I = samples['R_I'].values[:df_state.shape[0]]
+        
+        
+        state_Rs['state'].extend([state]*df_state.shape[0])
+        state_Rs['type'].extend(['R_I']*df_state.shape[0])
+        state_Rs['date'].extend(dd.values)
+        state_Rs['lower'].extend(np.repeat(np.percentile(R_I,25),df_state.shape[0]))
+        state_Rs['median'].extend(np.repeat(np.median(R_I),df_state.shape[0]))
+        state_Rs['upper'].extend(np.repeat(np.percentile(R_I,75),df_state.shape[0]))
+        state_Rs['top'].extend(np.repeat(np.percentile(R_I,95),df_state.shape[0]))
+        state_Rs['bottom'].extend(np.repeat(np.percentile(R_I,5),df_state.shape[0]))
+        state_Rs['mean'].extend(np.repeat(np.mean(R_I),df_state.shape[0]))
+        state_Rs['std'].extend(np.repeat(np.std(R_I),df_state.shape[0]))
+        
+    df_Rhats = pd.DataFrame().from_dict(state_Rs)
+    df_Rhats = df_Rhats.set_index(['state','date','type'])
+
+    d = pd.DataFrame()
+    for state in states:
+        for i,typ in enumerate(forecast_type):
+            if i==0:
+                t = pd.DataFrame.from_dict(typ_state_R[typ][state])
+                t['date'] = dd.values
+                t['state'] = state
+                t['type'] = typ
+            else:
+                temp = pd.DataFrame.from_dict(typ_state_R[typ][state])
+                temp['date'] = dd.values
+                temp['state'] = state
+                temp['type'] = typ
+                t = t.append(temp)   
+        #R_I
+        i = pd.DataFrame(np.tile(samples['R_I'].values,(len(dd.values),100)))
+        i['date'] = dd.values
+        i['type'] = 'R_I'
+        i['state'] = state
+
+        t = t.append(i)
+            
+        d = d.append(t)
+            
+            #df_Rhats = df_Rhats.loc[(df_Rhats.state==state)&(df_Rhats.type=='R_L')].join( t)
+
+    d = d.set_index(['state','date','type'])
+    df_Rhats = df_Rhats.join(d)
+    df_Rhats = df_Rhats.reset_index()
+    df_Rhats.state = df_Rhats.state.astype(str)
+    df_Rhats.type = df_Rhats.type.astype(str)        
+    
+    fig, ax = plt.subplots(figsize=(12,9), nrows=4,ncols=2,sharex=True, sharey=True)
+
+    plt.locator_params(axis='x',nbins=2)
+    for i,state in enumerate(plot_states):
+        
+        row = i//2
+        col = i%2
+        
+        plot_df = df_Rhats.loc[(df_Rhats.state==state)& (df_Rhats.type=='R_L')]
+        
+        ax[row,col].plot(plot_df.date, plot_df['median'])
+        
+        ax[row,col].fill_between( plot_df.date, plot_df['lower'],plot_df['upper'],alpha=0.4,color='C0')
+        ax[row,col].fill_between( plot_df.date, plot_df['bottom'],plot_df['top'],alpha=0.4,color='C0')
+        
+        ax[row,col].tick_params('x',rotation=20)
+        ax[row,col].xaxis.set_major_locator(plt.MaxNLocator(4))
+        ax[row,col].set_title(state)
+        ax[row,col].set_yticks([1],minor=True,)
+        ax[row,col].set_yticks([0,2,3],minor=False)
+        ax[row,col].set_yticklabels([0,2,3],minor=False)
+        ax[row,col].yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
+        ax[row,col].set_ylim((0,3))
+        
+        ax[row,col].set_xticks([plot_df.date.values[-n_forecast]],minor=True,)
+        ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
+    #fig.autofmt_xdate()
+    plt.savefig("figs/soc_mob_R_L_hats"+data_date.strftime('%m-%d')+".png",dpi=102)
+
+    df_Rhats = df_Rhats[['state','date','type','median',
+    'bottom','lower','upper','top']+[i for i in range(1000)] ]
+    #df_Rhats.columns = ['state','date','type','median',
+    #'bottom','lower','upper','top']  + [i for i in range(1000)]
+
+
+
+    df_hdf = df_Rhats.loc[df_Rhats.type=='R_L']
+    df_hdf = df_hdf.append(df_Rhats.loc[(df_Rhats.type=='R_I')&(df_Rhats.date=='2020-03-01')])
+    df_hdf = df_hdf.append(df_Rhats.loc[(df_Rhats.type=='R_L0')&(df_Rhats.date=='2020-03-01')])
+    #df_Rhats.to_csv('./soc_mob_R'+today+'.csv')
+    df_hdf.to_hdf('data/soc_mob_R'+data_date.strftime('%Y-%m-%d')+'.h5',key='Reff')

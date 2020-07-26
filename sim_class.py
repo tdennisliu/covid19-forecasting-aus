@@ -26,7 +26,8 @@ class Forecast:
         Reff=2.2,k=0.1,alpha_i=1,gam_list=[0.8],qi_list=[1], qa_list=[1/8], qs_list=[0.8],
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
         forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
-        ps_list=[0.7], test_campaign_date=None, test_campaign_factor=1
+        ps_list=[0.7], test_campaign_date=None, test_campaign_factor=1,
+        Reff_file_date=None,
         ):
         import numpy as np
         self.initial_state = current.copy() #Observed cases on start day
@@ -57,6 +58,7 @@ class Forecast:
         self.forecast_date = pd.to_datetime(
             forecast_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
 
+        self.Reff_file_date = Reff_file_date
         self.cross_border_state = cross_border_state
         self.cases_file_date = cases_file_date
 
@@ -312,7 +314,16 @@ class Forecast:
         
 
         if self.forecast_R is not None:
-            df_forecast = pd.read_hdf(self.datapath+'soc_mob_R2020-07-20.h5',
+            if self.Reff_file_date is None:
+                import glob, os
+
+                list_of_files = glob.glob(self.datapath+'soc_mob_R*.h5') 
+                latest_file = max(list_of_files, key=os.path.getctime)
+                print("Using file "+latest_file)
+                df_forecast = pd.read_hdf(latest_file,
+            key='Reff')
+            else:
+                df_forecast = pd.read_hdf(self.datapath+'soc_mob_R'+self.Reff_file_date+'.h5',
             key='Reff')
             num_days = df_forecast.loc[
                 (df_forecast.type=='R_L')&(df_forecast.state==self.state)].shape[0]
@@ -1102,12 +1113,26 @@ class Forecast:
         """
         import pandas as pd
         from datetime import timedelta
-        df= pd.read_excel(self.datapath+"COVID-19 UoM "+self.cases_file_date[0
-        ]+"2020 "+self.cases_file_date[1]+".xlsx",
-        parse_dates=['TRUE_ONSET_DATE',
-        'NOTIFICATION_DATE'],
-        dtype={'PLACE_OF_ACQUISITION':str})
+        import glob
+        
+        if self.cases_file_date is None:
+            import glob, os
 
+            list_of_files = glob.glob(self.datapath+'COVID-19 UoM*.xlsx') 
+            path = max(list_of_files, key=os.path.getctime)
+            print("Using file "+path)
+        else:
+            path = self.datapath+"COVID-19 UoM "+self.cases_file_date+"*.xlsx"
+
+        for file in glob.glob(path):
+            df = pd.read_excel(file,
+                       parse_dates=['SPECIMEN_DATE','NOTIFICATION_DATE','NOTIFICATION_RECEIVE_DATE','TRUE_ONSET_DATE'],
+                       dtype= {'PLACE_OF_ACQUISITION':str})
+        if len(glob.glob(path))!=1:
+            print("There are %i files with the same date" %len(glob.glob(path)))
+        
+            if len(glob.glob(path)) >1:
+                print("Using an arbritary file")
         df = df.loc[df.STATE==self.state]
 
         #Set imported cases, local cases have 1101 as first 4 digits

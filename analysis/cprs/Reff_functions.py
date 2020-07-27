@@ -133,7 +133,7 @@ def read_AddInsight():
             df_json1['date'] = date
             df_json = df_json.append(df_json1, ignore_index=True)
             jsons_list.append(df_json1)
-#            except:
+    #            except:
             #    print(date,"data for this day is not downloaded")
                # continue
     df_json['date'] = df_json.date.apply(lambda x: pd.to_datetime(x.replace('_','').replace('T','+'), format='%Y%m%d%z'))

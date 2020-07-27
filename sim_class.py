@@ -83,15 +83,15 @@ class Forecast:
                 3:31*1.3,
                 4:17,
                 5:15,
-                6:6,
+                6:3,
             },
             'NSW': {
                 1: 90,
-                2: 407,
+                2: 408,
                 3: 694*1.3,
                 4: 380,
-                5: 314,
-                6: 256,
+                5: 312,
+                6: 276,
             },
             'NT': {
                 1: 3,
@@ -107,7 +107,7 @@ class Forecast:
                 3:305*1.3,
                 4:162,
                 5:87,
-                6:21,
+                6:25,
             },
             'SA': {
                 1:13,
@@ -136,10 +136,10 @@ class Forecast:
             'WA': {
                 1:15,
                 2:73,
-                3:153*1.3,
+                3:154*1.3,
                 4:115,
                 5:110,
-                6:74
+                6:78
             },
         }
         #changes below also need to be changed in simulate
@@ -149,7 +149,7 @@ class Forecast:
             3: 5.2,
             4: 5.2,
             5: 22.2,
-            6: 138.2 ## this needs to change for
+            6: 145.2 ## this needs to change for
                     # each change in forecast date
         }
 
@@ -159,7 +159,7 @@ class Forecast:
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
-    def generate_times(self,  i=3, j=1, m=3, n=1, size=10000):
+    def generate_times(self,  i=2.5, j=1, m=2, n=1, size=10000):
         """
         Generate large amount of gamma draws to save on simulation time later
         """

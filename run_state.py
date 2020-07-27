@@ -40,22 +40,22 @@ abc =False
 
 
 local_detection = {
-            'NSW':0.85,#0.556,#0.65,
+            'NSW':0.8,#0.556,#0.65,
             'QLD':0.9,#0.353,#0.493,#0.74,
             'SA':0.7,#0.597,#0.75,
             'TAS':0.4,#0.598,#0.48,
-            'VIC':0.7,#0.558,#0.77,
+            'VIC':0.55,#0.558,#0.77,
             'WA':0.7,#0.409,#0.509,#0.66,
             'ACT':0.95,#0.557,#0.65,
             'NT':0.95,#0.555,#0.71
         }
 
 a_local_detection = {
-            'NSW':0.25,#0.556,#0.65,
+            'NSW':0.05,#0.556,#0.65,
             'QLD':0.05,#0.353,#0.493,#0.74,
             'SA':0.05,#0.597,#0.75,
-            'TAS':0.15,#0.598,#0.48,
-            'VIC':0.23,#0.558,#0.77,
+            'TAS':0.05,#0.598,#0.48,
+            'VIC':0.05,#0.558,#0.77,
             'WA':0.05,#0.409,#0.509,#0.66,
             'ACT':0.7,#0.557,#0.65,
             'NT':0.7,#0.555,#0.71
@@ -106,7 +106,7 @@ for state in states:
         qs_prior = [local_detection[state]]
         qa_prior = [a_local_detection[state]]
         gam =[1/2]
-        ps_prior = 0.8
+        ps_prior = 0.4
         ps_prior= [ps_prior]
 
     for i,cat in enumerate(initial_people):
@@ -127,7 +127,7 @@ for state in states:
     elif state in ['NSW']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.5, k =0.1,gam_list=gam,
+        alpha_i= 0.1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,

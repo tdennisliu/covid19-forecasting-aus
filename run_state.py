@@ -106,7 +106,7 @@ for state in states:
         qs_prior = [local_detection[state]]
         qa_prior = [a_local_detection[state]]
         gam =[1/2]
-        ps_prior = 0.4
+        ps_prior = 0.7
         ps_prior= [ps_prior]
 
     for i,cat in enumerate(initial_people):

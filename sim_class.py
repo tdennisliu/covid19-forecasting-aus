@@ -697,25 +697,29 @@ class Forecast:
         reinitialising_window = 0
         self.daycount= 0
         while len(self.infected_queue)>0:
-
-            if self.infected_queue[0]> self.max_cases:
-                #had 1 mill cases, stop sim, but not bad sim
-                print("Sim "+str(self.num_of_sim
-                )+" in "+self.state+" has >"+str(self.max_cases)+" cases, ending")
-                self.num_too_many+=1
-                day_end = self.people[self.infected_queue[0]].infection_time
-                if day_end > self.forecast_date:
-                    #hold vlaue forever
+            day_end = self.people[self.infected_queue[0]].infection_time
+            if day_end < self.forecast_date:
+                if self.infected_queue[0]> self.max_backcast_cases:
+                    print("Sim "+str(self.num_of_sim
+                    )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
+                    self.num_too_many+=1
+                    self.bad_sim = True
+                    break
+            else:
+                #check max cases for after forecast date
+                if self.infected_queue[0]>self.max_cases:
+                    #hold value forever
                     if day_end < self.cases.shape[0]-1:
                         self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-1,2]
 
                         self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-1,2]
                     else:
                         self.cases_after +=1
-                else:
-                    #if before forecast date, then make bad_sim and throw out.
-                    self.bad_sim = True
-                break
+                
+                    print("Sim "+str(self.num_of_sim
+                        )+" in "+self.state+" has >"+str(self.max_cases)+" cases in forecast period.")
+                    self.num_too_many+=1
+                    break
 
             
             ## stop if parent infection time greater than end time
@@ -806,16 +810,27 @@ class Forecast:
                 #Each check of day needs to simulate the cases before moving
                 # to next check, otherwise will be doubling up on undetecteds
                 while len(self.infected_queue)>0:
-                    if self.infected_queue[0]> self.max_cases:
-                        #had 1 mill cases, stop sim, but not bad sim
-                        #print("Sim "+str(self.num_of_sim)+" has >500k cases, ending")
-                        
-                        day_end = self.people[self.infected_queue[0]].infection_time
-                        self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-1,2]
+                    day_end = self.people[self.infected_queue[0]].infection_time
+                    
+                    #check for exceeding max_cases
+                    if day_end <self.forecast_date:
+                        if day_end > self.max_backcast_cases:
+                            print("Sim "+str(self.num_of_sim
+                            )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
+                            self.num_too_many+=1
+                            self.bad_sim = True
+                            break
+                    else:
+                        if self.infected_queue[0]> self.max_cases:
+                            
+                            day_end = self.people[self.infected_queue[0]].infection_time
+                            self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-1,2]
 
-                        self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-1,2]
-
-                        break
+                            self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-1,2]
+                            print("Sim "+str(self.num_of_sim
+                                )+" in "+self.state+" has >"+str(self.max_cases)+" cases in forecast period.")
+                            self.num_too_many+=1
+                            break
                     ## stop if parent infection time greater than end time
                     if self.people[self.infected_queue[0]].infection_time >end_time:
                         personkey =self.infected_queue.popleft()
@@ -842,6 +857,11 @@ class Forecast:
                         parent_key = self.infected_queue.popleft()
                         self.generate_new_cases(parent_key,Reff=Reff,k=self.k)
                         #missed_outbreak = max(1,missed_outbreak*0.9)
+                else:
+                    #pass in here if while queue loop completes 
+                    continue
+                #only reach here if while loop breaks, so break the data check
+                break
         self.people.clear()
         gc.collect()
         if self.bad_sim:
@@ -1153,9 +1173,9 @@ class Forecast:
         df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
         df = df.sort_values(by='date')
 
-        #Set max_cases to 100 times total cases
-        self.max_cases = min(100000,5*sum(df.local.values + df.imported.values))
-        self.max_cases = max(self.max_cases, 10000)
+        self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
+        self.max_backcast_cases = max(1000,1.5*sum(df.local.values) + sum(df.imported.values))
+        #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time
         df = df.reindex(range(self.end_time), fill_value=0)

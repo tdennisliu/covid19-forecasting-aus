@@ -29,7 +29,7 @@ else:
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 XBstate = None
 start_date = '2020-03-01'
-case_file_date = '24Jul'
+case_file_date = None #'24Jul'
 Reff_file_date = '2020-07-27'
 forecast_date = '2020-07-27'
 test_campaign_date = '2020-06-25'
@@ -106,7 +106,7 @@ for state in states:
         qs_prior = [local_detection[state]]
         qa_prior = [a_local_detection[state]]
         gam =[1/2]
-        ps_prior = 0.7
+        ps_prior = 0.8
         ps_prior= [ps_prior]
 
     for i,cat in enumerate(initial_people):

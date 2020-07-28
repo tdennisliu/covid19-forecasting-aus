@@ -654,6 +654,8 @@ class Forecast:
                     #unobserved people
                     new_person = Person(0,day,0,0,'I')
                     self.people[len(self.people)] = new_person
+                    if day <= end_time:
+                        self.cases[max(0,day-1), 0] +=1
          #####
 
         #Create queue for infected people

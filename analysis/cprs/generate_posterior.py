@@ -208,8 +208,9 @@ fit = sm_pol_gamma.sampling(
     #control={'max_treedepth':15}
 )
 
-
-print(fit.stansummary(pars=['bet','R_I','R_L','theta_md']))
+filename = "stan_posterior_fit" + data_date.strftime("%Y-%m-%d") + ".txt"
+with open("../data/"+filename, 'w') as f:
+    print(fit.stansummary(pars=['bet','R_I','R_L','theta_md']), file=f)
 samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','brho','theta_md'])
 
 var_to_csv = predictors

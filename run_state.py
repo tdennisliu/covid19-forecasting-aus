@@ -98,8 +98,8 @@ for state in states:
         #qi_prior = [qi_d[state]]
         #qs_prior = [local_detection[state]]
         #qa_prior = [a_local_detection[state]]
-        gam =beta(1.2,1.2,size=10000)#np.maximum(0.1,np.minimum(2,gamma(4,0.25, size=1000)))
-        ps_prior = beta(2,2,size=10000)
+        gam =0.1 + beta(2,2,size=10000) *0.9 #np.minimum(3,gamma(4,0.25, size=1000))
+        ps_prior = 0.1+beta(2,2,size=10000)*0.9
 
     else:
         qi_prior = [qi_d[state]]
@@ -113,7 +113,7 @@ for state in states:
         people[i] = Person(0,0,0,0,cat)
     
     if state in ['VIC']:
-        XBstate = 'SA'
+        #XBstate = 'SA'
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
         alpha_i= 1, k =0.1,gam_list=gam,

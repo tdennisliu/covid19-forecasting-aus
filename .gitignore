@@ -2,7 +2,7 @@
 *.xlsx
 /data/md/*
 /data/Dennis*/*
-/data/LSHTM_Reff_estimates/*
+/data/LSHTM_Reff_estimates/*/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -18,6 +18,4 @@ states=("NSW" "VIC" "SA" "QLD" "TAS" "WA" "ACT" "NT")
 
 python run_state.py $1 $2 $3 ${states[$SLURM_ARRAY_TASK_ID]} $4 p
 
-python collate_states.py $1 $2 $3
-
 deactivate

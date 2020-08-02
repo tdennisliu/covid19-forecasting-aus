@@ -712,9 +712,9 @@ class Forecast:
                 if self.infected_queue[0]>self.max_cases:
                     #hold value forever
                     if day_end < self.cases.shape[0]-1:
-                        self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-1,2]
+                        self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-2,2]
 
-                        self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-1,2]
+                        self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-2,2]
                     else:
                         self.cases_after +=1
                 
@@ -826,9 +826,9 @@ class Forecast:
                         if self.infected_queue[0]> self.max_cases:
                             
                             day_end = self.people[self.infected_queue[0]].infection_time
-                            self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-1,2]
+                            self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-2,2]
 
-                            self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-1,2]
+                            self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-2,2]
                             print("Sim "+str(self.num_of_sim
                                 )+" in "+self.state+" has >"+str(self.max_cases)+" cases in forecast period.")
                             self.num_too_many+=1
@@ -868,7 +868,7 @@ class Forecast:
         gc.collect()
         if self.bad_sim:
             #return NaN arrays for all bad_sims
-            self.metric = 0
+            self.metric = np.nan
             self.cumulative_cases = np.empty_like(self.cases)
             self.cumulative_cases[:] = np.nan
             return (self.cumulative_cases,self.cumulative_cases, {

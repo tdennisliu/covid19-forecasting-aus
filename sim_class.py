@@ -1176,6 +1176,7 @@ class Forecast:
         if self.state=='VIC':
             #data quality issue
             df.loc[df.date_inferred=='2002-07-03','date_inferred'] = pd.to_datetime('2020-07-03')
+            df.loc[df.date_inferred=='2002-07-17','date_inferred'] = pd.to_datetime('2020-07-17')
         df = df.groupby(['date_inferred'])[['imported','local']].sum()
         df.reset_index(inplace=True)
         df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear

@@ -159,7 +159,7 @@ class Forecast:
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
-    def generate_times(self,  i=2.5, j=1, m=2, n=1, size=10000):
+    def generate_times(self,  i=2.5, j=1.25, m=1.2, n=1, size=10000):
         """
         Generate large amount of gamma draws to save on simulation time later
         """
@@ -215,6 +215,10 @@ class Forecast:
             self.generate_times(size=10000)
             self.get_inf_time = self.iter_inf_time()
             self.get_detect_time = self.iter_detect_time()
+
+            #counters for terminating early
+            self.inf_backcast_counter = 0
+            self.inf_forecast_counter = 0
 
             #assign infection time to those discovered
             # obs time is day =0
@@ -435,6 +439,7 @@ class Forecast:
                 
                 inf_time = self.people[parent_key].infection_time + next(self.get_inf_time)
                 if inf_time > self.forecast_date:
+                    self.inf_forecast_counter +=1
                     if travel:
                         if self.cross_border_state is not None:
                         #check if SA person
@@ -466,6 +471,8 @@ class Forecast:
                                 else:
                                     #cross border seed happened after forecast
                                     self.travel_cases_after +=1
+                else:
+                    self.inf_backcast_counter +=1
                 #normal case within state
                 if self.people[parent_key].category=='A':
                     child_times.append(ceil(inf_time))
@@ -475,7 +482,7 @@ class Forecast:
                 else:
                     #within forecast time
                     detection_rv = random()
-                    detect_time = 0 #give 0 by default, fill in if passes
+                    detect_time = inf_time + next(self.get_detect_time)
                         
                     recovery_time = 0 #for now not tracking recoveries
                     
@@ -494,14 +501,14 @@ class Forecast:
                             detect_prob = self.qs
                         if detection_rv < detect_prob:
                             #case detected
-                            detect_time = inf_time + next(self.get_detect_time)
+                            
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),2] += 1
 
                     else:
                         category = 'A'
                         self.cases[max(0,ceil(inf_time)-1),1] += 1
-                        detect_time = 0
+                        #detect_time = 0
                         if self.test_campaign_date is not None:
                         #see if case is during a testing campaign
                             if inf_time <self.test_campaign_date:
@@ -512,7 +519,7 @@ class Forecast:
                             detect_prob=self.qa
                         if detection_rv < detect_prob:
                             #case detected
-                            detect_time = inf_time + next(self.get_detect_time)
+                            #detect_time = inf_time + next(self.get_detect_time)
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),1] += 1
 
@@ -701,7 +708,7 @@ class Forecast:
         while len(self.infected_queue)>0:
             day_end = self.people[self.infected_queue[0]].infection_time
             if day_end < self.forecast_date:
-                if self.infected_queue[0]> self.max_backcast_cases:
+                if self.inf_backcast_counter> self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                     self.num_too_many+=1
@@ -709,7 +716,7 @@ class Forecast:
                     break
             else:
                 #check max cases for after forecast date
-                if self.infected_queue[0]>self.max_cases:
+                if self.inf_forecast_counter>self.max_cases:
                     #hold value forever
                     if day_end < self.cases.shape[0]-1:
                         self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-2,2]
@@ -816,16 +823,15 @@ class Forecast:
                     
                     #check for exceeding max_cases
                     if day_end <self.forecast_date:
-                        if day_end > self.max_backcast_cases:
+                        if self.inf_backcast_counter > self.max_backcast_cases:
                             print("Sim "+str(self.num_of_sim
                             )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                             self.num_too_many+=1
                             self.bad_sim = True
                             break
                     else:
-                        if self.infected_queue[0]> self.max_cases:
+                        if self.inf_forecast_counter> self.max_cases:
                             
-                            day_end = self.people[self.infected_queue[0]].infection_time
                             self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-2,2]
 
                             self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-2,2]
@@ -1176,7 +1182,7 @@ class Forecast:
         df = df.sort_values(by='date')
 
         self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = max(1000,1.5*sum(df.local.values) + sum(df.imported.values))
+        self.max_backcast_cases = max(100,4*sum(df.local.values) + sum(df.imported.values))
         #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time

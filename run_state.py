@@ -30,7 +30,7 @@ else:
 XBstate = None
 start_date = '2020-03-01'
 case_file_date = None #'24Jul'
-Reff_file_date = '2020-07-31'
+Reff_file_date = None
 forecast_date = '2020-07-31'
 test_campaign_date = '2020-06-25'
 test_campaign_factor = 1.25

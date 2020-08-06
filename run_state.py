@@ -127,7 +127,7 @@ for state in states:
     elif state in ['NSW']:
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 0.1, k =0.1,gam_list=gam,
+        alpha_i= 1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,

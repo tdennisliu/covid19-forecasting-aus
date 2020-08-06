@@ -133,3 +133,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#Random system files
+.DS_Store
+
+# R project stuff:
+.Rproj.user

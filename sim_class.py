@@ -164,8 +164,8 @@ class Forecast:
         Generate large amount of gamma draws to save on simulation time later
         """
 
-        self.inf_times = 1 + np.random.gamma(i/j, j, size =size) #shape and scale
-        self.detect_times = 1 + np.random.gamma(m/n,n, size = size)
+        self.inf_times =  1+ np.random.gamma(i/j, j, size =size) #shape and scale
+        self.detect_times = 1+  np.random.gamma(m/n,n, size = size)
 
         return None
     
@@ -703,7 +703,7 @@ class Forecast:
         # of infecteds
         n_resim = 0
         self.bad_sim = False
-        reinitialising_window = 0
+        reinitialising_window = 3
         self.daycount= 0
         while len(self.infected_queue)>0:
             day_end = self.people[self.infected_queue[0]].infection_time
@@ -762,7 +762,7 @@ class Forecast:
         #self.people.clear()
         if self.bad_sim ==False:
             #Check simulation for discrepancies
-            for day in range(end_time):
+            for day in range(7,end_time):
                 #each day runs through self.infected_queue
             
                 missed_outbreak = self.data_check(day) #True or False
@@ -1087,6 +1087,14 @@ class Forecast:
             if  actual_3_day_total > threshold:
                 return min(3,actual_3_day_total/threshold)
             else:
+                #long absence, then a case, reintroduce
+                week_in_sim = sum(self.observed_cases[
+                    max(0,day-7):day+1,2] + self.observed_cases[
+                        max(0,day-7):day+1,1])
+                if week_in_sim == 0:
+                    if actual_3_day_total >0:
+                        return actual_3_day_total
+                
                 #no outbreak missed
                 return False
 

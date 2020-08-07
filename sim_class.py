@@ -679,20 +679,9 @@ class Forecast:
                     #imports shouldn't count for extinction counts
                     self.cases_after +=1
                     print("cases after at initialisation")
-            else:
-                if person.category=='S':
-                    self.cases[max(0,ceil(person.infection_time)),2] +=1
-                    if (person.detection_time < end_time) & (person.detection_time!=0):
-                        self.observed_cases[max(0,ceil(person.detection_time)), 2] +=1
-                elif person.category=='I':
-                    #Imports recorded on creation in sim
-                    continue
-                elif person.category=='A':
-                    self.cases[max(0,ceil(person.infection_time)),1] +=1
-                    if (person.detection_time < end_time) & (person.detection_time!=0):
-                        self.observed_cases[max(0,ceil(person.detection_time)), 1] +=1
-                else:
-                    print("ERROR: not right category")
+            
+            #Cases already recorded at initialise_sim() by addding to
+            # self.current
 
         #Record initial inferred obs including importations.
         self.inferred_initial_obs = self.observed_cases[0,:].copy() 

@@ -14,14 +14,14 @@ df_google_all = read_in_google(Aus_only=True,moving=True,local=True)
 states = ['NSW','QLD','SA','VIC','TAS','WA','ACT','NT']#,'AUS']
 plot_states = states.copy()
 #plot_states.remove('AUS')
-df_samples = read_in_posterior(date = '2020-07-18')
+df_samples = read_in_posterior(date = '2020-07-30')
 
 ## grab survey data
 
 surveys = pd.read_csv("data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
 surveys = surveys.append(pd.read_csv("data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
 
-for i in range(12,16):
+for i in range(12,19):
     surveys = surveys.append(pd.read_csv("data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
 
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
@@ -54,8 +54,8 @@ survey_X = pd.pivot_table(data=always,
 prop_all = survey_X
 
 ###Create dates
-cprs_start_date = pd.to_datetime('2020-04-01')
-cprs_end_date = pd.to_datetime('2020-07-22')
+cprs_start_date = pd.to_datetime('2020-08-17')#2020-04-01')
+cprs_end_date = pd.to_datetime('2020-08-17')#'2020-07-22')
 
 cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
@@ -74,14 +74,14 @@ for data_date in cprs_dates:
     #forecast time parameters
     n_training =28
     today = data_date.strftime('%Y-%m-%d')
-    n_forecast = 28
+    n_forecast = 42
 
     #cap = 0 #10?
     training_start_date = datetime(2020,3,1,0,0)
     print("Forecast ends at {} days after 1st March".format(
-        pd.to_datetime(today).dayofyear + 28 - pd.to_datetime(training_start_date).dayofyear)
+        pd.to_datetime(today).dayofyear + n_forecast - pd.to_datetime(training_start_date).dayofyear)
         )
-    print("Final date is {}".format(pd.to_datetime(today) + timedelta(days=28)))
+    print("Final date is {}".format(pd.to_datetime(today) + timedelta(days=n_forecast)))
     df_google = df_google.loc[df_google.date>= training_start_date]
     outdata = {'date': [],
             'type': [],

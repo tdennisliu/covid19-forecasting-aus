@@ -6,6 +6,14 @@ import seaborn as sns
 from Reff_constants import *
 plt.style.use('seaborn-poster')
 
+def read_in_posterior(date='2020-07-30'):
+    """
+    read in samples from posterior from inference
+    """
+    df = pd.read_hdf("data/soc_mob_posterior"+date+".h5", key='samples')
+    
+    return df
+
 def read_in_google(Aus_only=True,local=False,moving=False):
     """
     Read in the Google data set
@@ -14,7 +22,7 @@ def read_in_google(Aus_only=True,local=False,moving=False):
         if type(local)==str:
             df = pd.read_csv(local,parse_dates=['date'])
         elif type(local)==bool:
-            local = '../data/Global_Mobility_Report.csv'
+            local = 'data/Global_Mobility_Report.csv'
             df = pd.read_csv(local,parse_dates=['date'])
     else:
         df = pd.read_csv('https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv',parse_dates=['date'])
@@ -24,7 +32,7 @@ def read_in_google(Aus_only=True,local=False,moving=False):
         df = df.loc[df.country_region_code=='AU']
         #Change state column to state initials
         df['state'] = df.sub_region_1.map(lambda x: states_initials[x] if not pd.isna(x) else 'AUS' )
-
+    df = df.loc[df.sub_region_2.isna()]
     if moving:
         # generate moving average columns in reverse
         df = df.sort_values(by='date')
@@ -370,7 +378,7 @@ def read_in_cases(case_file_date='29Jun'):
     from datetime import timedelta
     import glob
     
-    path = "../data/COVID-19 UoM "+case_file_date+" *.xlsx"
+    path = "data/COVID-19 UoM "+case_file_date+" *.xlsx"
     for file in glob.glob(path):
         df_NNDSS = pd.read_excel(file,
                        parse_dates=['SPECIMEN_DATE','NOTIFICATION_DATE','NOTIFICATION_RECEIVE_DATE','TRUE_ONSET_DATE'],

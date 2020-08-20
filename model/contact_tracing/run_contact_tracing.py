@@ -13,8 +13,40 @@ case_file_date = None #'24Jul'
 #Reff_file_date = '2020-07-20'
 Reff_file_date = '2020-08-06'
 #Number of initial symptomatic and asymptomatic cases respectively
-initial_cases = [10,0]
+initial_cases = [2,0]
 
+local_detection = {
+            'NSW':0.5, #0.8 #0.2 #0.556,#0.65,
+            'QLD':0.9,#0.353,#0.493,#0.74,
+            'SA':0.7,#0.597,#0.75,
+            'TAS':0.4,#0.598,#0.48,
+            'VIC':0.55,#0.558,#0.77,
+            'WA':0.7,#0.409,#0.509,#0.66,
+            'ACT':0.95,#0.557,#0.65,
+            'NT':0.95,#0.555,#0.71
+        }
+
+a_local_detection = {
+            'NSW':0.1,#0.556,#0.65,
+            'QLD':0.05,#0.353,#0.493,#0.74,
+            'SA':0.05,#0.597,#0.75,
+            'TAS':0.05,#0.598,#0.48,
+            'VIC':0.05,#0.558,#0.77,
+            'WA':0.05,#0.409,#0.509,#0.66,
+            'ACT':0.7,#0.557,#0.65,
+            'NT':0.7,#0.555,#0.71
+        }
+
+qi_d = {
+            'NSW':0.95,#0.758,
+            'QLD':0.95,#0.801,
+            'SA':0.95,#0.792,
+            'TAS':0.95,#0.800,
+            'VIC':0.95,#0.735,
+            'WA':0.95,#0.792,
+            'ACT':0.95,#0.771,
+            'NT':0.95,#0.761
+    }      
 # Laura
 # sets the seed for only the `action_time’ for the initial cases, 
 # and so all simulations will start with the same initial cases and the same time to action
@@ -81,9 +113,6 @@ t_a_scale = 2
 for i,cat in enumerate(initial_people):
     people[i] = Person(0,0,0,1,cat, action_time = gamma(t_a_shape,t_a_scale))
     
-    
-
-
 #create forecast object    
 if state in ['VIC']:
     #XBstate = 'SA'
@@ -153,7 +182,7 @@ Model.read_in_cases()
 N=1
 p_c=1.0
 DAYS = 2
-Model.simulate(time_end,1,N)
+Model.simulate(time_end,1,N, DAYS=DAYS, p_c =p_c)
 
 
 # Simulation study for delay time
@@ -167,7 +196,7 @@ DAYS = 3
 p_c = 1
 pc_100_day_N3 = []
 for N in range(0, n):
-    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N)
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N, DAYS=DAYS, p_c=p_c)
     
     #v = list(x)[2]
     #v2 = v.values()
@@ -182,4 +211,4 @@ for N in range(0, n):
         print("Timeline of Cases:\n", cases_array)
         print("Length of People (CasesTotal): %i " % CasesTotal)
 
-print('Completed Days = -3 , p = 1.0')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))

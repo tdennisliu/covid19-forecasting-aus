@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import nbinom, erlang, beta, binom, gamma, poisson, beta
+from scipy.stats import nbinom, erlang, beta, binom, poisson, beta
 import matplotlib.pyplot as plt
 import os
 class Person:
@@ -160,7 +160,7 @@ class Forecast:
         }
 
         dir_path = os.getcwd()
-        self.datapath = os.path.join(dir_path,'../data/')
+        self.datapath = os.path.join(dir_path,'data/')
 
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
@@ -262,11 +262,14 @@ class Forecast:
         else:
             num_undetected_s = nbinom.rvs(self.current[2],self.qs*self.qua_qs_factor)
         
-        if self.current[0]==0:
-            num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
-        else:
-            num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
+        ## Laura ,skip this for contact tracing
+        #if self.current[0]==0:
+        #    num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
+        #else:
+        #    num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
+        num_undetected_i = 0
 
+        ######
         total_s = num_undetected_s + self.current[2]
 
         #infer some non detected asymp at initialisation
@@ -415,9 +418,9 @@ class Forecast:
         """
         
         from math import ceil
-        from numpy.random import random
+        from numpy.random import random, gamma
 
-    #check parent category   
+        #check parent category   
         if self.people[parent_key].category=='S':
             num_offspring = nbinom.rvs(n=k,p= 1- self.alpha_s*Reff/(self.alpha_s*Reff + k))
         elif self.people[parent_key].category=='A':
@@ -518,7 +521,7 @@ class Forecast:
                             # Laura
                             # if parent is undetected, assign a new time to action 
                             if self.people[parent_key].detected==0:
-                                action_time = detect_time + gamma(t_a_shape,t_a_scale)
+                                action_time = detect_time + gamma(self.t_a_shape,self.t_a_scale)
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),2] += 1
 
@@ -544,7 +547,7 @@ class Forecast:
                             # action_time = self.people[parent_key].detection_time + 
                             # 2* draw from distrubtion
                             if self.people[parent_key].detected==0:
-                                action_time = detect_time + 2*gamma(t_a_shape,t_a_scale)
+                                action_time = detect_time + 2*gamma(self.t_a_shape,self.t_a_scale)
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),1] += 1
 
@@ -553,25 +556,26 @@ class Forecast:
                     # contact trace 2=1 day before parent's detection time
                     if self.people[parent_key].detected==1:
                         #only check contact tracing if parent was detected
-                        
-                        if inf_time < self.people[parent_key].detection_time - DAYS:
+
+                        if inf_time < self.people[parent_key].detection_time - self.DAYS:
                             
                             self.infected_queue.append(len(self.people))
                             
                         #elif  (self.people[parent_key].detection_time - DAYS) < inf_time < (self.people[parent_key].action_time):
                         # elif ((self.people[parent_key].detection_time - DAYS) < inf_time) and (inf_time < (self.people[parent_key].action_time)):   
-                        elif inf_time < (self.people[parent_key].action_time):   
+                        elif inf_time < self.people[parent_key].action_time:   
                             
                             x_rn = random()
-                            if x_rn <= p_c:
-                        
+                            if x_rn <= self.p_c:
+                                #case caught in contact tracing
+                                #inherit action time
                                 action_time = self.people[parent_key].action_time
                                 self.infected_queue.append(len(self.people))
                             
                         # else assign new time to action.
                         # need to add if de
                             else:
-                                action_time = inf_time + gamma(t_a_shape,t_a_scale)
+                                action_time = inf_time + gamma(self.t_a_shape,self.t_a_scale)
                                 self.infected_queue.append(len(self.people))
                                 
                     else:
@@ -650,7 +654,7 @@ class Forecast:
         else:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
-    def simulate(self, end_time,sim,seed):
+    def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8, t_a_shape = 3/2, t_a_scale=2 ):
         """
         Simulate forward until end_time
         """
@@ -659,6 +663,12 @@ class Forecast:
         import gc
         np.random.seed(seed)
         self.num_of_sim = sim
+
+        self.DAYS = DAYS
+        self.p_c = p_c
+        self.t_a_shape = t_a_shape
+        self.t_a_scale = t_a_scale
+
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)
@@ -981,7 +991,7 @@ class Forecast:
                 'ps':self.ps,
                 'bad_sim':self.bad_sim,
                 # Laura add
-                'Model_people':len(Model.people),
+                'Model_people':len(self.people),
                 'cases_after':self.cases_after,
                 'travel_seeds': self.cross_border_seeds[:,self.num_of_sim],
                 'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases[:,self.num_of_sim],
@@ -1483,36 +1493,3 @@ class Forecast:
         self.people.clear()
         gc.collect()
         self.people = people
-
-local_detection = {
-            'NSW':0.2, #0.8 #0.2 #0.556,#0.65,
-            'QLD':0.9,#0.353,#0.493,#0.74,
-            'SA':0.7,#0.597,#0.75,
-            'TAS':0.4,#0.598,#0.48,
-            'VIC':0.55,#0.558,#0.77,
-            'WA':0.7,#0.409,#0.509,#0.66,
-            'ACT':0.95,#0.557,#0.65,
-            'NT':0.95,#0.555,#0.71
-        }
-
-a_local_detection = {
-            'NSW':0.05,#0.556,#0.65,
-            'QLD':0.05,#0.353,#0.493,#0.74,
-            'SA':0.05,#0.597,#0.75,
-            'TAS':0.05,#0.598,#0.48,
-            'VIC':0.05,#0.558,#0.77,
-            'WA':0.05,#0.409,#0.509,#0.66,
-            'ACT':0.7,#0.557,#0.65,
-            'NT':0.7,#0.555,#0.71
-        }
-
-qi_d = {
-            'NSW':0.95,#0.758,
-            'QLD':0.95,#0.801,
-            'SA':0.95,#0.792,
-            'TAS':0.95,#0.800,
-            'VIC':0.95,#0.735,
-            'WA':0.95,#0.792,
-            'ACT':0.95,#0.771,
-            'NT':0.95,#0.761
-    }      

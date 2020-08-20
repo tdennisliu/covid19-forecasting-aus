@@ -172,7 +172,7 @@ class Forecast:
 
         self.inf_times = 1 + np.random.gamma(i/j, j, size =size) #shape and scale
         self.detect_times = 1 + np.random.gamma(m/n,n, size = size)
-
+        self.action_times = np.random.gamma(self.t_a_shape, self.t_a_scale, size = size)
         return None
     
 
@@ -192,6 +192,13 @@ class Forecast:
         for time in cycle(self.detect_times):
             yield time
 
+    def iter_action_time(self):
+        """
+        access Next detect_time
+        """
+        from itertools import cycle
+        for time in cycle(self.action_times):
+            yield time    
     def initialise_sim(self,curr_time=0):
         """
         Given some number of cases in self.initial_state (copied),
@@ -221,6 +228,7 @@ class Forecast:
             self.generate_times(size=10000)
             self.get_inf_time = self.iter_inf_time()
             self.get_detect_time = self.iter_detect_time()
+            self.get_action_time = self.iter_action_time()
 
             #counters for terminating early
             self.inf_backcast_counter = 0
@@ -521,7 +529,7 @@ class Forecast:
                             # Laura
                             # if parent is undetected, assign a new time to action 
                             if self.people[parent_key].detected==0:
-                                action_time = detect_time + gamma(self.t_a_shape,self.t_a_scale)
+                                action_time = detect_time + next(self.get_action_time)
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),2] += 1
 
@@ -547,7 +555,7 @@ class Forecast:
                             # action_time = self.people[parent_key].detection_time + 
                             # 2* draw from distrubtion
                             if self.people[parent_key].detected==0:
-                                action_time = detect_time + 2*gamma(self.t_a_shape,self.t_a_scale)
+                                action_time = detect_time + 2*next(self.get_action_time)
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),1] += 1
 
@@ -575,7 +583,7 @@ class Forecast:
                         # else assign new time to action.
                         # need to add if de
                             else:
-                                action_time = inf_time + gamma(self.t_a_shape,self.t_a_scale)
+                                action_time = inf_time + next(self.get_action_time)
                                 self.infected_queue.append(len(self.people))
                                 
                     else:

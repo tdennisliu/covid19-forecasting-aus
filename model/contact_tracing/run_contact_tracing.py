@@ -68,17 +68,6 @@ forecast_date = '2020-03-02'
 print("Simulating state " +state)
 
 
-##Initialise the number of cases as 1st of March data incidence
-current = {
-    'ACT':[0,0,0],
-    'NSW':[10,0,2], #1
-    'NT':[0,0,0],
-    'QLD':[2,0,0],
-    'SA':[2,0,0],
-    'TAS':[0,0,0],
-    'VIC':[2,0,0], #1
-    'WA':[0,0,0],
- } 
 current ={state: [0,initial_cases[0],initial_cases[1]]}
 forecast_dict = {}
 
@@ -180,9 +169,9 @@ Model.read_in_cases()
 ##        and are indexed in time by their date of symptom onset.
 
 N=1
-p_c=1.0
-DAYS = 2
-Model.simulate(time_end,1,N, DAYS=DAYS, p_c =p_c)
+#p_c=1.0
+#DAYS = 2
+#Model.simulate(time_end,1,N, DAYS=DAYS, p_c =p_c)
 
 
 # Simulation study for delay time
@@ -195,11 +184,11 @@ n=1000
 DAYS = 3
 p_c = 1
 pc_100_day_N3 = []
+
 for N in range(0, n):
-    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N, DAYS=DAYS, p_c=p_c)
-    
-    #v = list(x)[2]
-    #v2 = v.values()
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
     Cases = params['Model_people']
     CasesAfter = params['cases_after']
     CasesTotal = Cases + CasesAfter
@@ -210,5 +199,8 @@ for N in range(0, n):
         print("sim number %i " % N)
         print("Timeline of Cases:\n", cases_array)
         print("Length of People (CasesTotal): %i " % CasesTotal)
+
+    #reset the simulation to the start
     Model.reset_to_start(people)
+
 print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))

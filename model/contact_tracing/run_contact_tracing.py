@@ -210,5 +210,5 @@ for N in range(0, n):
         print("sim number %i " % N)
         print("Timeline of Cases:\n", cases_array)
         print("Length of People (CasesTotal): %i " % CasesTotal)
-
+    Model.reset_to_start(people)
 print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))

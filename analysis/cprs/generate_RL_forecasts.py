@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+import os
+
 from scipy.stats import norm
 from scipy.special import expit
 from datetime import date, timedelta, datetime
@@ -93,12 +94,28 @@ for data_date in cprs_dates:
     predictors.remove('residential_7days')
 
     mob_samples = 1000
+    
+    axes = []
+    figs = []
+    for var in predictors:
         
-        
+        fig, ax_states = plt.subplots(figsize=(7,8),nrows=4, ncols=2, sharex=True)
+        axes.append(ax_states)
+        fig.suptitle(var)
+        figs.append(fig)
+    ##extra fig for microdistancing
+    var='Proportion people always microdistancing'
+    fig, ax_states = plt.subplots(figsize=(7,8),nrows=4, ncols=2, sharex=True)
+    axes.append(ax_states)
+    fig.suptitle(var)
+    figs.append(fig)    
+    
     state_Rmed = {}
     state_sims = {}
     for i,state in enumerate(states):
         
+        rownum = int(i/2.)
+        colnum = np.mod(i,2)
 
         rows = df_google.loc[df_google.state==state].shape[0]
         #Rmed currently a list, needs to be a matrix
@@ -133,7 +150,6 @@ for data_date in cprs_dates:
                 
         dd = [dates.tolist()[-1] + timedelta(days=x) for x in range(1,n_forecast+1)]
 
-            #     print(state)
 
         sims_med = np.median(sims,axis=2) #N by predictors
         sims_q25 = np.percentile(sims,25,axis=2)
@@ -159,6 +175,7 @@ for data_date in cprs_dates:
         
         for j, var in enumerate(predictors+['md_prop']):
             #Record data
+            axs=axes[j]
             if (state=='AUS') and (var=='md_prop'):
                 continue
 
@@ -176,9 +193,47 @@ for data_date in cprs_dates:
                 
                 outdata['std'].extend(np.std(md_sims,axis=1))
 
+            if state in plot_states:
+                if var != 'md_prop':
+                    axs[rownum,colnum].plot(dates,df_google[df_google['state'] == state][var].values)
+                    axs[rownum,colnum].fill_between(dates,
+                                                    np.percentile(Rmed_array[:,j,:], 25, axis =1),
+                                                    np.percentile(Rmed_array[:,j,:], 75, axis =1),
+                                                alpha=0.5)
 
+                    axs[rownum,colnum].plot(dd,sims_med[:,j],'k')
+                    axs[rownum,colnum].fill_between(dd, sims_q25[:,j], sims_q75[:,j], color='k',alpha = 0.1)
+                else:
+                    ##md plot
+                    axs[rownum,colnum].plot(prop[state].index,prop[state].values)
+                    #axs[rownum,colnum].fill_between(dates,
+                    #                                np.percentile(Rmed_array[:,j,:], 25, axis =1),
+                    #                                np.percentile(Rmed_array[:,j,:], 75, axis =1),
+                    #                               alpha=0.5)
+
+                    axs[rownum,colnum].plot(dd_md,np.median(md_sims,axis=1),'k')
+                    axs[rownum,colnum].fill_between(dd_md, np.quantile(md_sims,0.25, axis=1),
+                                                    np.quantile(md_sims,0.75,axis=1), color='k',alpha = 0.1)
+                    
+                axs[rownum,colnum].set_title(state)
+                axs[rownum,colnum].axhline(1,ls = '--', c = 'k')
+                axs[rownum,colnum].set_title(state)
+                axs[rownum,colnum].tick_params('x',rotation=90)
+                axs[rownum,colnum].xaxis.set_major_locator(plt.MaxNLocator(4))
+                fig.autofmt_xdate()
+            
         state_Rmed[state] = Rmed_array
         state_sims[state] = sims
+    os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%m-%d"), exist_ok=True)
+    for i,fig in enumerate(figs):
+        if i<len(predictors)-1:
+
+            fig.savefig(
+                "figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/"+str(predictors[i])+".png",dpi=144)
+
+
+        else:
+            fig.savefig("figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/micro_dist.png",dpi=144)
 
     df_out = pd.DataFrame.from_dict(outdata)
 
@@ -228,6 +283,40 @@ for data_date in cprs_dates:
 
     expo_decay=True
     theta_md = np.tile(df_samples['theta_md'].values, (df_md['NSW'].shape[0],1))
+
+
+    fig, ax = plt.subplots(figsize=(12,9), nrows=4,ncols=2,sharex=True, sharey=True)
+
+    plt.locator_params(axis='x',nbins=2)
+
+    for i,state in enumerate(plot_states):
+        prop_sim= df_md[state].values#np.random.normal(df_md[state].values, df_md_std.values)
+        if expo_decay:
+            md = ((1+theta_md).T**(-1* prop_sim)).T
+        else:
+            md = (2*expit(-1*theta_md*prop_sim[:,np.newaxis]))
+            
+        
+        row = i//2
+        col = i%2
+        
+        ax[row,col].plot(df_md[state].index, np.median(md,axis=1 ), label='Microdistancing')
+        ax[row,col].fill_between(df_md[state].index, np.quantile(md,0.25,axis=1 ),np.quantile(md,0.75,axis=1 ),
+                                label='Microdistancing',
+                                alpha=0.4,
+                                color='C0')
+        ax[row,col].fill_between(df_md[state].index, np.quantile(md,0.05,axis=1 ),np.quantile(md,0.95,axis=1 ),
+                                label='Microdistancing',
+                                alpha=0.4,
+                                color='C0')
+        ax[row,col].set_title(state)
+        ax[row,col].tick_params('x',rotation=20)
+        ax[row,col].xaxis.set_major_locator(plt.MaxNLocator(4))
+        
+        
+        ax[row,col].set_xticks([df_md[state].index.values[-n_forecast-extra_days_md]],minor=True,)
+        ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
+    fig.savefig("figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/md_factor.png",dpi=144)
 
 
     df_R = df_R.sort_values('date')
@@ -502,7 +591,7 @@ for data_date in cprs_dates:
         ax[row,col].set_xticks([plot_df.date.values[-n_forecast]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
     #fig.autofmt_xdate()
-    plt.savefig("figs/soc_mob_R_L_hats"+data_date.strftime('%m-%d')+".png",dpi=102)
+    plt.savefig("figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/soc_mob_R_L_hats"+data_date.strftime('%m-%d')+".png",dpi=102)
 
     df_Rhats = df_Rhats[['state','date','type','median',
     'bottom','lower','upper','top']+[i for i in range(1000)] ]

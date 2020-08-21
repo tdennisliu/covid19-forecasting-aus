@@ -15,7 +15,7 @@ df_google_all = read_in_google(Aus_only=True,moving=True,local=True)
 states = ['NSW','QLD','SA','VIC','TAS','WA','ACT','NT']#,'AUS']
 plot_states = states.copy()
 #plot_states.remove('AUS')
-df_samples = read_in_posterior(date = '2020-07-30')
+
 
 ## grab survey data
 
@@ -62,6 +62,7 @@ cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
 for data_date in cprs_dates:
     print(data_date)
+    df_samples = read_in_posterior(date = '2020-07-27')
     cases = read_in_cases(data_date.strftime('%d%b%Y'))
     
     one_month = data_date + timedelta(days= 28)
@@ -574,7 +575,7 @@ for data_date in cprs_dates:
         
         plot_df = df_Rhats.loc[(df_Rhats.state==state)& (df_Rhats.type=='R_L')]
         
-        ax[row,col].plot(plot_df.date, plot_df['median'])
+        ax[row,col].plot(plot_df.date, plot_df['mean'])
         
         ax[row,col].fill_between( plot_df.date, plot_df['lower'],plot_df['upper'],alpha=0.4,color='C0')
         ax[row,col].fill_between( plot_df.date, plot_df['bottom'],plot_df['top'],alpha=0.4,color='C0')

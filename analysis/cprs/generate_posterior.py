@@ -52,10 +52,10 @@ always = always.reset_index().set_index(['state','date'])
 
 survey_X = pd.pivot_table(data=always,
                           index='date',columns='state',values='proportion')
-survey_counts =pd.pivot_table(data=always,
+survey_counts_base =pd.pivot_table(data=always,
                           index='date',columns='state',values='count').drop(['Australia','Other'],axis=1).astype(int)
 
-survey_respond = pd.pivot_table(data=always,
+survey_respond_base = pd.pivot_table(data=always,
                           index='date',columns='state',values='respondents').drop(['Australia','Other'],axis=1).astype(int)
 
 ## Read in pystan model that is saved on disk
@@ -63,7 +63,9 @@ survey_respond = pd.pivot_table(data=always,
 sm_pol_gamma = pickle.load(open('model/sm_pol_gamma.pkl','rb'))
 
 
-data_date =  pd.to_datetime('2020-07-27')
+data_date =  pd.to_datetime('2020-08-17')
+survey_respond = survey_respond_base.loc[:data_date]
+survey_counts = survey_counts_base.loc[:data_date]
 #########
 ### here is where I can loop over to perform inference##
 #######
@@ -104,9 +106,9 @@ start_date = '2020-03-01'
 end_date = '2020-03-31'
 
 ##Second wave inputs
-sec_states=sorted(['VIC'])
+sec_states=sorted(['NSW','VIC'])
 sec_start_date = '2020-06-01'
-sec_end_date = '2020-07-07' #all we have for now
+sec_end_date = '2020-08-10' #all we have for now
 
 fit_mask = df.state.isin(states_to_fit)
 if fit_post_March:
@@ -174,7 +176,7 @@ for state in sec_states:
 policy_v = [1]*df2X.loc[df2X.state=='VIC'].shape[0]
 policy = dfX.loc[dfX.state=='NSW','post_policy']
 
-
+print(sec_count_by_state[0].shape, sec_count_by_state[1].shape)
 
 ##Make state by state arrays
 input_data ={

@@ -11,22 +11,19 @@ from scipy.special import expit
 from datetime import date, timedelta, datetime
 import pystan
 import pickle
-
+import os
 from Reff_functions import *
 from Reff_constants import *
 
-# Reff estimates from Price et al 2020
-#df_Reff = read_in_Reff() #estimates up to 14th April
 
-df_Reff = read_in_LSHTM()#read_in_Reff()
 
 
 ### Read in md surveys
-surveys = pd.read_csv("../data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
-surveys = surveys.append(pd.read_csv("../data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
+surveys = pd.read_csv("data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
+surveys = surveys.append(pd.read_csv("data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
 
 for i in range(12,21):
-    surveys = surveys.append(pd.read_csv("../data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
+    surveys = surveys.append(pd.read_csv("data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
 
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
 surveys['proportion'] = surveys['count']/surveys.respondents
@@ -36,7 +33,7 @@ always =surveys.loc[surveys.response=='Always'].set_index(["state",'date'])
 always = always.unstack(['state'])
 
 
-idx = pd.date_range('2020-03-01','2020-07-15')
+idx = pd.date_range('2020-03-01',pd.to_datetime("today"))
 
 always = always.reindex(idx, fill_value=np.nan)
 
@@ -63,15 +60,24 @@ survey_respond = pd.pivot_table(data=always,
 
 ## Read in pystan model that is saved on disk
 
-sm = pickle.load(open('model/sm_pol_gamma.pkl','rb'))
+sm_pol_gamma = pickle.load(open('model/sm_pol_gamma.pkl','rb'))
 
 
-data_date =  pd.to_datetime('2020-07-20')
+data_date =  pd.to_datetime('2020-07-27')
 #########
 ### here is where I can loop over to perform inference##
 #######
-df_Reff = df_Reff.loc[df_Reff.date_of_analysis==data_date.strftime("%Y-%m-%d")]
 
+# Reff estimates from Price et al 2020
+#df_Reff = read_in_Reff() #estimates up to 14th April
+
+#df_Reff = read_in_LSHTM()#read_in_Reff()
+#df_Reff = df_Reff.loc[df_Reff.date_of_analysis==data_date.strftime("%Y-%m-%d")]
+
+df_Reff = pd.read_csv("results/EpyEstim/Reff"+
+            data_date.strftime("%Y-%m-%d")+"tau_7.csv",parse_dates=['INFECTION_DATES'])
+df_Reff['date'] = df_Reff.INFECTION_DATES
+df_Reff['state'] = df_Reff.STATE
 df_state = read_in_cases(case_file_date=data_date.strftime("%d%b%Y"))
 
 df_Reff = df_Reff.merge(df_state,how='left',left_on=['state','date'], right_on=['STATE','date_inferred']) #how = left to use Reff days, NNDSS missing dates
@@ -199,7 +205,7 @@ input_data ={
     'respond_md_v':sec_respond_by_state,
 
 }
-iterations=10000
+iterations=2000
 chains=2
 fit = sm_pol_gamma.sampling(
     data=input_data,
@@ -208,14 +214,82 @@ fit = sm_pol_gamma.sampling(
     #control={'max_treedepth':15}
 )
 
+#make results dir
+results_dir ="results/soc_mob_posterior/" 
+os.makedirs(results_dir,exist_ok=True)
+
 filename = "stan_posterior_fit" + data_date.strftime("%Y-%m-%d") + ".txt"
-with open("../data/"+filename, 'w') as f:
+with open(results_dir+filename, 'w') as f:
     print(fit.stansummary(pars=['bet','R_I','R_L','theta_md']), file=f)
 samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','brho','theta_md'])
+
+fig,ax = plt.subplots(figsize=(12,9))
+samples_mov_gamma['R_L_prior'] = np.random.gamma(
+   2.4**2/0.2, 0.2/2.4, size=samples_mov_gamma.shape[0])
+
+samples_mov_gamma['R_I_prior'] = np.random.gamma(
+   0.5**2/0.2, .2/0.5, size=samples_mov_gamma.shape[0])
+
+sns.violinplot(x='variable',y='value',
+               data=pd.melt(samples_mov_gamma[[col for col in samples_mov_gamma if 'R' in col]]),
+              ax=ax,
+              cut=0)
+
+ax.set_yticks([1],minor=True,)
+ax.set_yticks([0,2,3],minor=False)
+ax.set_yticklabels([0,2,3],minor=False)
+ax.set_ylim((0,3))
+ax.set_xticklabels(['R_I','R_L0','R_L0 prior','R_I prior'])
+ax.yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
+plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"R_md_priors.png",dpi = 144)
+
+posterior = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))] 
+                             ] 
+
+split=True
+md = 'power'#samples_mov_gamma.md.values
+
+posterior.columns = [val for val in predictors] 
+long = pd.melt(posterior) 
+
+fig,ax2 =plt.subplots(figsize=(12,9))
+
+ax2 = sns.violinplot(x='variable',y='value',#hue='policy',
+                    data=long,
+                    ax=ax2,
+                     color='C0'
+                   )
+
+
+ax2.plot([0]*len(predictors), linestyle='dashed',alpha=0.6, color = 'grey')
+ax2.tick_params(axis='x',rotation=90)
+
+#ax =plot_posterior_violin(posterior)
+
+#ax2.set_title('Coefficients of mobility indices')
+ax2.set_xlabel('Social mobility index')
+ax2.set_xticklabels([var[:-6] for var in mov_values])
+ax2.tick_params('x',rotation=15)
+plt.savefig(
+    results_dir+data_date.strftime("%Y-%m-%d")+'mobility_posteriors.png', dpi =144)
+
+ax3 =predict_plot(samples_mov_gamma,df.loc[(df.date>=start_date)&(df.date<=end_date)],gamma=True,
+                 moving=True,split=split,grocery=True,ban = ban,
+                R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
+                 rho=states_to_fit, R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[start_date:end_date])#by states....
+for ax in ax3:
+    for a in ax:
+        a.set_ylim((0,3))
+        #a.set_xlim((start_date,end_date))
+plt.savefig(
+    results_dir+data_date.strftime("%Y-%m-%d")+"total_Reff_allstates.png", dpi=144)
+
+
+
 
 var_to_csv = predictors
 samples_mov_gamma[predictors] = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))]]
 var_to_csv = ['R_I']+['R_L']+['theta_md']+predictors
-today = datetime.strftime(datetime.today(),format='%Y-%m-%d')
 
-samples_mov_gamma[var_to_csv].to_hdf('../data/soc_mob_posterior'+today+'.h5',key='samples')
+
+samples_mov_gamma[var_to_csv].to_hdf('data/soc_mob_posterior'+data_date.strftime("%Y-%m-%d")+'.h5',key='samples')

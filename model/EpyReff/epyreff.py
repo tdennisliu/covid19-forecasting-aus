@@ -142,7 +142,7 @@ def index_by_infection_date(infections_wide):
     #Determine end dates as the last infected date by state.
     index_only = df_combined.index.to_frame()
     index_only = index_only.reset_index(drop=True)
-    maxdates = index_only.groupby(['STATE'])['INFECTION_DATE'].max()
+    maxdates = index_only['INFECTION_DATE'].max()
 
     for aus_state in statelist:
         state_data = local_infs.xs(aus_state, level='STATE')
@@ -150,12 +150,12 @@ def index_by_infection_date(infections_wide):
 
         #dftest.index=dftest.reindex(alldates, fill_value=0)
 
-        alldates = pd.date_range(start_date, maxdates[aus_state]) #All days from start_date to the last infection day.
+        alldates = pd.date_range(start_date, maxdates) #All days from start_date to the last infection day.
         local_statedict[aus_state] = state_data.reindex(alldates, fill_value=0)
 
     for aus_state in statelist:
         state_data = imported_infs.xs(aus_state, level='STATE')
-        alldates = pd.date_range(start_date, maxdates[aus_state])
+        alldates = pd.date_range(start_date, maxdates)
         imported_statedict[aus_state] = state_data.reindex(alldates, fill_value=0)
 
     #Convert dictionaries to data frames

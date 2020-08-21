@@ -75,6 +75,6 @@ df.to_csv(results_path+'/Reff'+file_date+"tau_"+str(tau)+".csv",index=False)
 
 #plot all the estimates
 fig,ax = plot_all_states(R_summary_states,df_interim, dates, 
-        start='2020-03-01',end='2020-08-01',save=True,
+        start='2020-03-01',end=pd.to_datetime("today").strftime("%Y-%m-%d"),save=True,
         tau=tau, date=date
     )

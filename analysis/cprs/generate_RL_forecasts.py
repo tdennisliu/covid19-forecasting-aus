@@ -62,7 +62,7 @@ cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
 for data_date in cprs_dates:
     print(data_date)
-    df_samples = read_in_posterior(date = '2020-07-27')
+    df_samples = read_in_posterior(date = '2020-08-17')
     cases = read_in_cases(data_date.strftime('%d%b%Y'))
     
     one_month = data_date + timedelta(days= 28)
@@ -592,7 +592,7 @@ for data_date in cprs_dates:
         ax[row,col].set_xticks([plot_df.date.values[-n_forecast]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
     #fig.autofmt_xdate()
-    plt.savefig("figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/soc_mob_R_L_hats"+data_date.strftime('%m-%d')+".png",dpi=102)
+    plt.savefig("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/soc_mob_R_L_hats"+data_date.strftime('%Y-%m-%d')+".png",dpi=102)
 
     df_Rhats = df_Rhats[['state','date','type','median',
     'bottom','lower','upper','top']+[i for i in range(1000)] ]

@@ -165,7 +165,9 @@ class Forecast:
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
-    def generate_times(self,  i=2.5, j=1.25, m=1.2, n=1, size=10000):
+    #def generate_times(self,  i=2.5, j=1.25, m=1.2, n=1, size=10000):
+    def generate_times(self,  i=2, j=1, m=2, n=1.5, size=10000):
+
         """
         Generate large amount of gamma draws to save on simulation time later
         """
@@ -583,8 +585,9 @@ class Forecast:
                         # else assign new time to action.
                         # need to add if de
                             else:
-                                action_time = inf_time + next(self.get_action_time)
+                                action_time = detect_time + next(self.get_action_time)
                                 self.infected_queue.append(len(self.people))
+
                                 
                     else:
                         #parent undetected
@@ -593,7 +596,8 @@ class Forecast:
 
                     #add person to tracked people
                     # Laura # add action_time when recording
-                    self.people[len(self.people)] = Person(parent_key, inf_time, detect_time,isdetected, category,action_time)
+                    self.people[len(self.people)] = Person(parent_key, inf_time, detect_time,isdetected, 
+                    category,action_time=action_time)
 
             if travel:
                 #for parent, check their cross border travel

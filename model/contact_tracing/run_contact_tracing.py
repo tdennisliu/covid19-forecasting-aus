@@ -185,7 +185,7 @@ DAYS = 3
 p_c = 1
 pc_100_day_N3 = []
 
-for N in range(0, n):
+for N in range(n, n+1000):
     cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
      DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
 
@@ -204,3 +204,790 @@ for N in range(0, n):
     Model.reset_to_start(people)
 
 print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+# Add
+
+# DAYS = -3
+# p = 0.9
+
+#n=1000
+
+DAYS = 3
+p_c = 0.9
+pc_90_day_N3 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)    
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_90_day_N3.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+        
+# print('Completed Days = -3 , p = 0.9')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+
+# DAYS = -3
+# p = 0.75
+
+#n=1000
+
+DAYS = 3
+p_c = 0.75
+pc_75_day_N3 = []
+#for N in range(0, n):
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_75_day_N3.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+        
+# print('Completed Days =-3, p = 0.75')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = -3
+# p = 0.5
+
+#n=1000
+
+DAYS = 3
+p_c = 0.5
+pc_50_day_N3 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_50_day_N3.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+        
+# print('Completed Days = -3,  p = 0.5')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = -2
+# p = 1.0
+
+#n=1000
+
+DAYS = 2
+p_c = 1
+pc_100_day_N2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_100_day_N2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+   
+    Model.reset_to_start(people)
+
+# print('Completed Days = -2 , p = 1.0')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+
+# DAYS = -2
+# p = 0.9
+
+#n=1000
+
+DAYS = 2
+p_c = 0.9
+pc_90_day_N2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_90_day_N2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = -2 , p = 0.9')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+
+# DAYS = -2
+# p = 0.75
+
+#n=1000
+
+DAYS = 2
+p_c = 0.75
+pc_75_day_N2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_75_day_N2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days =-2, p = 0.75')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = -2
+# p = 0.5
+
+#n=1000
+
+DAYS = 2
+p_c = 0.5
+pc_50_day_N2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_50_day_N2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+   
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = -2,  p = 0.5')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = -1
+# p = 1.0
+
+#n=1000
+
+DAYS = 1
+p_c = 1
+pc_100_day_N1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_100_day_N1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+
+# print('Completed Days = -1 , p = 1.0')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = -1
+# p = 0.9
+
+#n=1000
+
+DAYS = 1
+p_c = 0.9
+pc_90_day_N1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_90_day_N1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = -1 , p = 0.9')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+
+# DAYS = -1
+# p = 0.75
+
+#n=1000
+
+DAYS = 1
+p_c = 0.75
+pc_75_day_N1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_75_day_N1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days =-1, p = 0.75')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+# DAYS = -1
+# p = 0.5
+
+#n=1000
+
+DAYS = 1
+p_c = 0.5
+pc_50_day_N1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_50_day_N1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = -1,  p = 0.5')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+# DAYS = 0
+# p = 1.0
+
+#n=1000
+
+DAYS = 0
+p_c = 1
+pc_100_day_0 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_100_day_0.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+
+# print('Completed Days = 0 , p = 1.0')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = 0
+# p = 0.9
+
+#n=1000
+
+DAYS = 0
+p_c = 0.9
+pc_90_day_0 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_90_day_0.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+   
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = 0 , p = 0.9')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+
+# DAYS = 0
+# p = 0.75
+
+#n=1000
+
+DAYS = 0
+p_c = 0.75
+pc_75_day_0 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_75_day_0.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days =0, p = 0.75')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+# DAYS = 0
+# p = 0.5
+
+#n=1000
+
+DAYS = 0
+p_c = 0.5
+pc_50_day_0 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_50_day_0.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = 0,  p = 0.5')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = +1
+# p = 1.0
+
+#n=1000
+
+DAYS =-1
+p_c = 1
+pc_100_day_P1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+     
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_100_day_P1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+
+# print('Completed Days = +1 , p = 1.0')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = +1
+# p = 0.9
+
+#n=1000
+
+DAYS = -1
+p_c = 0.9
+pc_90_day_P1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_90_day_P1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = +1 , p = 0.9')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+
+# DAYS = +1
+# p = 0.75
+
+#n=1000
+
+DAYS = -1
+p_c = 0.75
+pc_75_day_P1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_75_day_P1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days =+1, p = 0.75')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+# DAYS = +1
+# p = 0.5
+
+#n=1000
+
+DAYS = -1
+p_c = 0.5
+pc_50_day_P1 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_50_day_P1.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = +1,  p = 0.5')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+# DAYS = +2
+# p = 1.0
+
+#n=1000
+
+DAYS =-2
+p_c = 1
+pc_100_day_P2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_100_day_P2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+
+# print('Completed Days = +2 , p = 1.0')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# DAYS = +2
+# p = 0.9
+
+#n=1000
+
+DAYS = -2
+p_c = 0.9
+pc_90_day_P2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_90_day_P2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = +2 , p = 0.9')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+
+# DAYS = +1
+# p = 0.75
+
+#n=1000
+
+DAYS = -2
+p_c = 0.75
+pc_75_day_P2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_75_day_P2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days =+2, p = 0.75')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+# DAYS = +2
+# p = 0.5
+
+#n=1000
+
+DAYS = -2
+p_c = 0.5
+pc_50_day_P2 = []
+for N in range(n, n+1000):
+    cases_array, observed_cases_array, params = Model.simulate(time_end,1,N,
+     DAYS=DAYS, p_c=p_c, t_a_shape=t_a_shape, t_a_scale= t_a_scale)
+
+    Cases = params['Model_people']
+    CasesAfter = params['cases_after']
+    CasesTotal = Cases + CasesAfter
+
+    pc_50_day_P2.append((CasesTotal))
+    
+    if N%100==0:
+        print("sim number %i " % N)
+        print("Timeline of Cases:\n", cases_array)
+        print("Length of People (CasesTotal): %i " % CasesTotal)
+    
+    Model.reset_to_start(people)
+
+        
+# print('Completed Days = +2,  p = 0.5')
+print('Completed Days = %i , p = %.2f' % (DAYS, p_c ))
+
+
+# Export 
+
+import pandas
+
+#df = pandas.DataFrame(data={"CaseTot1Day": CaseTot1Day})
+#df.to_csv("./CaseTot1Day.csv", sep=',',index=False)
+
+# DAYS = -3
+
+df = pandas.DataFrame(data={"pc_100_day_N3": pc_100_day_N3})
+df.to_csv("./pc_100_day_N3_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_90_day_N3": pc_90_day_N3})
+df.to_csv("./pc_90_day_N3_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_75_day_N3": pc_75_day_N3})
+df.to_csv("./pc_75_day_N3_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_50_day_N3": pc_50_day_N3})
+df.to_csv("./pc_50_day_N3_sc3_05_322.csv", sep=',',index=False)
+
+# DAYS = -2
+
+df = pandas.DataFrame(data={"pc_100_day_N2": pc_100_day_N2})
+df.to_csv("./pc_100_day_N2_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_90_day_N2": pc_90_day_N2})
+df.to_csv("./pc_90_day_N2_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_75_day_N2": pc_75_day_N2})
+df.to_csv("./pc_75_day_N2_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_50_day_N2": pc_50_day_N2})
+df.to_csv("./pc_50_day_N2_sc3_05_322.csv", sep=',',index=False)
+
+# DAYS = -1
+
+df = pandas.DataFrame(data={"pc_100_day_N1": pc_100_day_N1})
+df.to_csv("./pc_100_day_N1_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_90_day_N1": pc_90_day_N1})
+df.to_csv("./pc_90_day_N1_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_75_day_N1": pc_75_day_N1})
+df.to_csv("./pc_75_day_N1_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_50_day_N1": pc_50_day_N1})
+df.to_csv("./pc_50_day_N1_sc3_05_322.csv", sep=',',index=False)
+
+
+DAYS = 0
+
+df = pandas.DataFrame(data={"pc_100_day_0": pc_100_day_0})
+df.to_csv("./pc_100_day_0_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_90_day_0": pc_90_day_0})
+df.to_csv("./pc_90_day_0_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_75_day_0": pc_75_day_0})
+df.to_csv("./pc_75_day_0_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_50_day_0": pc_50_day_0})
+df.to_csv("./pc_50_day_0_sc3_05_322.csv", sep=',',index=False)
+
+
+
+DAYS = 1
+
+df = pandas.DataFrame(data={"pc_100_day_P1": pc_100_day_P1})
+df.to_csv("./pc_100_day_P1_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_90_day_P1": pc_90_day_P1})
+df.to_csv("./pc_90_day_P1_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_75_day_P1": pc_75_day_P1})
+df.to_csv("./pc_75_day_P1_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_50_day_P1": pc_50_day_P1})
+df.to_csv("./pc_50_day_P1_sc3_05_322.csv", sep=',',index=False)
+
+
+DAYS = 2
+
+df = pandas.DataFrame(data={"pc_100_day_P2": pc_100_day_P2})
+df.to_csv("./pc_100_day_P2_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_90_day_P2": pc_90_day_P2})
+df.to_csv("./pc_90_day_P2_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_75_day_P2": pc_75_day_P2})
+df.to_csv("./pc_75_day_P2_sc3_05_322.csv", sep=',',index=False)
+
+df = pandas.DataFrame(data={"pc_50_day_P2": pc_50_day_P2})
+df.to_csv("./pc_50_day_P2_sc3_05_322.csv", sep=',',index=False)
+
+

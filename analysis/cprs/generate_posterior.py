@@ -16,13 +16,14 @@ from Reff_functions import *
 from Reff_constants import *
 
 
-
+iterations=5000
+chains=2
 
 ### Read in md surveys
 surveys = pd.read_csv("data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
 surveys = surveys.append(pd.read_csv("data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
 
-for i in range(12,21):
+for i in range(12,22):
     surveys = surveys.append(pd.read_csv("data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
 
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
@@ -63,8 +64,8 @@ survey_respond_base = pd.pivot_table(data=always,
 sm_pol_gamma = pickle.load(open('model/sm_pol_gamma.pkl','rb'))
 
 ###Create dates
-cprs_start_date = pd.to_datetime('2020-04-01') 
-cprs_end_date = pd.to_datetime('2020-07-22')
+cprs_start_date = pd.to_datetime('2020-08-25')#'2020-04-01') 
+cprs_end_date = pd.to_datetime('2020-08-25')#'2020-07-22')
 
 cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
@@ -117,8 +118,8 @@ for data_date in cprs_dates:
 
     ##Second wave inputs
     sec_states=sorted(['NSW','VIC'])
-    sec_start_date = '2020-06-01'
-    sec_end_date = '2020-08-10' #all we have for now
+    sec_start_date = '2020-05-01'
+    sec_end_date = '2020-08-14' #all we have for now
 
     fit_mask = df.state.isin(states_to_fit)
     if fit_post_March:
@@ -186,8 +187,6 @@ for data_date in cprs_dates:
         sec_count_by_state.append(survey_counts.loc[sec_start_date:sec_end_date,state].values)
         sec_respond_by_state.append(survey_respond.loc[sec_start_date:sec_end_date,state].values)
 
-    print(sec_mobility_by_state)
-    print(sec_data_by_state['mean'])
     policy_v = [1]*df2X.loc[df2X.state=='VIC'].shape[0]
     policy = dfX.loc[dfX.state=='NSW','post_policy']
 
@@ -222,8 +221,7 @@ for data_date in cprs_dates:
         'respond_md_v':sec_respond_by_state,
 
     }
-    iterations=2000
-    chains=2
+
     fit = sm_pol_gamma.sampling(
         data=input_data,
         iter=iterations,
@@ -301,7 +299,9 @@ for data_date in cprs_dates:
     plt.savefig(
         results_dir+data_date.strftime("%Y-%m-%d")+"total_Reff_allstates.png", dpi=144)
 
-
+    #remove plots from memory
+    fig.clear()
+    plt.close(fig)
 
 
     var_to_csv = predictors

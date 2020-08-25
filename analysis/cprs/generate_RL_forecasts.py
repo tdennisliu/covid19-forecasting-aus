@@ -33,7 +33,7 @@ always =surveys.loc[surveys.response=='Always'].set_index(["state",'date'])
 always = always.unstack(['state'])
 
 #fill in date range
-idx = pd.date_range('2020-03-01','2020-07-08')
+idx = pd.date_range('2020-03-01',pd.to_datetime("today"))
 
 always = always.reindex(idx, fill_value=np.nan)
 

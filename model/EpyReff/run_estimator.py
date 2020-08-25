@@ -28,7 +28,7 @@ df_linel = tidy_cases_lambda(df_interim)
 ##generate possible infection dates from the notification data
 df_inf = draw_inf_dates(df_linel, nreplicates=1000,
                     shape_rd=2.77, scale_rd=3.17, offset_rd=0,
-                    shape_inc=2.0/1.5, scale_inc=1.5, offset_inc=1,
+                    shape_inc=1.62/0.418, scale_inc=0.418, offset_inc=1,
     )
 
 ##reindex dataframe to include all dates, 
@@ -38,19 +38,17 @@ df_inc_zeros = index_by_infection_date(df_inf)
 
 #get all lambdas
 lambda_dict = lambda_all_states(df_inc_zeros,
-                                shape_gen=2,scale_gen=1,offset=1, 
+                                shape_gen=3.64/3.07,scale_gen=3.07,offset=0, 
                                 trunc_days=trunc_days)
 
 
-#get all lambdas
-lambda_DL = lambda_all_states(df_inc_zeros)
 
 states = [*df_inc_zeros.index.get_level_values('STATE').unique()]
 R_summary_states={}
 dates = {}
 df= pd.DataFrame()
 for state in states:
-    lambda_state = lambda_DL[state]
+    lambda_state = lambda_dict[state]
     df_state_I = df_inc_zeros.xs((state,'local'),level=('STATE','SOURCE'))
     #get Reproduciton numbers
     a,b,R = Reff_from_case(df_state_I.values,lambda_state,prior_a=prior_a, prior_b=prior_b, tau=tau)

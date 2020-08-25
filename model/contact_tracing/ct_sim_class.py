@@ -389,7 +389,8 @@ class Forecast:
                 #R_L0
                 for day in range(num_days):
                     Reff_lookupstate[day] = 0.75*df.loc[state, [i for i in range(1000)]].values[0]
-                print(Reff_lookupstate[day])
+                print("Reff with mean %.2f" %np.mean(Reff_lookupstate[day]))
+                print("90\% CrI {}".format(np.quantile(Reff_lookupstate[day],(0.05,0.95))))
 
             #Nested dict with key to state, then key to date
             Reff_lookupdist[state] = Reff_lookupstate

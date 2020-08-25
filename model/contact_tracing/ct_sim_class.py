@@ -388,8 +388,8 @@ class Forecast:
             else:
                 #R_L0
                 for day in range(num_days):
-                    Reff_lookupstate[day] = df.loc[state, [i for i in range(1000)]].values[0]
-
+                    Reff_lookupstate[day] = 0.75*df.loc[state, [i for i in range(1000)]].values[0]
+                print(Reff_lookupstate[day])
 
             #Nested dict with key to state, then key to date
             Reff_lookupdist[state] = Reff_lookupstate
@@ -1010,7 +1010,16 @@ class Forecast:
                 'num_of_sim':self.num_of_sim,
             }
             ) 
-    
+
+    def simulate_then_reset(self, *args, **kwargs):
+        """
+        Run simulate then reset the simulation
+        """
+        cases_array, observed_cases_array, params = self.simulate(*args, **kwargs)
+        self.reset_to_start(self.initial_people)
+        return cases_array, observed_cases_array, params
+
+
     def simulate_many(self, end_time, n_sims):
         """
         Simulate multiple times 

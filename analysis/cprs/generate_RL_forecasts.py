@@ -72,7 +72,7 @@ cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
 for data_date in cprs_dates:
     print(data_date)
-    df_samples = read_in_posterior(date = '2020-08-17')
+    df_samples = read_in_posterior(date = data_date.strftime("%Y-%m-%d"))
     cases = read_in_cases(data_date.strftime('%d%b%Y'))
     
     one_month = data_date + timedelta(days= 28)

@@ -458,9 +458,12 @@ class Forecast:
                 
                 inf_time = self.people[parent_key].infection_time + next(self.get_inf_time)
                # LAURA
-                # print(inf_time)
-                # print(self.forecast_date)
-                
+                if self.people[parent_key].detected==1:
+                    #if parent detected
+                    if inf_time> self.people[parent_key].action_time:
+                        #infection occurs after isolation
+                        #infection never occurs, skip
+                        continue
                 # Laura
                 # add an action_time = 0 when an offspring is first examined:
                 action_time = 0

@@ -8,23 +8,28 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 from scipy.special import expit
+from sys import argv
 from datetime import date, timedelta, datetime
 import pystan
 import pickle
-import os
+import os, glob
 from Reff_functions import *
 from Reff_constants import *
 
 
-iterations=5000
+iterations=8000
 chains=2
 
 ### Read in md surveys
-surveys = pd.read_csv("data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
-surveys = surveys.append(pd.read_csv("data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
 
-for i in range(12,22):
-    surveys = surveys.append(pd.read_csv("data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
+surveys = pd.DataFrame()
+##Improve this to read by glob.glob and get all of them
+
+    
+path = "data/md/Barometer wave*.csv"
+for file in glob.glob(path):
+    surveys = surveys.append(pd.read_csv(file,parse_dates=['date']))
+surveys = surveys.sort_values(by='date')
 
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
 surveys['proportion'] = surveys['count']/surveys.respondents
@@ -64,9 +69,13 @@ survey_respond_base = pd.pivot_table(data=always,
 sm_pol_gamma = pickle.load(open('model/sm_pol_gamma.pkl','rb'))
 
 ###Create dates
-cprs_start_date = pd.to_datetime('2020-08-25')#'2020-04-01') 
-cprs_end_date = pd.to_datetime('2020-08-25')#'2020-07-22')
-
+try:
+    cprs_start_date = pd.to_datetime(argv[1])#2020-04-01')
+    cprs_end_date = pd.to_datetime(argv[1])#'2020-07-22')
+except:
+    print("Running full validation dates")
+    cprs_start_date = pd.to_datetime('2020-04-01')
+    cprs_end_date = pd.to_datetime('2020-07-22')
 cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
 for data_date in cprs_dates:

@@ -13,7 +13,7 @@ from scipy.stats import gamma
 ## parameters
 tau = 7
 prior_a=1
-prior_b=5
+prior_b=2
 trunc_days = 21
 
 shape_inc = 1.62/0.418
@@ -122,3 +122,4 @@ fig,ax = plot_all_states(R_summary_states,df_interim, dates,
         start='2020-03-01',end=pd.to_datetime("today").strftime("%Y-%m-%d"),save=True,
         tau=tau, date=date
     )
+plt.close()

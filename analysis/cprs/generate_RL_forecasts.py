@@ -30,7 +30,7 @@ path = "data/md/Barometer wave*.csv"
 for file in glob.glob(path):
     surveys = surveys.append(pd.read_csv(file,parse_dates=['date']))
 surveys = surveys.sort_values(by='date')
-print(surveys.tail(2))
+
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
 surveys['proportion'] = surveys['count']/surveys.respondents
 surveys.date = pd.to_datetime(surveys.date)

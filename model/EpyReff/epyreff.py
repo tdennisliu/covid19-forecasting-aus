@@ -20,8 +20,9 @@ def read_cases_lambda(case_file_date):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     path = os.path.join(dir_path,"../../data/COVID-19 UoM "+case_file_date+"*.xlsx")
     print("Reading file from:")
-    print(path)
+
     for file in glob.glob(path):
+        print(file)
         df_NNDSS = pd.read_excel(file,
                            parse_dates=['SPECIMEN_DATE','NOTIFICATION_DATE','NOTIFICATION_RECEIVE_DATE','TRUE_ONSET_DATE'],
                            dtype= {'PLACE_OF_ACQUISITION':str})

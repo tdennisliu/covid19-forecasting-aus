@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+import os, glob
 
 from scipy.stats import norm
 from scipy.special import expit
 from datetime import date, timedelta, datetime
+from sys import argv
 
 from Reff_constants import *
 from Reff_functions import *
@@ -19,12 +20,17 @@ plot_states = states.copy()
 
 ## grab survey data
 
-surveys = pd.read_csv("data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
-surveys = surveys.append(pd.read_csv("data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
+#surveys = pd.read_csv("data/md/Barometer wave 1 to 10.csv",parse_dates = ['date'])
+#surveys = surveys.append(pd.read_csv("data/md/Barometer wave 11 complience.csv",parse_dates=['date'])) #they spelt compliance wrong??
+surveys = pd.DataFrame()
+##Improve this to read by glob.glob and get all of them
 
-for i in range(12,21):
-    surveys = surveys.append(pd.read_csv("data/md/Barometer wave "+str(i)+" compliance.csv",parse_dates=['date']))
-
+    
+path = "data/md/Barometer wave*.csv"
+for file in glob.glob(path):
+    surveys = surveys.append(pd.read_csv(file,parse_dates=['date']))
+surveys = surveys.sort_values(by='date')
+print(surveys.tail(2))
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
 surveys['proportion'] = surveys['count']/surveys.respondents
 surveys.date = pd.to_datetime(surveys.date)
@@ -55,9 +61,13 @@ survey_X = pd.pivot_table(data=always,
 prop_all = survey_X
 
 ###Create dates
-cprs_start_date = pd.to_datetime('2020-08-17')#2020-04-01')
-cprs_end_date = pd.to_datetime('2020-08-17')#'2020-07-22')
-
+try:
+    cprs_start_date = pd.to_datetime(argv[1])#2020-04-01')
+    cprs_end_date = pd.to_datetime(argv[1])#'2020-07-22')
+except:
+    print("Running full validation dates")
+    cprs_start_date = pd.to_datetime('2020-04-01')
+    cprs_end_date = pd.to_datetime('2020-07-22')
 cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 
 for data_date in cprs_dates:
@@ -225,16 +235,17 @@ for data_date in cprs_dates:
             
         state_Rmed[state] = Rmed_array
         state_sims[state] = sims
-    os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%m-%d"), exist_ok=True)
+    os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d"), exist_ok=True)
     for i,fig in enumerate(figs):
         if i<len(predictors)-1:
 
             fig.savefig(
-                "figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/"+str(predictors[i])+".png",dpi=144)
+                "figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/"+str(predictors[i])+".png",dpi=144)
 
 
         else:
-            fig.savefig("figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/micro_dist.png",dpi=144)
+            fig.savefig(
+                "figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/micro_dist.png",dpi=144)
 
     df_out = pd.DataFrame.from_dict(outdata)
 
@@ -317,7 +328,7 @@ for data_date in cprs_dates:
         
         ax[row,col].set_xticks([df_md[state].index.values[-n_forecast-extra_days_md]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
-    fig.savefig("figs/mobility_forecasts/"+data_date.strftime("%m-%d")+"/md_factor.png",dpi=144)
+    fig.savefig("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/md_factor.png",dpi=144)
 
 
     df_R = df_R.sort_values('date')
@@ -592,6 +603,7 @@ for data_date in cprs_dates:
         ax[row,col].set_xticks([plot_df.date.values[-n_forecast]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
     #fig.autofmt_xdate()
+    os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d"), exist_ok=True)
     plt.savefig("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/soc_mob_R_L_hats"+data_date.strftime('%Y-%m-%d')+".png",dpi=102)
 
     df_Rhats = df_Rhats[['state','date','type','median',

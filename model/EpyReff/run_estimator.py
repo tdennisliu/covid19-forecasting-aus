@@ -1,6 +1,8 @@
 ###
 # Run EpyReff on NNDSS data
 ###
+import matplotlib
+matplotlib.use('Agg')
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +13,7 @@ from sys import argv
 from scipy.stats import gamma
 
 ## parameters
-tau = 7
+tau = 4
 prior_a=1
 prior_b=2
 trunc_days = 21

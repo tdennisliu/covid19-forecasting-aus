@@ -192,8 +192,8 @@ cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 for data_date in cprs_dates:
     print(data_date)
 #data_date =  pd.to_datetime('2020-08-17')
-    survey_respond = survey_respond_base.loc[:data_date-timedelta(10)] 
-    survey_counts = survey_counts_base.loc[:data_date-timedelta(10)]
+    survey_respond = survey_respond_base.loc[:data_date-timedelta(3)] 
+    survey_counts = survey_counts_base.loc[:data_date-timedelta(3)]
 
     ## also filter Reff by 10 days!
     ## need to truncate most recent days of Reff
@@ -245,7 +245,10 @@ for data_date in cprs_dates:
     ##Second wave inputs
     sec_states=sorted(['NSW','VIC'])
     sec_start_date = '2020-05-01'
-    possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
+    if data_date > pd.to_datetime("2020-05-12"):
+        possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
+    else:
+        possible_end_date = pd.to_datetime("2020-05-11")
     sec_end_date = min('2020-08-14',possible_end_date.strftime('%Y-%m-%d')) #all we have for now
 
     fit_mask = df.state.isin(states_to_fit)

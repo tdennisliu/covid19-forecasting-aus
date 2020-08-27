@@ -99,7 +99,7 @@ for data_date in cprs_dates:
     #df_Reff = df_Reff.loc[df_Reff.date_of_analysis==data_date.strftime("%Y-%m-%d")]
 
     df_Reff = pd.read_csv("results/EpyEstim/Reff"+
-                data_date.strftime("%Y-%m-%d")+"tau_7.csv",parse_dates=['INFECTION_DATES'])
+                data_date.strftime("%Y-%m-%d")+"tau_4.csv",parse_dates=['INFECTION_DATES'])
     df_Reff['date'] = df_Reff.INFECTION_DATES
     df_Reff['state'] = df_Reff.STATE
     if data_date < '2020-06-02':

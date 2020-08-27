@@ -2,6 +2,8 @@
 # Read in LSHTM results and perform inference on 
 
 ####
+import matplotlib
+matplotlib.use('Agg')
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -128,7 +130,7 @@ for data_date in cprs_dates:
     ##Second wave inputs
     sec_states=sorted(['NSW','VIC'])
     sec_start_date = '2020-05-01'
-    sec_end_date = '2020-08-14' #all we have for now
+    sec_end_date = min('2020-08-14',data_date.strftime('%Y-%m-%d')) #all we have for now
 
     fit_mask = df.state.isin(states_to_fit)
     if fit_post_March:

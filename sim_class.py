@@ -1172,6 +1172,9 @@ class Forecast:
                 
         if self.state=='VIC':
             #data quality issue
+            df.loc[df.date_inferred<='2019-01-01','date_inferred'] = df.loc[
+                df.date_inferred<='2019-01-01','date_inferred'
+                ] + pd.offsets.DateOffset(year=2020)
             df.loc[df.date_inferred=='2002-07-03','date_inferred'] = pd.to_datetime('2020-07-03')
             df.loc[df.date_inferred=='2002-07-17','date_inferred'] = pd.to_datetime('2020-07-17')
         df = df.groupby(['date_inferred'])[['imported','local']].sum()

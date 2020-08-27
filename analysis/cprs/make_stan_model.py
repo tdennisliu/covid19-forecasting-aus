@@ -112,5 +112,5 @@ sm_pol_gamma = pystan.StanModel(
 )
 
 # save it to the file 'model.pkl' for later use
-with open('/model/sm_pol_gamma.pkl', 'wb') as f:
+with open('./model/sm_pol_gamma.pkl', 'wb') as f:
     pickle.dump(sm_pol_gamma, f)

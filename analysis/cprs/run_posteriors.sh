@@ -20,5 +20,6 @@ dates=("2020-04-01" "2020-04-08" "2020-04-15" "2020-04-22" "2020-04-29" "2020-05
 "2020-07-01" "2020-07-08" "2020-07-15" "2020-07-22")
 
 python analysis/cprs/generate_posterior.py ${dates[$SLURM_ARRAY_TASK_ID]}
+python analysis/cprs/generate_RL_forecasts.py ${dates[$SLURM_ARRAY_TASK_ID]}
 
 deactivate

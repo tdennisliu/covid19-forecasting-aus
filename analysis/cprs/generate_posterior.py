@@ -215,6 +215,8 @@ for data_date in cprs_dates:
         #no leading zero on early dates
         if data_date.day <10:
             df_state = read_in_cases(case_file_date=data_date.strftime('%d%b%Y')[1:])
+        else:
+            df_state = read_in_cases(case_file_date=data_date.strftime('%d%b%Y'))
     else:
         df_state = read_in_cases(case_file_date=data_date.strftime('%d%b%Y'))
     df_Reff = df_Reff.merge(df_state,how='left',left_on=['state','date'], right_on=['STATE','date_inferred']) #how = left to use Reff days, NNDSS missing dates

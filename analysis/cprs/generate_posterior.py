@@ -192,8 +192,6 @@ cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 for data_date in cprs_dates:
     print(data_date)
 #data_date =  pd.to_datetime('2020-08-17')
-    survey_respond = survey_respond_base.loc[:data_date-timedelta(3)] 
-    survey_counts = survey_counts_base.loc[:data_date-timedelta(3)]
 
     ## also filter Reff by 10 days!
     ## need to truncate most recent days of Reff
@@ -272,6 +270,16 @@ for data_date in cprs_dates:
 
     dfX = df.loc[fit_mask].sort_values('date')
     df2X = df.loc[second_wave_mask].sort_values('date')
+
+    #filter out the surveys we don't have 
+    if df2X.shape[0]>0:
+        survey_respond = survey_respond_base.loc[:df2X.date.values[-1]] 
+        survey_counts = survey_counts_base.loc[:df2X.date.values[-1]]
+    else:
+        survey_respond = survey_respond_base.loc[:dfX.date.values[-1]] 
+        survey_counts = survey_counts_base.loc[:dfX.date.values[-1]]
+
+
 
     data_by_state= {}
     sec_data_by_state={}

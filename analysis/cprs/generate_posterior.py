@@ -407,7 +407,7 @@ for data_date in cprs_dates:
 
     #ax2.set_title('Coefficients of mobility indices')
     ax2.set_xlabel('Social mobility index')
-    ax2.set_xticklabels([var[:-6] for var in mov_values])
+    ax2.set_xticklabels([var[:-6] for var in predictors])
     ax2.tick_params('x',rotation=15)
     plt.savefig(
         results_dir+data_date.strftime("%Y-%m-%d")+'mobility_posteriors.png', dpi =144)

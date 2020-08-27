@@ -102,8 +102,11 @@ for data_date in cprs_dates:
                 data_date.strftime("%Y-%m-%d")+"tau_7.csv",parse_dates=['INFECTION_DATES'])
     df_Reff['date'] = df_Reff.INFECTION_DATES
     df_Reff['state'] = df_Reff.STATE
-    df_state = read_in_cases(case_file_date=data_date.strftime("%d%b%Y"))
-
+    if data_date < '2020-06-02':
+        #no leading zero on early dates
+        df_state = read_in_cases(case_file_date=data_date.strftime('%d%b%Y')[1:])
+    else:
+        df_state = read_in_cases(case_file_date=data_date.strftime('%d%b%Y'))
     df_Reff = df_Reff.merge(df_state,how='left',left_on=['state','date'], right_on=['STATE','date_inferred']) #how = left to use Reff days, NNDSS missing dates
     df_Reff['rho_moving'] = df_Reff.groupby(['state'])['rho'].transform(lambda x: x.rolling(7,1).mean()) #minimum number of 1
 

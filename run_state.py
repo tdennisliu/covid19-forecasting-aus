@@ -29,11 +29,16 @@ else:
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 XBstate = None
 start_date = '2020-03-01'
-case_file_date = argv[3]#None #'24Jul'
+case_file_date = pd.to_datetime(argv[3]).strftime("%d%b")#None #'24Jul'
 Reff_file_date = argv[3]#'2020-08-25'
 forecast_date = argv[3]#'2020-08-25'
 test_campaign_date = '2020-06-25'
 test_campaign_factor = 1.25
+
+if pd.to_datetime(argv[3]) < pd.to_datetime('2020-06-02'):
+    if data_date.day <10:
+        #no leading zero on early dates
+        case_file_date=case_file_date[1:]
 
 R_I='R_I'
 abc =False

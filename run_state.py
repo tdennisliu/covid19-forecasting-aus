@@ -36,7 +36,7 @@ test_campaign_date = '2020-06-25'
 test_campaign_factor = 1.25
 
 if pd.to_datetime(argv[3]) < pd.to_datetime('2020-06-02'):
-    if data_date.day <10:
+    if pd.to_datetime(argv[3]).day <10:
         #no leading zero on early dates
         case_file_date=case_file_date[1:]
 

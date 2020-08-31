@@ -21,7 +21,7 @@ sims_dict={
 }
 for n in range(n_sims):
     if n <2000:
-        sims_dict['sim'+str(n)] = []
+        sims_dict['sim_'+str(n)] = []
 
 print("forecast up to: {}".format(end_date))
 date_col = [day.strftime('%Y-%m-%d') for day in pd.date_range(start_date,end_date)]

@@ -11,7 +11,7 @@ import seaborn as sns
 from scipy.stats import norm
 from scipy.special import expit
 from sys import argv
-from datetime import date, timedelta, datetime
+from datetime import timedelta, datetime
 import pystan
 import pickle
 import os, glob
@@ -27,11 +27,12 @@ chains=2
 surveys = pd.DataFrame()
 ##Improve this to read by glob.glob and get all of them
 
-    
 path = "data/md/Barometer wave*.csv"
 for file in glob.glob(path):
     surveys = surveys.append(pd.read_csv(file,parse_dates=['date']))
+
 surveys = surveys.sort_values(by='date')
+print("Latest Microdistancing survey is {}".format(surveys.date.values[-1]))
 
 surveys.loc[surveys.state!='ACT','state'] = surveys.loc[surveys.state!='ACT','state'].map(states_initials).fillna(surveys.loc[surveys.state!='ACT','state'])
 surveys['proportion'] = surveys['count']/surveys.respondents
@@ -47,7 +48,12 @@ always = always.reindex(idx, fill_value=np.nan)
 
 always.index.name = 'date'
 
+#fill back to earlier and between weeks. 
+# Assume survey on day x applies for all days up to x - 6
 always =always.fillna(method='bfill')
+
+#assume values continue forward if survey hasn't completed
+always = always.fillna(method='ffill') 
 always = always.stack(['state'])
 
 #Zero out before first survey 20th March

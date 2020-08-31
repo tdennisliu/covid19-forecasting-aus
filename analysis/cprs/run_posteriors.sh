@@ -12,7 +12,7 @@
 #SBATCH --array=0-16
 
 module load Python/3.6.1-foss-2016b
-source /fast/users/a1193089/virtualenvs/bin/activate
+source $FASTDIR/virtualenvs/bin/activate
 
 
 dates=("2020-04-01" "2020-04-08" "2020-04-15" "2020-04-22" "2020-04-29" "2020-05-06" 

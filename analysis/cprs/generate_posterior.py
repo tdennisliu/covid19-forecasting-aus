@@ -247,7 +247,8 @@ for data_date in cprs_dates:
         possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
     else:
         possible_end_date = pd.to_datetime("2020-05-11")
-    sec_end_date = min('2020-08-14',possible_end_date.strftime('%Y-%m-%d')) #all we have for now
+    sec_end_date = possible_end_date.strftime('%Y-%m-%d')
+    #min('2020-08-14',possible_end_date.strftime('%Y-%m-%d')) #all we have for now
 
     fit_mask = df.state.isin(states_to_fit)
     if fit_post_March:

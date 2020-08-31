@@ -444,12 +444,12 @@ for data_date in cprs_dates:
     plt.savefig(
         results_dir+data_date.strftime("%Y-%m-%d")+"total_Reff_allstates.png", dpi=144)
 
-    #ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.#date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
-    #                R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
-    #                rho='data', R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
-    #for ax in ax4:
-    #    for a in ax:
-    #        a.set_ylim((0,3))
+    ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
+                    R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
+                    rho='data', R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
+    for ax in ax4:
+        for a in ax:
+            a.set_ylim((0,3))
             #a.set_xlim((start_date,end_date))
     plt.savefig(
         results_dir+data_date.strftime("%Y-%m-%d")+"Reff_sec_phase.png", dpi=144)

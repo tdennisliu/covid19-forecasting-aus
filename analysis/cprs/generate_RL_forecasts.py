@@ -76,7 +76,7 @@ for data_date in cprs_dates:
     print(data_date)
     df_samples = read_in_posterior(date = data_date.strftime("%Y-%m-%d"))
     
-    one_month = data_date + timedelta(days= 28)
+    one_month = data_date + timedelta(days= 42)
 
     days_from_March = one_month.dayofyear -pd.to_datetime('2020-03-01').dayofyear
 

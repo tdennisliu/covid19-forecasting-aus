@@ -21,7 +21,7 @@ sims_dict={
 }
 for n in range(n_sims):
     if n <2000:
-        sims_dict['sim_'+str(n)] = []
+        sims_dict['sim'+str(n)] = []
 
 print("forecast up to: {}".format(end_date))
 date_col = [day.strftime('%Y-%m-%d') for day in pd.date_range(start_date,end_date)]
@@ -45,7 +45,7 @@ for i,state in enumerate(states):
         if np.all(row.isna()):
             continue
         else:
-            sims_dict['sim_'+str(n)].extend(row.values)
+            sims_dict['sim'+str(n)].extend(row.values)
             n +=1
     print(n)
     while n < 2000:
@@ -56,7 +56,7 @@ for i,state in enumerate(states):
             if np.all(row.isna()):
                 continue
             else:
-                sims_dict['sim_'+str(n)].extend(row.values)
+                sims_dict['sim'+str(n)].extend(row.values)
                 n +=1
 
 

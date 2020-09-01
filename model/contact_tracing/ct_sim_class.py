@@ -208,6 +208,7 @@ class Forecast:
         infectious times. Updates self.current for each person.
         """
         from math import ceil
+        import copy
         if curr_time ==0:
             
             #grab a sample from parameter lists
@@ -223,7 +224,7 @@ class Forecast:
             self.alpha_s = 1/(self.ps + self.gam*(1-self.ps))
             self.alpha_a = self.gam * self.alpha_s
             self.current = self.initial_state.copy()
-            self.people = self.initial_people.copy()
+            self.people = copy.deepcopy(self.initial_people)
 
             #N samples for each of infection and detection times
             #Grab now and iterate through samples to save simulation
@@ -1514,7 +1515,8 @@ class Forecast:
         """
         Reset forecast object back to initial conditions and reinitialise
         """
-        import gc
+        ##Laura
+        import gc,copy
         self.people.clear()
         gc.collect()
-        self.people = people
+        self.people = copy.deepcopy(people)

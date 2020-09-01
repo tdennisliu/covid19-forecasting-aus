@@ -162,7 +162,7 @@ model {
     for (i in 1:j) {
         for (n in 1:N){
             prop_md[n,i] ~ beta(1 + count_md[i][n], 1+ respond_md[i][n] - count_md[i][n]);
-            brho[n,i] ~ beta( 1+ imported[n,i], 1+ local[n,i]);
+            brho[n,i] ~ beta( 1+ imported[n,i], 1+ local[n,i]); //ratio imported/ (imported + local)
             noise[i][n,:] ~ normal( Mob[i][n,:] , Mob_std[i][n,:]);
             mu_hat[n,i] ~ gamma( Reff[n,i]*Reff[n,i]/(sigma2[n,i]), Reff[n,i]/sigma2[n,i]); //Stan uses shape/inverse scale
         }
@@ -170,7 +170,7 @@ model {
     for (i in 1:j_v){
         for (n in 1:N_v){
             prop_md_v[n,i] ~ beta(1 + count_md_v[i][n], 1+ respond_md_v[i][n] - count_md_v[i][n]);
-            brho_v[n,i] ~ beta( 1+ imported_v[n,i], 1+ local_v[n,i]);
+            brho_v[n,i] ~ beta( 1+ imported_v[n,i], 1+ local_v[n,i]); //ratio imported/ (imported + local)
             noise_v[i][n,:] ~ normal( Mob_v[i][n,:] , Mob_v_std[i][n,:]);
             mu_hat_v[n,i] ~ gamma( Reff_v[n,i]*Reff_v[n,i]/(sigma2_v[n,i]), Reff_v[n,i]/sigma2_v[n,i]);
         }
@@ -298,7 +298,7 @@ for data_date in cprs_dates:
                             index='date',columns='state',values=value).sort_index(
             axis='columns')
             #account for dates pre second wave
-        if df2X.loc[df2X.state=='VIC'].shape[0]==0:
+        if df2X.loc[df2X.state==sec_states[0]].shape[0]==0:
             print("making empty")
             sec_data_by_state[value] = pd.DataFrame(columns=sec_states).astype(float)
         
@@ -350,7 +350,7 @@ for data_date in cprs_dates:
         'local':data_by_state['local'].values,
         'imported':data_by_state['imported'].values,
         
-        'N_v': df2X.loc[df2X.state=='VIC'].shape[0],
+        'N_v': df2X.loc[df2X.state==sec_states[0]].shape[0],
         'j_v': len(sec_states),
         'Reff_v': sec_data_by_state['mean'].values,
         'Mob_v': sec_mobility_by_state,

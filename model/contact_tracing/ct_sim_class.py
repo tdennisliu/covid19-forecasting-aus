@@ -620,7 +620,8 @@ class Forecast:
                     #Laura
             #Laura
             #record actual number of secondary cases
-            self.secondary_cases.append(actual_offspring_counter)
+            prop_cases_prevented = (num_offspring -actual_offspring_counter)/num_offspring
+            self.secondary_cases.append(prop_cases_prevented)
             if travel:
                 #for parent, check their cross border travel
                 if self.cross_border_state is not None:

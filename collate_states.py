@@ -7,7 +7,7 @@ start_date = '2020-03-01'
 n_sims=int(argv[1]) #number of sims
 days = int(argv[2])
 
-forecast_type= argv[3]
+forecast_type= 'R_L' #formerly argv[3]
 
 dic_states={
     'state':[],

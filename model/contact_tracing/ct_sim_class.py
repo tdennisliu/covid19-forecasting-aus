@@ -36,6 +36,7 @@ class Forecast:
         Reff_file_date=None,
         ):
         import numpy as np
+        import copy
         self.initial_state = current.copy() #Observed cases on start day
         #self.current=current
         self.state = state
@@ -43,7 +44,7 @@ class Forecast:
         self.start_date = pd.to_datetime(start_date,format='%Y-%m-%d')
         self.quarantine_change_date = pd.to_datetime(
             '2020-04-01',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
-        self.initial_people = people.copy() #detected people only
+        self.initial_people = copy.deepcopy(people) #detected people only
         self.Reff = Reff
         self.alpha_i = alpha_i
         self.gam_list = gam_list

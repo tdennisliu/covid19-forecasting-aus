@@ -265,9 +265,11 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-
+        Model.t_a_shape = t_a_shape
+        Model.t_a_scale = t_a_scale
+        Model.generate_times()
         ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
-        #ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
+        ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
         plt.savefig("./model/contact_tracing/figs/"+file_name+"actual_gen_dist.png",dpi=300)
 
         #Plot actual generation time against original generation time

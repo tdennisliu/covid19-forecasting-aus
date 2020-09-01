@@ -226,6 +226,10 @@ class Forecast:
             self.current = self.initial_state.copy()
             self.people = copy.deepcopy(self.initial_people)
 
+            ## Laura
+            self.secondary_cases=[]
+            self.generation_times=[]
+
             #N samples for each of infection and detection times
             #Grab now and iterate through samples to save simulation
             self.generate_times(size=10000)
@@ -452,6 +456,10 @@ class Forecast:
         if num_offspring >0:  
             
             num_sympcases = self.new_symp_cases(num_offspring)
+            
+            #Laura
+            actual_offspring_counter =0
+
             if self.people[parent_key].category=='A':
                 child_times = []
             for new_case in range(num_offspring):
@@ -465,6 +473,12 @@ class Forecast:
                         #infection occurs after isolation
                         #infection never occurs, skip
                         continue
+                    else:
+                        #infection does occur
+                        actual_offspring_counter +=1
+                        #generation interval even if undetected?
+                        self.generation_times.append(
+                            inf_time - self.people[parent_key].infection_time)
                 # Laura
                 # add an action_time = 0 when an offspring is first examined:
                 action_time = 0
@@ -603,7 +617,10 @@ class Forecast:
                     # Laura # add action_time when recording
                     self.people[len(self.people)] = Person(parent_key, inf_time, detect_time,isdetected, 
                     category,action_time=action_time)
-
+                    #Laura
+            #Laura
+            #record actual number of secondary cases
+            self.secondary_cases.append(actual_offspring_counter)
             if travel:
                 #for parent, check their cross border travel
                 if self.cross_border_state is not None:
@@ -1009,6 +1026,8 @@ class Forecast:
                 'bad_sim':self.bad_sim,
                 # Laura add
                 'Model_people':len(self.people),
+                'secondary_cases':self.secondary_cases,
+                'generation_times': self.generation_times,
                 'cases_after':self.cases_after,
                 'travel_seeds': self.cross_border_seeds[:,self.num_of_sim],
                 'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases[:,self.num_of_sim],
@@ -1520,3 +1539,4 @@ class Forecast:
         self.people.clear()
         gc.collect()
         self.people = copy.deepcopy(people)
+        return None

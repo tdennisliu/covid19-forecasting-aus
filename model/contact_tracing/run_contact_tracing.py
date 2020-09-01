@@ -1,3 +1,6 @@
+import matplotlib 
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import pandas as pd
 from numpy.random import beta, gamma
 
@@ -5,6 +8,7 @@ from ct_sim_class import *
 import multiprocessing as mp
 
 from sys import argv
+import os
 
 def worker(arg):
     """
@@ -213,6 +217,8 @@ if __name__ == '__main__':
             "t_a_shape":t_a_shape,
             "t_a_scale":t_a_scale,
         }
+        secondary_cases = []
+        actual_gen_times = []
         #lose the ordering with parallel processing unless we record to dict?
         for cases_array, observed_cases_array, params in pool.imap_unordered(worker,
             [(Model,'simulate_then_reset',time_end, N, N, kwargs) 
@@ -221,12 +227,18 @@ if __name__ == '__main__':
             num_sim = params['num_of_sim']
             Cases = params['Model_people']
             CasesAfter = params['cases_after']
+
+            secondary_cases.extend(params['secondary_cases'])
+            actual_gen_times.extend(params['generation_times'])
+
             CasesTotal = Cases + CasesAfter
             
             pc_100_dict[num_sim] = CasesTotal
 
             #dont need to reset simulation when parallelised?
 
+
+        
         #record results back in order into orginal list
         for N in range(n):
             pc_dict[p_c].append(pc_100_dict[N])
@@ -238,7 +250,7 @@ if __name__ == '__main__':
                 )
             )
         )
-        
+        os.makedirs("./model/contact_tracing/figs/",exist_ok=True)
         #record and print to csv
         file_name = "pc_"+str(
                 int(p_c*100)
@@ -248,6 +260,22 @@ if __name__ == '__main__':
                 file_name: pc_dict[p_c]
             })
         df.to_csv("./model/contact_tracing/"+file_name+"_sc3_05_322.csv", sep=',',index=False)
+
+
+        #Plot actual generation time against original generation time
+        fig,ax = plt.subplots(figsize=(12,9))
+
+
+        ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
+        #ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
+        plt.savefig("./model/contact_tracing/figs/"+file_name+"actual_gen_dist.png",dpi=300)
+
+        #Plot actual generation time against original generation time
+        fig,ax = plt.subplots(figsize=(12,9))
+
+        ax.hist(secondary_cases, label='Actual',density=True,bins=20)
+
+        plt.savefig("./model/contact_tracing/figs/"+file_name+"actual_secondary_dist.png",dpi=300)
 
     
     pool.close()

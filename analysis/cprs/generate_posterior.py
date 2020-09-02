@@ -422,7 +422,7 @@ for data_date in cprs_dates:
 
     # Second phase
     
-    fig,ax = plt.subplots(figsize=(24,9), ncols=len(sec_states),sharey=True)
+    fig,ax = plt.subplots(figsize=(24,9), ncols=len(sec_states),sharey=True, squeeze=False)
     states_to_fitd = {state: i+1 for i,state in enumerate(sec_states)      }
 
     for i, state in enumerate(sec_states):
@@ -435,24 +435,24 @@ for data_date in cprs_dates:
             ['brho_v['+str(j+1)+','+str(states_to_fitd[state])+']' 
             for j in range(df2X.loc[df2X.state==sec_states[0]].shape[0])]
             ]
-        ax[i].plot(dates, rho_samples.median(),label='fit',color='C0')
-        ax[i].fill_between(dates, rho_samples.quantile(0.25),rho_samples.quantile(0.75),color='C0',alpha=0.4)
+        ax[0,i].plot(dates, rho_samples.median(),label='fit',color='C0')
+        ax[0,i].fill_between(dates, rho_samples.quantile(0.25),rho_samples.quantile(0.75),color='C0',alpha=0.4)
     
-        ax[i].fill_between(dates, rho_samples.quantile(0.05),rho_samples.quantile(0.95),color='C0',alpha=0.4)
+        ax[0,i].fill_between(dates, rho_samples.quantile(0.05),rho_samples.quantile(0.95),color='C0',alpha=0.4)
 
         sns.lineplot(x='date_inferred',y='rho',
-            data=df_state.loc[(df_state.date_inferred>=sec_start_date) & (df_state.STATE==state)&(df_state.date_inferred<=sec_end_date)], ax=ax[i],color='C1',label='data')
+            data=df_state.loc[(df_state.date_inferred>=sec_start_date) & (df_state.STATE==state)&(df_state.date_inferred<=sec_end_date)], ax=ax[0,i],color='C1',label='data')
         sns.lineplot(x='date',y='rho',
-                data=df_Reff.loc[(df_Reff.date>=sec_start_date) & (df_Reff.state==state)&(df_Reff.date<=sec_end_date)], ax=ax[i],color='C1',label='data')
+                data=df_Reff.loc[(df_Reff.date>=sec_start_date) & (df_Reff.state==state)&(df_Reff.date<=sec_end_date)], ax=ax[0,i],color='C1',label='data')
         sns.lineplot(x='date',y='rho_moving',
-                data=df_Reff.loc[(df_Reff.date>=sec_start_date) & (df_Reff.state==state)&(df_Reff.date<=sec_end_date)], ax=ax[i],color='C2',label='moving')
+                data=df_Reff.loc[(df_Reff.date>=sec_start_date) & (df_Reff.state==state)&(df_Reff.date<=sec_end_date)], ax=ax[0,i],color='C2',label='moving')
         
         dates = dfX.loc[dfX.state==sec_states[0]].date
         
-        ax[i].tick_params('x',rotation=20)
-        ax[i].xaxis.set_major_locator(plt.MaxNLocator(4))    
-        ax[i].set_title(state)
-    ax[0].set_ylabel('Proportion of imported cases')
+        ax[0,i].tick_params('x',rotation=20)
+        ax[0,i].xaxis.set_major_locator(plt.MaxNLocator(4))    
+        ax[0,i].set_title(state)
+    ax[0,0].set_ylabel('Proportion of imported cases')
     plt.legend()
     plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"rho_sec_phase.png",dpi = 144)
 

@@ -153,7 +153,7 @@ def read_AddInsight():
 def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True, 
                  delta=1.0,R=2.2,sigma=1, md_arg=None,
                  ban='2020-03-16',single=False,var=None,
-                rho=None, R_I =None, winter=False, prop=None):
+                rho=None, R_I =None, winter=False, prop=None,second_phase=False):
     """
     Produce posterior predictive plots for all states
     """
@@ -314,9 +314,17 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                         states_to_fitd = {s: i+1 for i,s in enumerate(rho)      }
                         if states_initials[state] in states_to_fitd.keys():
                             #transpose as columns are days, need rows to be days
-                            rho_data = samples_sim[
-                                ['brho['+str(j+1)+','+
-                                 str(states_to_fitd[states_initials[state]])+']' 
+                            if second_phase:
+                                #use brho_v
+                                rho_data = samples_sim[
+                                    ['brho_v['+str(j+1)+','+
+                                    str(states_to_fitd[states_initials[state]])+']' 
+                                        for j in range(df_state.shape[0])]].values.T 
+                            else:
+                                # first phase
+                                rho_data = samples_sim[
+                                    ['brho['+str(j+1)+','+
+                                    str(states_to_fitd[states_initials[state]])+']' 
                                         for j in range(df_state.shape[0])]].values.T 
                         else:
                             print("Using data as inference not done on {}".format(state))

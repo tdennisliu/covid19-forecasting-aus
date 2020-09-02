@@ -381,8 +381,77 @@ for data_date in cprs_dates:
     filename = "stan_posterior_fit" + data_date.strftime("%Y-%m-%d") + ".txt"
     with open(results_dir+filename, 'w') as f:
         print(fit.stansummary(pars=['bet','R_I','R_L','theta_md']), file=f)
-    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','brho','theta_md'])
+    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','brho','theta_md','brho_v'])
 
+    # Plot ratio of imported to total cases
+    # First phase
+    #rho calculated at data entry
+    if isinstance(df_state.index, pd.MultiIndex):
+        df_state = df_state.reset_index()
+
+        
+    states=sorted(['NSW','QLD','VIC','TAS','SA','WA','ACT','NT'])
+    fig,ax = plt.subplots(figsize=(24,9), ncols=len(states),sharey=True)
+    states_to_fitd = {state: i+1 for i,state in enumerate(states_to_fit)      }
+
+    for i, state in enumerate(states):
+        if state in states_to_fit:
+            dates = df_Reff.loc[(df_Reff.date>=start_date) & 
+                                (df_Reff.state==state)&(df_Reff.date<=end_date)].date
+            rho_samples = samples_mov_gamma[['brho['+str(j+1)+','+str(states_to_fitd[state])+']' for j in range(dfX.loc[dfX.state==states_to_fit[0]].shape[0])]]
+            ax[i].plot(dates, rho_samples.median(),label='fit',color='C0')
+            ax[i].fill_between(dates, rho_samples.quantile(0.25),rho_samples.quantile(0.75),color='C0',alpha=0.4)
+        
+            ax[i].fill_between(dates, rho_samples.quantile(0.05),rho_samples.quantile(0.95),color='C0',alpha=0.4)
+        else:
+            sns.lineplot(x='date_inferred',y='rho',
+                data=df_state.loc[(df_state.date_inferred>=start_date) & (df_state.STATE==state)&(df_state.date_inferred<=end_date)], ax=ax[i],color='C1',label='data')
+        sns.lineplot(x='date',y='rho',
+                data=df_Reff.loc[(df_Reff.date>=start_date) & (df_Reff.state==state)&(df_Reff.date<=end_date)], ax=ax[i],color='C1',label='data')
+        sns.lineplot(x='date',y='rho_moving',
+                data=df_Reff.loc[(df_Reff.date>=start_date) & (df_Reff.state==state)&(df_Reff.date<=end_date)], ax=ax[i],color='C2',label='moving')
+        
+        dates = dfX.loc[dfX.state==states_to_fit[0]].date
+        
+        ax[i].tick_params('x',rotation=20)
+        ax[i].xaxis.set_major_locator(plt.MaxNLocator(4))    
+        ax[i].set_title(state)
+    ax[0].set_ylabel('Proportion of imported cases')
+    plt.legend()
+    plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"rho_first_phase.png",dpi = 144)
+
+    # Second phase
+    
+    fig,ax = plt.subplots(figsize=(24,9), ncols=len(sec_states),sharey=True)
+    states_to_fitd = {state: i+1 for i,state in enumerate(sec_states)      }
+
+    for i, state in enumerate(sec_states):
+
+        dates = df_Reff.loc[(df_Reff.date>=start_date) & 
+                            (df_Reff.state==state)&(df_Reff.date<=end_date)].date
+        rho_samples = samples_mov_gamma[['brho_v['+str(j+1)+','+str(states_to_fitd[state])+']' for j in range(df2X.loc[df2X.state==sec_states[0]].shape[0])]]
+        ax[i].plot(dates, rho_samples.median(),label='fit',color='C0')
+        ax[i].fill_between(dates, rho_samples.quantile(0.25),rho_samples.quantile(0.75),color='C0',alpha=0.4)
+    
+        ax[i].fill_between(dates, rho_samples.quantile(0.05),rho_samples.quantile(0.95),color='C0',alpha=0.4)
+
+        sns.lineplot(x='date_inferred',y='rho',
+            data=df_state.loc[(df_state.date_inferred>=sec_start_date) & (df_state.STATE==state)&(df_state.date_inferred<=sec_end_date)], ax=ax[i],color='C1',label='data')
+        sns.lineplot(x='date',y='rho',
+                data=df_Reff.loc[(df_Reff.date>=sec_start_date) & (df_Reff.state==state)&(df_Reff.date<=sec_end_date)], ax=ax[i],color='C1',label='data')
+        sns.lineplot(x='date',y='rho_moving',
+                data=df_Reff.loc[(df_Reff.date>=sec_start_date) & (df_Reff.state==state)&(df_Reff.date<=sec_end_date)], ax=ax[i],color='C2',label='moving')
+        
+        dates = dfX.loc[dfX.state==sec_states[0]].date
+        
+        ax[i].tick_params('x',rotation=20)
+        ax[i].xaxis.set_major_locator(plt.MaxNLocator(4))    
+        ax[i].set_title(state)
+    ax[0].set_ylabel('Proportion of imported cases')
+    plt.legend()
+    plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"rho_sec_phase.png",dpi = 144)
+
+    #plot marginal distributions
     fig,ax = plt.subplots(figsize=(12,9))
     samples_mov_gamma['R_L_prior'] = np.random.gamma(
     2.4**2/0.2, 0.2/2.4, size=samples_mov_gamma.shape[0])
@@ -446,7 +515,8 @@ for data_date in cprs_dates:
 
     ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
                     R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
-                    rho='data', R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
+                    rho=sec_states, second_phase=True,
+                     R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
     for ax in ax4:
         for a in ax:
             a.set_ylim((0,3))

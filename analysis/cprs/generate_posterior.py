@@ -333,7 +333,7 @@ for data_date in cprs_dates:
         sec_respond_by_state.append(survey_respond.loc[sec_start_date:sec_end_date,state].values)
 
     policy_v = [1]*df2X.loc[df2X.state==sec_states[0]].shape[0]
-    policy = dfX.loc[dfX.state==states[0],'post_policy']
+    policy = dfX.loc[dfX.state==states_to_fit[0],'post_policy']
 
 
 

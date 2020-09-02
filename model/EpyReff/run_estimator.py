@@ -20,7 +20,7 @@ trunc_days = 21
 
 shape_inc = 5.807 #taken from Lauer et al. 2020 #1.62/0.418
 scale_inc= 0.948 #0.418
-offset_inc = 1
+offset_inc = 0
 
 shape_rd=2.77 
 scale_rd=3.17

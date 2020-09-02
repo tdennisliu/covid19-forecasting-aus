@@ -159,13 +159,13 @@ class Forecast:
 
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
-    def generate_times(self,  i=3.64, j=3.07, m=1.62, n=0.418, size=10000):
+    def generate_times(self,  i=3.64, j=3.07, m=5.505, n=0.948, size=10000):
         """
         Generate large amount of gamma draws to save on simulation time later
         """
 
         self.inf_times =  np.random.gamma(i/j, j, size =size) #shape and scale
-        self.detect_times = 1+np.random.gamma(m/n,n, size = size)
+        self.detect_times = np.random.gamma(m/n,n, size = size)
 
         return None
     

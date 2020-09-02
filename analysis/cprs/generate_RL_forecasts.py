@@ -238,7 +238,7 @@ for data_date in cprs_dates:
         state_sims[state] = sims
     os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d"), exist_ok=True)
     for i,fig in enumerate(figs):
-        if i<len(predictors)-1:
+        if i<len(predictors):
 
             fig.savefig(
                 "figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/"+str(predictors[i])+".png",dpi=144)

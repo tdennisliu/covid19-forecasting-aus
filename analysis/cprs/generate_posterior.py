@@ -426,10 +426,15 @@ for data_date in cprs_dates:
     states_to_fitd = {state: i+1 for i,state in enumerate(sec_states)      }
 
     for i, state in enumerate(sec_states):
-
-        dates = df_Reff.loc[(df_Reff.date>=start_date) & 
-                            (df_Reff.state==state)&(df_Reff.date<=end_date)].date
-        rho_samples = samples_mov_gamma[['brho_v['+str(j+1)+','+str(states_to_fitd[state])+']' for j in range(df2X.loc[df2X.state==sec_states[0]].shape[0])]]
+        #Google mobility only up to a certain date, so take only up to that value
+        dates = pd.date_range(start=sec_start_date,
+        end=df2X.loc[df2X.state==sec_states[0]].date.values[-1])
+        #df_Reff.loc[(df_Reff.date>=sec_start_date) & 
+        #                    (df_Reff.state==state)&(df_Reff.date<=sec_end_date)].date
+        rho_samples = samples_mov_gamma[
+            ['brho_v['+str(j+1)+','+str(states_to_fitd[state])+']' 
+            for j in range(df2X.loc[df2X.state==sec_states[0]].shape[0])]
+            ]
         ax[i].plot(dates, rho_samples.median(),label='fit',color='C0')
         ax[i].fill_between(dates, rho_samples.quantile(0.25),rho_samples.quantile(0.75),color='C0',alpha=0.4)
     

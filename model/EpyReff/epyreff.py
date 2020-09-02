@@ -62,7 +62,7 @@ def tidy_cases_lambda(interim_data, remove_territories=True):
 
 ##gamma draws take arguments (shape, scale)
 def draw_inf_dates(df_linelist, shape_rd=2.77, scale_rd=3.17, offset_rd=0,
-                    shape_inc=2.0/1.5, scale_inc=1.5, offset_inc=1,nreplicates=1):
+                    shape_inc=5.807, scale_inc=0.948, offset_inc=1,nreplicates=1):
 
     notification_dates = df_linelist['NOTIFICATION_RECEIVE_DATE']
     nsamples = notification_dates.shape[0]
@@ -74,8 +74,9 @@ def draw_inf_dates(df_linelist, shape_rd=2.77, scale_rd=3.17, offset_rd=0,
     #shape_rd = shape_rd/scale_rd
 
     # DEFINE INCUBATION PERIOD DISTRIBUTION
-    #     mean_inc = 2.0
-    #     sd_inc = 1.41
+    # Taken from Lauer et al 2020
+    #     mean_inc = 5.5 days
+    #     sd_inc = 1.52
     #scale_inc = (scale_inc)**2/shape_inc #scale**2 = var / shape
     #shape_inc =(scale_inc)**2/scale_inc**2 
 
@@ -177,12 +178,13 @@ def index_by_infection_date(infections_wide):
     return(df_inc_zeros)
 
 
-def generate_lambda(infection_dates, shape_gen=2, scale_gen=1, 
+def generate_lambda(infection_dates, shape_gen=3.64/3.07, scale_gen=3.07, 
                     trunc_days=21,shift=0, offset=1):
     """
     Given array of infection_dates (N_dates by N_samples), where values are possible
     number of cases infected on this day, generate the force of infection Lambda_t,
     a N_dates-tau by N_samples array.
+    Default generation interval parameters taken from Ganyani et al 2020.
     """
     from scipy.stats import gamma
  

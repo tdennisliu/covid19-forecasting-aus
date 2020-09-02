@@ -18,8 +18,8 @@ prior_a=1
 prior_b=2
 trunc_days = 21
 
-shape_inc = 1.62/0.418
-scale_inc= 0.418
+shape_inc = 5.807 #taken from Lauer et al. 2020 #1.62/0.418
+scale_inc= 0.948 #0.418
 offset_inc = 1
 
 shape_rd=2.77 

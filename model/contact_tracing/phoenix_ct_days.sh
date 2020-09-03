@@ -12,7 +12,7 @@
 #SBATCH --array=0-5
 
 module load Python/3.6.1-foss-2016b
-source /fast/users/a1193089/virtualenvs/bin/activate
+source $FASTDIR/virtualenvs/bin/activate
 
 python model/contact_tracing/run_contact_tracing.py $SLURM_ARRAY_TASK_ID
 

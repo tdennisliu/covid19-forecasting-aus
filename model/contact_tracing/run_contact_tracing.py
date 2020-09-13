@@ -28,7 +28,7 @@ if __name__ == '__main__':
     DAYS_list = (-3,-2,-1,0,1,2)
     DAYS = DAYS_list[int(argv[1])] #select right day from list
 
-    p_c_list = (0.5,0.75,0.9,1)
+    p_c_list = (0,0.5,0.75,0.9,1)
     p_c_list = p_c_list[::-1]
 
     ##########
@@ -125,8 +125,8 @@ if __name__ == '__main__':
     ##create dictionary to input intial People
     # Laura
     # give action_times to each initial case
-    t_a_shape = 3/2
-    t_a_scale = 2
+    t_a_shape = 3/1
+    t_a_scale = 1
     for i,cat in enumerate(initial_people):
         people[i] = Person(0,0,0,1,cat, action_time = gamma(t_a_shape,t_a_scale))
         
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     #Set up some required attributes for simulation
     Model.end_time = time_end
-    Model.cross_border_seeds = np.zeros(shape=(time_end,1000),dtype=int)
+    Model.cross_border_seeds = np.zeros(shape=(time_end,10000),dtype=int)
     Model.cross_border_state_cases = np.zeros_like(Model.cross_border_seeds)
 
     Model.num_bad_sims = 0
@@ -200,10 +200,10 @@ if __name__ == '__main__':
 
     # Simulation study for delay time
 
-    t_a_shape = 3/2
-    t_a_scale = 2
+    t_a_shape = 3/1
+    t_a_scale = 1
 
-    n=1000
+    n=10000
     pc_100_dict = {}
 
     pc_dict = {}
@@ -259,7 +259,7 @@ if __name__ == '__main__':
             data={
                 file_name: pc_dict[p_c]
             })
-        df.to_csv("./model/contact_tracing/"+file_name+"_sc3_05_322.csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/"+file_name+"_sc3_311.csv", sep=',',index=False)
 
 
         #Plot actual generation time against original generation time

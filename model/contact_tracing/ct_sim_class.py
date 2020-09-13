@@ -688,7 +688,7 @@ class Forecast:
         else:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
-    def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8, t_a_shape = 3/2, t_a_scale=2 ):
+    def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8, t_a_shape = 3/1, t_a_scale=1 ):
         """
         Simulate forward until end_time
         """

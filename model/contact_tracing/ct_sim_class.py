@@ -36,6 +36,7 @@ class Forecast:
         Reff_file_date=None,
         ):
         import numpy as np
+        import copy
         self.initial_state = current.copy() #Observed cases on start day
         #self.current=current
         self.state = state
@@ -43,7 +44,7 @@ class Forecast:
         self.start_date = pd.to_datetime(start_date,format='%Y-%m-%d')
         self.quarantine_change_date = pd.to_datetime(
             '2020-04-01',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
-        self.initial_people = people.copy() #detected people only
+        self.initial_people = copy.deepcopy(people) #detected people only
         self.Reff = Reff
         self.alpha_i = alpha_i
         self.gam_list = gam_list
@@ -166,14 +167,14 @@ class Forecast:
         assert len(people) == sum(current), "Number of people entered does not equal sum of counts in current status"
         
     #def generate_times(self,  i=2.5, j=1.25, m=1.2, n=1, size=10000):
-    def generate_times(self,  i=2, j=1, m=2, n=1.5, size=10000):
+    def generate_times(self,  i=3.64, j=3.07, m=5.51, n=0.948, size=10000):
 
         """
         Generate large amount of gamma draws to save on simulation time later
         """
 
-        self.inf_times = 1 + np.random.gamma(i/j, j, size =size) #shape and scale
-        self.detect_times = 1 + np.random.gamma(m/n,n, size = size)
+        self.inf_times = np.random.gamma(i/j, j, size =size) #shape and scale
+        self.detect_times = np.random.gamma(m/n,n, size = size)
         self.action_times = np.random.gamma(self.t_a_shape, self.t_a_scale, size = size)
         return None
     
@@ -620,7 +621,8 @@ class Forecast:
                     #Laura
             #Laura
             #record actual number of secondary cases
-            self.secondary_cases.append(actual_offspring_counter)
+            prop_cases_prevented = (num_offspring -actual_offspring_counter)/num_offspring
+            self.secondary_cases.append(prop_cases_prevented)
             if travel:
                 #for parent, check their cross border travel
                 if self.cross_border_state is not None:

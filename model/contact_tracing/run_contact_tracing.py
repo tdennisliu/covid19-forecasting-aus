@@ -217,7 +217,7 @@ if __name__ == '__main__':
             "t_a_shape":t_a_shape,
             "t_a_scale":t_a_scale,
         }
-        secondary_cases = []
+        prop_cases_prevented = []
         actual_gen_times = []
         #lose the ordering with parallel processing unless we record to dict?
         for cases_array, observed_cases_array, params in pool.imap_unordered(worker,
@@ -228,7 +228,7 @@ if __name__ == '__main__':
             Cases = params['Model_people']
             CasesAfter = params['cases_after']
 
-            secondary_cases.extend(params['secondary_cases'])
+            prop_cases_prevented.extend(params['secondary_cases'])
             actual_gen_times.extend(params['generation_times'])
 
             CasesTotal = Cases + CasesAfter
@@ -265,15 +265,17 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-
+        Model.t_a_shape = t_a_shape
+        Model.t_a_scale = t_a_scale
+        Model.generate_times()
         ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
-        #ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
+        ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
         plt.savefig("./model/contact_tracing/figs/"+file_name+"actual_gen_dist.png",dpi=300)
 
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-        ax.hist(secondary_cases, label='Actual',density=True,bins=20)
+        ax.hist(prop_cases_prevented, label='Actual',density=True,bins=20)
 
         plt.savefig("./model/contact_tracing/figs/"+file_name+"actual_secondary_dist.png",dpi=300)
 

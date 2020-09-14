@@ -690,7 +690,7 @@ class Forecast:
         else:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
-    def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8, t_a_shape = 1/2, t_a_scale=1 ):
+    def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8, t_a_shape = 2/1, t_a_scale=1 ):
         """
         Simulate forward until end_time
         """
@@ -1001,7 +1001,7 @@ class Forecast:
                 'ps':self.ps,
                 'bad_sim':self.bad_sim,
                 # Laura add
-                'Model_people':len(Model.people),
+                'Model_people':len(self.people),
                 'cases_after':self.cases_after,
                 'travel_seeds': self.cross_border_seeds[:,self.num_of_sim],
                 'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,

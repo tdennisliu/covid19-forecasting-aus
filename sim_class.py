@@ -223,7 +223,7 @@ class Forecast:
             #assign infection time to those discovered
             # obs time is day =0
             for person in self.people.keys():
-                self.people[person].infection_time = -1*next(self.get_inf_time)
+                self.people[person].infection_time = -1*next(self.get_detect_time)
         else:
             #reinitialising, so actual people need times
             #assume all symptomatic
@@ -234,7 +234,7 @@ class Forecast:
             for person in range(int(self.current[2])):
                 self.infected_queue.append(len(self.people))
                 
-                inf_time = next(self.get_inf_time)
+                #inf_time = next(self.get_inf_time) #remove?
                 detection_time = next(self.get_detect_time)
                 if person <- num_symp:
                     new_person = Person(-1, 

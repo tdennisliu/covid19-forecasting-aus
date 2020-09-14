@@ -84,7 +84,7 @@ for state in states:
 
 #make folder to record files
 dir_path = os.path.dirname(os.path.realpath(__file__))
-results_path =dir_path+"../../../results/EpyEstim/"
+results_path =dir_path+"../../../results/EpyReff/"
 os.makedirs( results_path, exist_ok=True)
 
 file_date = pd.to_datetime("2020"+date, format="%Y%d%b").strftime("%Y-%m-%d")

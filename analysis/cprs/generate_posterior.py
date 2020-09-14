@@ -211,7 +211,7 @@ for data_date in cprs_dates:
     #df_Reff = read_in_LSHTM()#read_in_Reff()
     #df_Reff = df_Reff.loc[df_Reff.date_of_analysis==data_date.strftime("%Y-%m-%d")]
 
-    df_Reff = pd.read_csv("results/EpyEstim/Reff"+
+    df_Reff = pd.read_csv("results/EpyReff/Reff"+
                 data_date.strftime("%Y-%m-%d")+"tau_4.csv",parse_dates=['INFECTION_DATES'])
     df_Reff['date'] = df_Reff.INFECTION_DATES
     df_Reff['state'] = df_Reff.STATE

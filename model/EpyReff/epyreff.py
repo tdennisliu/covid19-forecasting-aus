@@ -389,6 +389,6 @@ def plot_all_states(R_summ_states,df_interim, dates,
         import os
         dir_path = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(dir_path,"../../figs/")
-        os.makedirs(path+"EpyEstim/", exist_ok=True )
-        plt.savefig(path+"/EpyEstim/Reff_tau_"+str(tau)+"_"+date+".png",dpi=300)
+        os.makedirs(path+"EpyReff/", exist_ok=True )
+        plt.savefig(path+"/EpyReff/Reff_tau_"+str(tau)+"_"+date+".png",dpi=300)
     return fig, ax

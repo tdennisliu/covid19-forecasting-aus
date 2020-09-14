@@ -386,11 +386,14 @@ def read_in_cases(case_file_date='29Jun'):
     from datetime import timedelta
     import glob
     
-    path = "data/COVID-19 UoM "+case_file_date+" *.xlsx"
+    path = "data/COVID-19 UoM "+case_file_date+"*.xlsx"
     for file in glob.glob(path):
         df_NNDSS = pd.read_excel(file,
                        parse_dates=['SPECIMEN_DATE','NOTIFICATION_DATE','NOTIFICATION_RECEIVE_DATE','TRUE_ONSET_DATE'],
                        dtype= {'PLACE_OF_ACQUISITION':str})
+    if glob.glob(path) is None:
+        print("No file found for ")
+        print(path)
     df_NNDSS.PLACE_OF_ACQUISITION.fillna('00038888',inplace=True) #Fill blanks with simply unknown
 
     df_NNDSS['date_inferred'] = df_NNDSS.TRUE_ONSET_DATE

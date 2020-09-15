@@ -407,7 +407,7 @@ def read_in_cases(case_file_date='29Jun'):
     df_state = df_NNDSS[['date_inferred','STATE','imported','local']].groupby(['STATE','date_inferred']).sum()
 
     df_state['rho'] = [ 0 if (i+l == 0) else i/(i+l) for l,i in zip(df_state.local,df_state.imported)  ]
-    
+    #shift rho by 5?? mean symptom onset time?
     return df_state
 
 

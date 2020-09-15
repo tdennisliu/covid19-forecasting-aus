@@ -4,7 +4,7 @@
 #SBATCH -N 1
 #SBATCH -n 12
 #SBATCH --time=1-00:00:00
-#SBATCH --mem=80GB
+#SBATCH --mem=60GB
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL

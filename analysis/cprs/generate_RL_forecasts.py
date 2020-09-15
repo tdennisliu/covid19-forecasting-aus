@@ -372,8 +372,8 @@ for data_date in cprs_dates:
             theta_md = np.tile(samples['theta_md'].values, (df_state.shape[0],mob_samples))
             if expo_decay:
                 md = ((1+theta_md).T**(-1* prop_sim)).T
-            else:
-                md = (2*expit(-1*theta_md*prop_sim[:,np.newaxis]))
+            #else:
+            #    md = (2*expit(-1*theta_md*prop_sim[:,np.newaxis]))
             
             for n in range(mob_samples):
                 #add gaussian noise to predictors before forecast

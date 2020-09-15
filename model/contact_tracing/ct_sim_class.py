@@ -1002,6 +1002,8 @@ class Forecast:
                 'bad_sim':self.bad_sim,
                 # Laura add
                 'Model_people':len(self.people),
+                'secondary_cases':self.secondary_cases,
+                'generation_times': self.generation_times,
                 'cases_after':self.cases_after,
                 'travel_seeds': self.cross_border_seeds[:,self.num_of_sim],
                 'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,

@@ -587,7 +587,7 @@ class Forecast:
                     if self.people[parent_key].detected==1:
                         #only check contact tracing if parent was detected
 
-                        if inf_time < self.people[parent_key].detection_time - self.DAYS:
+                        if inf_time < self.people[parent_key].detection_time + self.DAYS:
                             
                             self.infected_queue.append(len(self.people))
                             

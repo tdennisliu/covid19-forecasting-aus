@@ -465,9 +465,9 @@ class Forecast:
                 child_times = []
             for new_case in range(num_offspring):
                 #define each offspring
-                
-                inf_time = self.people[parent_key].infection_time + next(self.get_inf_time)
-               # LAURA
+                new_time = next(self.get_inf_time)
+                inf_time = self.people[parent_key].infection_time + new_time
+                # LAURA
                 if self.people[parent_key].detected==1:
                     #if parent detected
                     if inf_time> self.people[parent_key].action_time:
@@ -486,37 +486,7 @@ class Forecast:
 
                 if inf_time > self.forecast_date:
                     self.inf_forecast_counter +=1
-                    if travel:
-                        if self.cross_border_state is not None:
-                        #check if SA person
-                            if random() < self.travel_prob:
-                                if ceil(inf_time) <= self.cases.shape[0]:
-                                    self.cross_border_state_cases[max(0,ceil(inf_time)-1),self.num_of_sim] += 1
-                                    detection_rv = random()
-                                    detect_time = 0 #give 0 by default, fill in if passes
-                            
-                                    recovery_time = 0 #for now not tracking recoveries
-                        
-                                    if new_case <= num_sympcases-1: #minus 1 as new_case ranges from 0 to num_offspring-1 
-                                        #first num_sympcases are symnptomatic, rest are asymptomatic
-                                        category = 'S'                                 
-                                        if detection_rv < self.qs:
-                                            #case detected
-                                            detect_time = inf_time + next(self.get_detect_time)
-
-                                    else:
-                                        category = 'A'
-                                        detect_time = 0
-                                        if detection_rv < self.qa:
-                                            #case detected
-                                            detect_time = inf_time + next(self.get_detect_time)
-                                    self.people[len(self.people)] = Person(parent_key, inf_time, detect_time,recovery_time, category)
-                                    self.cross_border_sim(len(self.people)-1,ceil(inf_time))
-                                    #skip simulating this offspring in VIC
-                                    #continue
-                                else:
-                                    #cross border seed happened after forecast
-                                    self.travel_cases_after +=1
+                    
                 else:
                     self.inf_backcast_counter +=1
                 #normal case within state
@@ -623,46 +593,7 @@ class Forecast:
             #record actual number of secondary cases
             prop_cases_prevented = (num_offspring -actual_offspring_counter)/num_offspring
             self.secondary_cases.append(prop_cases_prevented)
-            if travel:
-                #for parent, check their cross border travel
-                if self.cross_border_state is not None:
-                    #Run cross border sim across children
-                    inf_time = self.people[parent_key].infection_time
-
-                    detect_time = self.people[parent_key].detection_time
-
-                    if self.people[parent_key].infection_time>self.forecast_date:
-                        #check it is after forecast date but before
-                        #end date
-                        if ceil(inf_time)-1 < self.cases.shape[0]:
-                            #check if travel
-                            #symptomatic people here
-                            pre_symp_time = inf_time
-                            while pre_symp_time < detect_time:
-                                travel_rv = random()
-                                if travel_rv<self.travel_prob:
-                                    #travelled
-                                    ## did they infect?
-                                    #symptomatic
-                                    self.cross_border_sim(parent_key,ceil(pre_symp_time))
-
-                                #can travel more than once
-                                pre_symp_time +=1 #move forward a day
-                                if pre_symp_time>self.cases.shape[0]:
-                                    break
-                            if detect_time==0:
-                                #asymptomatics
-                                if self.people[parent_key].category=='A':
-                                    for pre_symp_time in child_times:
-                                        if pre_symp_time< self.cases.shape[0] -1:
-                                            #only care if still within forecast time
-                                            travel_rv = random()
-                                            if travel_rv<self.travel_prob:
-                                            #travelled
-                                            ## did they infect?
-                                                self.cross_border_sim(parent_key,ceil(pre_symp_time))
-
-                                            #remove case from original state?
+            
         return None
     
     def cases_detected(self,new_cases):
@@ -878,6 +809,7 @@ class Forecast:
                 
                 missed_outbreak = self.data_check(day) #True or False
                 if missed_outbreak:
+                    print("Reinitialisation??")
                     self.daycount +=1                
                     if self.daycount >= reinitialising_window:
                         n_resim +=1

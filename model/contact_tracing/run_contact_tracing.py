@@ -139,7 +139,7 @@ if __name__ == '__main__':
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
-        cross_border_state=XBstate,cases_file_date=case_file_date,
+        cross_border_state=None,cases_file_date=case_file_date,
         ps_list = ps_prior, test_campaign_date=test_campaign_date, 
         test_campaign_factor=test_campaign_factor,Reff_file_date=Reff_file_date
         )
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     t_a_shape = 2/1
     t_a_scale = 1
 
-    n=10000
+    n=1000#10000
     pc_100_dict = {}
 
     pc_dict = {}

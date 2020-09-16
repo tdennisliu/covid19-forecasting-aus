@@ -203,7 +203,7 @@ if __name__ == '__main__':
     t_a_shape = 2/1
     t_a_scale = 1
 
-    n=10000
+    n=1000
     pc_100_dict = {}
 
     pc_dict = {}
@@ -301,6 +301,7 @@ if __name__ == '__main__':
         Model.generate_times()
         ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
         ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
+        plt.legend()
         plt.savefig("./model/contact_tracing/figs/"+plot_name+"actual_gen_dist.png",dpi=300)
 
         #Plot actual generation time against original generation time

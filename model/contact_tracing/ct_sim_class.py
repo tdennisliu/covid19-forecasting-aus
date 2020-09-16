@@ -496,7 +496,8 @@ class Forecast:
                     #new infection exceeds the simulation time, not recorded
                     self.cases_after = self.cases_after + 1                
                 else:
-                    #within forecast time
+                    #within forecast time, AND
+                    #parent either undetected, or detected and before action_time
                     detection_rv = random()
                     detect_time = inf_time + next(self.get_detect_time)
                         
@@ -553,7 +554,7 @@ class Forecast:
 
                     # Laura 
                     #add new infected to queue
-                    # contact trace 2=1 day before parent's detection time
+                    # contact trace day before parent's detection time
                     if self.people[parent_key].detected==1:
                         #only check contact tracing if parent was detected
 

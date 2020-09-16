@@ -259,7 +259,7 @@ if __name__ == '__main__':
             data={
                 file_name: pc_dict[p_c]
             })
-        df.to_csv("./model/contact_tracing/"+file_name+"_sc3_211.csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/"+file_name+"_sc3DL_travel.csv", sep=',',index=False)
 
 
         #Plot actual generation time against original generation time

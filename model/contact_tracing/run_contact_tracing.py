@@ -203,12 +203,33 @@ if __name__ == '__main__':
     t_a_shape = 2/1
     t_a_scale = 1
 
-    n=1000#10000
+    n=10#10000
     pc_100_dict = {}
 
     pc_dict = {}
+
+    prop_cases_prevented_by_sim = {}
+    prop_cases_prevented_by_pc = {}
+
+    #generation_times_by_sim ={}
+    generation_times_by_pc = {}
+
+    #set up dataframe
+
+    df = pd.DataFrame(
+        columns=[
+            'sim','pc','cases',
+            'prop_cases_prevented_mean',
+            'prop_cases_prevented_25',
+            'prop_cases_prevented_75',
+            'actual_gen_times_mean',
+            'actual_gen_times_25',
+            'actual_gen_times_75',
+            ])
     for p_c in p_c_list:
         pc_dict[p_c] = []
+        prop_cases_prevented_by_pc[p_c] =[]
+        generation_times_by_pc[p_c] =[]
 
     for p_c in p_c_list:
         kwargs = {
@@ -226,22 +247,41 @@ if __name__ == '__main__':
             ):
             num_sim = params['num_of_sim']
             Cases = params['Model_people']
-            CasesAfter = params['cases_after']
+            #CasesAfter = params['cases_after']
 
             prop_cases_prevented.extend(params['secondary_cases'])
             actual_gen_times.extend(params['generation_times'])
 
-            CasesTotal = Cases + CasesAfter
+            CasesTotal = Cases #+ CasesAfter
             
             pc_100_dict[num_sim] = CasesTotal
-
-            #dont need to reset simulation when parallelised?
+            
+            prop_cases_prevented_by_sim[num_sim] = np.mean(
+                params['secondary_cases'])
 
 
         
         #record results back in order into orginal list
         for N in range(n):
             pc_dict[p_c].append(pc_100_dict[N])
+            prop_cases_prevented_by_pc[p_c].append(prop_cases_prevented)
+            generation_times_by_pc[p_c].append(actual_gen_times)
+        temp = pd.DataFrame()
+        temp.index.name = 'sim'
+        temp['cases'] = pc_dict[p_c]
+
+        temp['prop_cases_prevented_mean'] = np.mean(prop_cases_prevented)
+        temp['prop_cases_prevented_25'] = np.quantile(prop_cases_prevented, 0.25)
+        temp['prop_cases_prevented_75'] = np.quantile(prop_cases_prevented, 0.75)
+        temp['actual_gen_times_mean'] = np.mean(actual_gen_times)
+        temp['actual_gen_times_25'] = np.quantile(actual_gen_times, 0.25)
+        temp['actual_gen_times_75'] = np.quantile(actual_gen_times, 0.75)
+
+        temp['sim'] = temp.index
+        temp['pc'] = p_c
+        temp['DAYS'] = DAYS
+        df = df.append(temp, ignore_index=True)
+        
         print("Finished p_c = %.2f, DAYS = %i" % (p_c, DAYS))
         print(
             "0.05,0.25,0.5,0.75,0.95 quantiles of cases \n {}".format(
@@ -251,17 +291,8 @@ if __name__ == '__main__':
             )
         )
         os.makedirs("./model/contact_tracing/figs/",exist_ok=True)
-        #record and print to csv
-        file_name = "pc_"+str(
-                int(p_c*100)
-            )+"_day_N"+str(DAYS)
-        df = pd.DataFrame(
-            data={
-                file_name: pc_dict[p_c]
-            })
-        df.to_csv("./model/contact_tracing/"+file_name+"_sc3DL_travel.csv", sep=',',index=False)
 
-
+        plot_name="pc_"+str(p_c) +"_DAYS"+str(DAYS)
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
@@ -270,16 +301,18 @@ if __name__ == '__main__':
         Model.generate_times()
         ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
         ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
-        plt.savefig("./model/contact_tracing/figs/"+file_name+"actual_gen_dist.png",dpi=300)
+        plt.savefig("./model/contact_tracing/figs/"+plot_name+"actual_gen_dist.png",dpi=300)
 
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
         ax.hist(prop_cases_prevented, label='Actual',density=True,bins=20)
 
-        plt.savefig("./model/contact_tracing/figs/"+file_name+"actual_secondary_dist.png",dpi=300)
+        plt.savefig("./model/contact_tracing/figs/"+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
-    
+        #record and print to csv
+        file_name = "allpc_days_"+str(DAYS)
+        df.to_csv("./model/contact_tracing/"+file_name+"_sc3DL.csv", sep=',',index=False)
     pool.close()
     pool.join()
     print("Finished DAYS %i" % DAYS)

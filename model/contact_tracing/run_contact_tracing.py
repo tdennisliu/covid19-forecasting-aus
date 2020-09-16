@@ -203,7 +203,7 @@ if __name__ == '__main__':
     t_a_shape = 2/1
     t_a_scale = 1
 
-    n=10#10000
+    n=10000
     pc_100_dict = {}
 
     pc_dict = {}

@@ -10,7 +10,7 @@ class Person:
     # Laura
     # default action_time to 0. This allows for code that doesn’t involve contact tracing (undetected cases) 
     # to continue without modification.
-    def __init__(self,parent, infection_time,detection_time, detected,category:str, action_time = 0):
+    def __init__(self,parent, infection_time,detection_time, detected,category:str, action_time = 1000):
         """
         Category is one of 'I','A','S' for Imported, Asymptomatic and Symptomatic
         """
@@ -21,6 +21,8 @@ class Person:
         self.category = category
         # Laura
         # Add action time to Person object
+        # Default action time is 1000 to move it outside of any 
+        # simulation window.
         self.action_time = action_time
     
 class Forecast:
@@ -481,8 +483,9 @@ class Forecast:
                         self.generation_times.append(
                             inf_time - self.people[parent_key].infection_time)
                 # Laura
-                # add an action_time = 0 when an offspring is first examined:
-                action_time = 0
+                # add an action_time = end of sim + 10
+                #  when an offspring is first examined:
+                action_time = self.end_time+10
 
                 if inf_time > self.forecast_date:
                     self.inf_forecast_counter +=1
@@ -497,7 +500,7 @@ class Forecast:
                     self.cases_after = self.cases_after + 1                
                 else:
                     #within forecast time, AND
-                    #parent either undetected, or detected and before action_time
+                    # case was not prevented by isolation
                     detection_rv = random()
                     detect_time = inf_time + next(self.get_detect_time)
                         
@@ -523,9 +526,18 @@ class Forecast:
                             # if parent is undetected, assign a new time to action 
                             if self.people[parent_key].detected==0:
                                 action_time = detect_time + next(self.get_action_time)
+                            else:
+                                #parent was detected, and now case is routine detected
+                                # Take minimum of routine isolation
+                                # and parents isoaltion time
+                                action_time = min(
+                                    self.people[parent_key].action_time,
+                                    detect_time + next(self.get_action_time)
+                                     )
+                                
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),2] += 1
-
+                            #if case undetected, case gets default action time
                     else:
                         category = 'A'
                         self.cases[max(0,ceil(inf_time)-1),1] += 1
@@ -549,6 +561,14 @@ class Forecast:
                             # 2* draw from distrubtion
                             if self.people[parent_key].detected==0:
                                 action_time = detect_time + 2*next(self.get_action_time)
+                            else:
+                                #parent was detected, and now case is routine detected
+                                # Take minimum of routine isolation
+                                # and parents isoaltion time
+                                action_time = min(
+                                    self.people[parent_key].action_time,
+                                    detect_time +2*next(self.get_action_time)
+                                    )
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),1] += 1
 
@@ -559,7 +579,9 @@ class Forecast:
                         #only check contact tracing if parent was detected
 
                         if inf_time < self.people[parent_key].detection_time + self.DAYS:
-                            
+                            #case before tracing window, 
+                            # action time already assigned if detected
+                            # through routine detection
                             self.infected_queue.append(len(self.people))
                             
                         #elif  (self.people[parent_key].detection_time - DAYS) < inf_time < (self.people[parent_key].action_time):
@@ -569,15 +591,18 @@ class Forecast:
                             x_rn = random()
                             if x_rn <= self.p_c:
                                 #case caught in contact tracing
-                                #inherit action time
-                                action_time = self.people[parent_key].action_time
+                                #inherit action time only if smaller
+                                # than your own from routine detection
+                                action_time = min(
+                                    self.people[parent_key].action_time,
+                                    action_time)
                                 isdetected = 1
                                 self.infected_queue.append(len(self.people))
                             
                             # else assign new time to action.
-
                             else:
-                                action_time = detect_time + next(self.get_action_time)
+                                if isdetected==1:
+                                    action_time = detect_time + next(self.get_action_time)
                                 self.infected_queue.append(len(self.people))
 
                                 
@@ -632,6 +657,7 @@ class Forecast:
         import gc
         np.random.seed(seed)
         self.num_of_sim = sim
+        self.end_time = end_time
 
         self.DAYS = DAYS
         self.p_c = p_c

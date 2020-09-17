@@ -461,7 +461,7 @@ class Forecast:
             num_sympcases = self.new_symp_cases(num_offspring)
             
             #Laura
-            actual_offspring_counter =0
+            case_prevented_counter =0
 
             if self.people[parent_key].category=='A':
                 child_times = []
@@ -475,10 +475,11 @@ class Forecast:
                     if inf_time> self.people[parent_key].action_time:
                         #infection occurs after isolation
                         #infection never occurs, skip
+                        case_prevented_counter +=1
                         continue
                     else:
                         #infection does occur
-                        actual_offspring_counter +=1
+
                         #generation interval even if undetected?
                         self.generation_times.append(
                             inf_time - self.people[parent_key].infection_time)
@@ -618,7 +619,7 @@ class Forecast:
                     #Laura
             #Laura
             #record actual number of secondary cases
-            prop_cases_prevented = (num_offspring -actual_offspring_counter)/num_offspring
+            prop_cases_prevented = (case_prevented_counter)/num_offspring
             self.secondary_cases.append(prop_cases_prevented)
             
         return None

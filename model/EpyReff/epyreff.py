@@ -282,7 +282,7 @@ def generate_summary(samples, dates_by='rows'):
     }
     return output
 
-def plot_Reff(Reff:dict, dates=None, ax_arg=None, **kwargs):
+def plot_Reff(Reff:dict, dates=None, ax_arg=None, truncate=None, **kwargs):
     """
     Given summary statistics of Reff as a dictionary, plot the distribution over time
     """
@@ -300,26 +300,41 @@ def plot_Reff(Reff:dict, dates=None, ax_arg=None, **kwargs):
     curr_color = next(color_cycle)['color']
     if dates is None:
         dates = range(len(Reff['mean']))
+
+    if truncate is None:    
+        ax.plot(dates, Reff['mean'], color= curr_color, **kwargs)
         
-    ax.plot(dates, Reff['mean'], color= curr_color, **kwargs)
-    
-    ax.fill_between(dates, Reff['lower'],Reff['upper'], alpha=0.4, color = curr_color)
-    ax.fill_between(dates, Reff['bottom'],Reff['top'], alpha=0.4, color= curr_color)
-    
+        ax.fill_between(dates, Reff['lower'],Reff['upper'], alpha=0.4, color = curr_color)
+        ax.fill_between(dates, Reff['bottom'],Reff['top'], alpha=0.4, color= curr_color)
+    else:
+        ax.plot(dates[truncate[0]:truncate[1]], Reff['mean'][truncate[0]:truncate[1]], color= curr_color, **kwargs)
+        
+        ax.fill_between(dates[truncate[0]:truncate[1]], Reff['lower'][truncate[0]:truncate[1]],
+            Reff['upper'][truncate[0]:truncate[1]],
+            alpha=0.4, color = curr_color)
+        ax.fill_between(dates[truncate[0]:truncate[1]], Reff['bottom'][truncate[0]:truncate[1]],
+            Reff['top'][truncate[0]:truncate[1]],
+            alpha=0.4, color= curr_color)
+        plt.legend()
+
+        
        #grid line at R_eff =1
     ax.set_yticks([1],minor=True,)
     ax.set_yticks([0,2,3],minor=False)
     ax.set_yticklabels([0,2,3],minor=False)
     ax.yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
-    
     ax.tick_params(axis='x', rotation = 45)
     
     return fig, ax
 
 def plot_all_states(R_summ_states,df_interim, dates,
-    start='2020-03-01',end='2020-08-01',save=True, date =None, tau = 7):
+    start='2020-03-01',end='2020-08-01',save=True, date =None, tau = 7, 
+    nowcast_truncation=-10):
     """
-    Plot results over time for all jurisdictions
+    Plot results over time for all jurisdictions.
+
+    dates: dictionary of (region, date) pairs where date holds the relevant
+            dates for plotting cases by inferred symptom-onset
     """
     import pandas as pd
     import numpy as np
@@ -354,7 +369,14 @@ def plot_all_states(R_summ_states,df_interim, dates,
         fig, ax[row,col] = plot_Reff(R_summary, 
                                     dates=dates[state], 
                                     ax_arg=(fig, ax[row,col]),
+                                    truncate=(0,nowcast_truncation),
                                     label='Our Model')
+
+        fig, ax[row,col] = plot_Reff(R_summary, 
+                                    dates=dates[state], 
+                                    ax_arg=(fig, ax[row,col]),
+                                    truncate=(nowcast_truncation,None),
+                                    label='Nowcast')
 
         
         #plot formatting

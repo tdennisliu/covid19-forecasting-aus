@@ -389,7 +389,6 @@ def read_in_cases(case_file_date='29Jun'):
     df_state = df_NNDSS[['date_inferred','STATE','imported','local']].groupby(['STATE','date_inferred']).sum()
 
     df_state['rho'] = [ 0 if (i+l == 0) else i/(i+l) for l,i in zip(df_state.local,df_state.imported)  ]
-    df_state['rho'] = df_state.rho.shift(periods=-4)
     return df_state
 
 

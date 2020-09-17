@@ -230,6 +230,16 @@ for data_date in cprs_dates:
     df_Reff['rho_moving'] = df_Reff.rho_moving.fillna(method='bfill')
     df_Reff['local'] = df_Reff.local.fillna(0)
     df_Reff['imported'] = df_Reff.imported.fillna(0)
+
+    #shift counts to align with infection date not symptom date
+    # dates should be complete at this point, no days skipped
+    # will be some end days with NaN, but that should be fine since 
+    # we don't use the most recent 10 days
+    df_Reff['local'] = df_Reff.local.shift(periods=-5)
+    df_Reff['imported'] = df_Reff.imported.shift(periods=-5)
+    df_Reff['rho_moving'] = df_Reff.rho_moving.shift(periods=-5)
+    df_Reff['rho'] = df_Reff.rho.shift(periods=-5)
+
     #Add Insight traffic
     #df_ai = read_AddInsight()
 

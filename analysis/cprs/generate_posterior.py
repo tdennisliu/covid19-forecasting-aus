@@ -19,7 +19,7 @@ from Reff_functions import *
 from Reff_constants import *
 
 
-iterations=6000
+iterations=2000
 chains=2
 
 ### Read in md surveys
@@ -118,10 +118,10 @@ parameters {
     matrix[N_v,K] noise_v[j_v];
 }
 transformed parameters {
-    matrix[N,j] mu_hat;
-    matrix[N_v,j_v] mu_hat_v;
-    matrix[N,j] md; //micro distancing
-    matrix[N_v,j_v] md_v; 
+    matrix<lower=0>[N,j] mu_hat;
+    matrix<lower=0>[N_v,j_v] mu_hat_v;
+    matrix<lower=0>[N,j] md; //micro distancing
+    matrix<lower=0>[N_v,j_v] md_v; 
     
      
     for (i in 1:j) {

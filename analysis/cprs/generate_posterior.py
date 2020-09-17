@@ -19,7 +19,7 @@ from Reff_functions import *
 from Reff_constants import *
 
 
-iterations=2000
+iterations=5000
 chains=2
 
 ### Read in md surveys

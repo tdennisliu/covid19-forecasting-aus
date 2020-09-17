@@ -175,7 +175,7 @@ class Forecast:
 
         self.inf_times = np.random.gamma(i/j, j, size =size) #shape and scale
         self.detect_times = np.random.gamma(m/n,n, size = size)
-        self.action_times = 1 + np.random.gamma(self.t_a_shape, self.t_a_scale, size = size)
+        self.action_times = np.random.gamma(self.t_a_shape, self.t_a_scale, size = size)
         return None
     
 
@@ -623,7 +623,7 @@ class Forecast:
         else:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
-    def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8, t_a_shape = 2/1, t_a_scale=1 ):
+    def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8, t_a_shape = 3/2, t_a_scale=2 ):
         """
         Simulate forward until end_time
         """

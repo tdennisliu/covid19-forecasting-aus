@@ -125,8 +125,8 @@ if __name__ == '__main__':
     ##create dictionary to input intial People
     # Laura
     # give action_times to each initial case
-    t_a_shape = 2/1
-    t_a_scale = 1
+    t_a_shape = 3/2
+    t_a_scale = 2
     for i,cat in enumerate(initial_people):
         people[i] = Person(0,0,0,1,cat, action_time = 1 + gamma(t_a_shape,t_a_scale))
         
@@ -200,8 +200,8 @@ if __name__ == '__main__':
 
     # Simulation study for delay time
 
-    t_a_shape = 2/1
-    t_a_scale = 1
+    t_a_shape = 3/2
+    t_a_scale = 2
 
     n=1000
     pc_100_dict = {}

@@ -335,7 +335,7 @@ class Forecast:
                 self.R_I = df_forecast.loc[
                     (df_forecast.type=='R_I')&
                     (df_forecast.state==self.state),
-                    self.num_of_sim]
+                    self.num_of_sim%2000]
 
             #R_L here 
             df_forecast = df_forecast.loc[df_forecast.type==self.forecast_R]
@@ -364,7 +364,7 @@ class Forecast:
                     newkey = key.dayofyear - self.start_date.dayofyear
 
                     Reff_lookupstate[newkey] = df.loc[(state,key),
-                    self.num_of_sim] #[i for i in range(1000)]
+                    self.num_of_sim%2000] #[i for i in range(1000)]
 
             else:
                 #R_L0

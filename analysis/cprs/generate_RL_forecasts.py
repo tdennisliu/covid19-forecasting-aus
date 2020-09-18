@@ -608,7 +608,7 @@ for data_date in cprs_dates:
     plt.savefig("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/soc_mob_R_L_hats"+data_date.strftime('%Y-%m-%d')+".png",dpi=102)
 
     df_Rhats = df_Rhats[['state','date','type','median',
-    'bottom','lower','upper','top']+[i for i in range(1000)] ]
+    'bottom','lower','upper','top']+[i for i in range(2000)] ]
     #df_Rhats.columns = ['state','date','type','median',
     #'bottom','lower','upper','top']  + [i for i in range(1000)]
 

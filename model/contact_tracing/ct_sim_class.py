@@ -600,10 +600,11 @@ class Forecast:
                                 isdetected = 1
                                 self.infected_queue.append(len(self.people))
                             
-                            # else assign new time to action.
+
                             else:
-                                if isdetected==1:
-                                    action_time = detect_time + next(self.get_action_time)
+                                #failed to be traced
+                                # if detected in routine detection, 
+                                # isolation time already assigned
                                 self.infected_queue.append(len(self.people))
 
                                 

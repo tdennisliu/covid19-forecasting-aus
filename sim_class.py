@@ -697,7 +697,7 @@ class Forecast:
         while len(self.infected_queue)>0:
             day_end = self.people[self.infected_queue[0]].infection_time
             if day_end < self.forecast_date:
-                if self.inf_backcast_counter> self.max_backcast_cases:
+                if self.inf_backcast_counter - self.cases_to_subtract > self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                     self.num_too_many+=1
@@ -812,7 +812,7 @@ class Forecast:
                     
                     #check for exceeding max_cases
                     if day_end <self.forecast_date:
-                        if self.inf_backcast_counter > self.max_backcast_cases:
+                        if self.inf_backcast_counter - self.cases_to_subtract > self.max_backcast_cases:
                             print("Sim "+str(self.num_of_sim
                             )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                             self.num_too_many+=1
@@ -1179,11 +1179,19 @@ class Forecast:
             df.loc[df.date_inferred=='2002-07-17','date_inferred'] = pd.to_datetime('2020-07-17')
         df = df.groupby(['date_inferred'])[['imported','local']].sum()
         df.reset_index(inplace=True)
+        #make date integer from start of year
         df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
         df = df.sort_values(by='date')
+        
+        ## calculate window of cases to measure against
+        if df.date.values[-1] >90:
+            #if final day of data is later than day 90, then remove first 90 days
+            self.cases_to_subtract = sum(df.local.values[:(self.end_time -90)])
+        else:
+            self.cases_to_subtract = 0
 
         self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = max(100,4*sum(df.local.values) + sum(df.imported.values))
+        self.max_backcast_cases = max(100,5*(sum(df.local.values) - self.cases_to_subtract)  + sum(df.imported.values))
         #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time

@@ -335,7 +335,7 @@ class Forecast:
                 self.R_I = df_forecast.loc[
                     (df_forecast.type=='R_I')&
                     (df_forecast.state==self.state),
-                    [i for i in range(1000)]].values[0,:]
+                    self.num_of_sim]
 
             #R_L here 
             df_forecast = df_forecast.loc[df_forecast.type==self.forecast_R]
@@ -364,7 +364,7 @@ class Forecast:
                     newkey = key.dayofyear - self.start_date.dayofyear
 
                     Reff_lookupstate[newkey] = df.loc[(state,key),
-                    [i for i in range(1000)]].values
+                    self.num_of_sim] #[i for i in range(1000)]
 
             else:
                 #R_L0
@@ -605,6 +605,8 @@ class Forecast:
         import gc
         np.random.seed(seed)
         self.num_of_sim = sim
+
+        self.read_in_Reff()
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)
@@ -736,7 +738,7 @@ class Forecast:
                         #sometimes initial cases infection time is pre
                         #Reff data, so take the earliest one
                         try:
-                            Reff = self.choose_random_item(self.Reff[ceil(curr_time)-1])
+                            Reff =  self.Reff[ceil(curr_time)-1]#self.choose_random_item(self.Reff[ceil(curr_time)-1])
                         except KeyError:
                             if curr_time>0:
                                 print("Unable to find Reff for this parent at time: %.2f" % curr_time)
@@ -842,7 +844,7 @@ class Forecast:
                                 #sometimes initial cases infection time is pre
                                 #Reff data, so take the earliest one
                                 try:
-                                    Reff = self.choose_random_item(self.Reff[ceil(curr_time)-1])
+                                    Reff = self.Reff[ceil(curr_time)-1]#self.choose_random_item(self.Reff[ceil(curr_time)-1])
                                 except KeyError:
                                     if curr_time>0:
                                         print("Unable to find Reff for this parent at time: %.2f" % curr_time)
@@ -1191,7 +1193,7 @@ class Forecast:
             self.cases_to_subtract = 0
 
         self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = max(100,5*(sum(df.local.values) - self.cases_to_subtract)  + sum(df.imported.values))
+        self.max_backcast_cases = max(100,3*(sum(df.local.values) - self.cases_to_subtract)  + sum(df.imported.values))
         #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time

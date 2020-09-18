@@ -196,7 +196,7 @@ if __name__ =="__main__":
 
 
     for key,item in forecast_dict.items():
-        item.read_in_Reff()
+        #item.read_in_Reff() #now in simulate method
         item.end_time = time_end
         item.read_in_cases()
         item.cross_border_seeds = np.zeros(shape=(time_end,n_sims),dtype=int)
@@ -243,43 +243,6 @@ if __name__ =="__main__":
             if progress:
                 pbar.update()
         
-        #repeat onces for bad sims
-        for cases, obs_cases, param_dict in pool.imap_unordered(worker,
-        [(forecast_dict[states[0]],'simulate',time_end,n, n+n_sims) 
-        for n in np.nonzero(bad_sim)[0]] #n+n_sims is the seed is the seed
-                        ):
-            #cycle through all results and record into arrays 
-            n = param_dict['num_of_sim'] 
-            if param_dict['bad_sim']:
-                #bad_sim True
-                bad_sim[n] = 1
-            else:
-                #good sims
-                ## record all parameters and metric
-                metrics[n] = param_dict['metric']
-                qs[n] = param_dict['qs']
-                qa[n] = param_dict['qa']
-                qi[n] = param_dict['qi']
-                alpha_a[n] = param_dict['alpha_a']
-                alpha_s[n] = param_dict['alpha_s']
-                accept[n] = param_dict['metric']>=0.8
-                cases_after[n] = param_dict['cases_after']
-                ps[n] =param_dict['ps']
-                travel_seeds[:,n] = param_dict['travel_seeds']
-                travel_induced_cases[:,n] = param_dict['travel_induced_cases'+str(XBstate)]
-
-
-            
-            #record cases appropriately
-            import_inci[:,n] = cases[:,0]
-            asymp_inci[:,n] = cases[:,1]
-            symp_inci[:,n] = cases[:,2]
-
-            import_inci_obs[:,n] = obs_cases[:,0]
-            asymp_inci_obs[:,n] = obs_cases[:,1]
-            symp_inci_obs[:,n] = obs_cases[:,2]
-
-    
     pool.close()
     pool.join()
 

@@ -28,14 +28,22 @@ if __name__ == '__main__':
     DAYS_list = (-3,-2,-1,0,1,2)
     DAYS = DAYS_list[int(argv[1])] #select right day from list
 
-    p_c_list = (0.5,0.75,0.9,1)
+    p_c_list = (0,0.5,0.75,0.9,1)
     p_c_list = p_c_list[::-1]
 
     ##########
-    #PARAMETERS TO PLAY WITH
+    #PARAMETERS TO CHANGE
     #########
+    
+    #time to isolation gamma parameters
+    t_a_offset = 1 #number of days minimum to isolation
+    t_a_shape = 3/2
+    t_a_scale = 2
+
+    #number of iterations
+    n=10000
+
     time_end = 30
-    forecast_type = 'R_L0'
     state = 'NSW'
     case_file_date = None #'24Jul'
     #Reff_file_date = '2020-07-20'
@@ -83,6 +91,7 @@ if __name__ == '__main__':
     #############
     ### These parameters do not need to be changed, ask DL
     XBstate = None
+    forecast_type = 'R_L0'
     start_date = '2020-03-01'
     test_campaign_date = '2020-06-25'
     test_campaign_factor = 1.25
@@ -105,6 +114,7 @@ if __name__ == '__main__':
     people = {}
 
     if abc:
+        #assign a distribution to parameters
         qs_prior = beta(2,2,size=10000)
         qi_prior = beta(2, 2, size=10000)
         qa_prior = beta(2,2, size=10000)
@@ -125,10 +135,9 @@ if __name__ == '__main__':
     ##create dictionary to input intial People
     # Laura
     # give action_times to each initial case
-    t_a_shape = 3/2
-    t_a_scale = 2
+
     for i,cat in enumerate(initial_people):
-        people[i] = Person(0,0,0,1,cat, action_time = 1 + gamma(t_a_shape,t_a_scale))
+        people[i] = Person(0,0,0,1,cat, action_time = t_a_offset + gamma(t_a_shape,t_a_scale))
         
     #create forecast object    
     if state in ['VIC']:
@@ -153,20 +162,11 @@ if __name__ == '__main__':
         cross_border_state=None,cases_file_date=case_file_date,
         ps_list = ps_prior,Reff_file_date=Reff_file_date
         )
-    elif state in ['ACT','NT','SA','WA','QLD']:
-        Model = Forecast(current[state],
-        state,start_date,people,
-        alpha_i= 0.1, k =0.1,gam_list=gam,
-        qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
-        qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
-        forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
-        cross_border_state=None,cases_file_date=case_file_date,
-        ps_list = ps_prior,Reff_file_date=Reff_file_date
-        )
+
     else:
         Model = Forecast(current[state],state,
         start_date,people,
-        alpha_i= 0.5, k =0.1,gam_list=gam,
+        alpha_i= 1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1, 
         forecast_R = forecast_type , R_I = R_I,forecast_date=forecast_date,
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     #Set up some required attributes for simulation
     Model.end_time = time_end
-    Model.cross_border_seeds = np.zeros(shape=(time_end,10000),dtype=int)
+    Model.cross_border_seeds = np.zeros(shape=(time_end,n),dtype=int)
     Model.cross_border_state_cases = np.zeros_like(Model.cross_border_seeds)
 
     Model.num_bad_sims = 0
@@ -198,12 +198,6 @@ if __name__ == '__main__':
 
 
 
-    # Simulation study for delay time
-
-    t_a_shape = 3/2
-    t_a_scale = 2
-
-    n=10000
     pc_100_dict = {}
 
     pc_dict = {}
@@ -237,6 +231,7 @@ if __name__ == '__main__':
             "p_c":p_c,
             "t_a_shape":t_a_shape,
             "t_a_scale":t_a_scale,
+            "t_a_offset":t_a_offset,
         }
         prop_cases_prevented = []
         actual_gen_times = []
@@ -291,6 +286,9 @@ if __name__ == '__main__':
             )
         )
         os.makedirs("./model/contact_tracing/figs/",exist_ok=True)
+        os.makedirs("./model/contact_tracing/figs/gen_interval/",exist_ok=True)
+        os.makedirs("./model/contact_tracing/figs/prop_cases_prevented/",exist_ok=True)
+        os.makedirs("./model/contact_tracing/results/",exist_ok=True)
 
         plot_name="pc_"+str(p_c) +"_DAYS"+str(DAYS)
         #Plot actual generation time against original generation time
@@ -298,22 +296,23 @@ if __name__ == '__main__':
 
         Model.t_a_shape = t_a_shape
         Model.t_a_scale = t_a_scale
+        Model.t_a_offset = t_a_offset
         Model.generate_times()
         ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
         ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
         plt.legend()
-        plt.savefig("./model/contact_tracing/figs/"+plot_name+"actual_gen_dist.png",dpi=300)
+        plt.savefig("./model/contact_tracing/figs/gen_interval/"+str(n)+plot_name+"actual_gen_dist.png",dpi=300)
 
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
         ax.hist(prop_cases_prevented, label='Actual',density=True,bins=20)
 
-        plt.savefig("./model/contact_tracing/figs/"+plot_name+"actual_prop_cases_dist.png",dpi=300)
+        plt.savefig("./model/contact_tracing/figs/prop_cases_prevented/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)
-        df.to_csv("./model/contact_tracing/"+file_name+"_sc3DL.csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc3DL.csv", sep=',',index=False)
     pool.close()
     pool.join()
     print("Finished DAYS %i" % DAYS)

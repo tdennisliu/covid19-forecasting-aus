@@ -1,6 +1,7 @@
 import matplotlib 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import sns
 import pandas as pd
 from numpy.random import beta, gamma
 
@@ -306,7 +307,7 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-        ax.hist(prop_cases_prevented, label='Actual',density=True,bins=20)
+        sns.kdeplot(prop_cases_prevented,ax=ax label='Actual',density=True,bins=20)
 
         plt.savefig("./model/contact_tracing/figs/prop_cases_prevented/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 

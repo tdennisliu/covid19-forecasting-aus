@@ -65,24 +65,24 @@ df %>%
   mutate(`pc` = as.factor(`pc`)) %>%
   mutate(`DAYS` = as.factor(`DAYS`)) %>%
   mutate(efficiency = pc) %>%
-  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
   geom_boxplot() +
   xlab("Days") +  
-  facet_wrap(~efficiency) +
-  ylim(0,200) +
-  ggtitle("Box plot of cases (axis limited at 200)")
+  facet_wrap(~DAYS) +
+  coord_cartesian(ylim = c(0, 5000)) +
+  ggtitle("Box plot of cases (axis limited at 5000)")
 
 
 df %>% 
   mutate(`pc` = as.factor(`pc`)) %>%
   mutate(`DAYS` = as.factor(`DAYS`)) %>%
   mutate(efficiency = pc) %>%
-  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
   geom_violin() +
   xlab("Days") +  
-  facet_wrap(~efficiency) +
-  ylim(0,200) + 
-  ggtitle("Violin plot of cases (axis limited at 200)")
+  facet_wrap(~DAYS) +
+  coord_cartesian(ylim = c(0, 5000)) +
+  ggtitle("Violin plot of cases (axis limited at 5000)")
 
 ```
 
@@ -148,6 +148,28 @@ df %>%
   ggtitle("Mean percentage of cases prevented") +
   labs(y="mean % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
   theme_bw()
+
+
+plot <- df %>%
+  filter(pc > 0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`)) %>%
+  mutate(change_mean = (baseline_mean - mean)/baseline_mean* 100) %>%
+  mutate(efficiency = pc) %>%
+  filter(DAYS <1) 
+
+# %>%
+#   mutate()
+# 
+#   ggplot(aes(x=`DAYS`, y=change_mean, group=`efficiency`)) +
+#   geom_line(aes(color=`efficiency`)) +
+#   geom_point(aes(color=`efficiency`)) +
+#   ggtitle("Mean percentage of cases prevented") +
+#   labs(y="mean % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
+#   theme_bw()
+
+
 
 ```
 
@@ -255,24 +277,24 @@ df2 %>%
   mutate(`pc` = as.factor(`pc`)) %>%
   mutate(`DAYS` = as.factor(`DAYS`)) %>%
   mutate(efficiency = pc) %>%
-  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
   geom_boxplot() +
   xlab("Days") +  
-  facet_wrap(~efficiency) +
-  ylim(0,200) +
-  ggtitle("Box plot of cases (axis limited at 200)")
+  facet_wrap(~DAYS) +
+  coord_cartesian(ylim = c(0, 5000)) +
+  ggtitle("Box plot of cases (axis limited at 5000)")
 
 
 df2 %>% 
   mutate(`pc` = as.factor(`pc`)) %>%
   mutate(`DAYS` = as.factor(`DAYS`)) %>%
   mutate(efficiency = pc) %>%
-  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
   geom_violin() +
   xlab("Days") +  
-  facet_wrap(~efficiency) +
-  ylim(0,200) + 
-  ggtitle("Violin plot of cases (axis limited at 200)")
+  facet_wrap(~DAYS) +
+  coord_cartesian(ylim = c(0, 5000)) +
+  ggtitle("Violin plot of cases (axis limited at 5000)")
 
 ```
 

@@ -1,6 +1,7 @@
 import matplotlib 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import sns
 import pandas as pd
 from numpy.random import beta, gamma
 
@@ -37,11 +38,11 @@ if __name__ == '__main__':
     
     #time to isolation gamma parameters
     t_a_offset = 1 #number of days minimum to isolation
-    t_a_shape = 3/2
+    t_a_shape = 1
     t_a_scale = 2
 
     #number of iterations
-    n=10000
+    n=20000
 
     time_end = 30
     state = 'NSW'
@@ -306,13 +307,13 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-        ax.hist(prop_cases_prevented, label='Actual',density=True,bins=20)
+        sns.kdeplot(prop_cases_prevented,ax=ax, label='Actual',density=True,bins=20)
 
         plt.savefig("./model/contact_tracing/figs/prop_cases_prevented/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)
-        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc3DL.csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc"+str(t_a_scale)+"DL.csv", sep=',',index=False)
     pool.close()
     pool.join()
     print("Finished DAYS %i" % DAYS)

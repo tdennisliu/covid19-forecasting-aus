@@ -470,7 +470,7 @@ class Forecast:
                 new_time = next(self.get_inf_time)
                 inf_time = self.people[parent_key].infection_time + new_time
                 # LAURA
-                if self.people[parent_key].detected==1:
+                if self.people[parent_key].detected >= 1:
                     #if parent detected
                     if inf_time> self.people[parent_key].action_time:
                         #infection occurs after isolation
@@ -525,7 +525,7 @@ class Forecast:
                             isdetected=1
                             # Laura
                             # if parent is undetected, assign a new time to action 
-                            if self.people[parent_key].detected==0:
+                            if self.people[parent_key].detected!=1:
                                 action_time = detect_time + next(self.get_action_time)
                             else:
                                 #parent was detected, and now case is routine detected
@@ -560,7 +560,7 @@ class Forecast:
                             # if parent is not detected, assign an action time 
                             # action_time = self.people[parent_key].detection_time + 
                             # 2* draw from distrubtion
-                            if self.people[parent_key].detected==0:
+                            if self.people[parent_key].detected!=1:
                                 action_time = detect_time + 2*next(self.get_action_time)
                             else:
                                 #parent was detected, and now case is routine detected
@@ -597,7 +597,11 @@ class Forecast:
                                 action_time = min(
                                     self.people[parent_key].action_time,
                                     action_time)
-                                isdetected = 1
+                                #you are secondary case, prevents snowball
+                                # cases still prevented by isolation, but 
+                                #will not trigger tertiary cases to be 
+                                # contact traced unless routine detected.
+                                isdetected = 2 
                                 self.infected_queue.append(len(self.people))
                             
 

@@ -1,0 +1,405 @@
+---
+title: "Contact tracing with time to action distribution "
+author: "Laura Boyle, Dennis Liu, Joshua Ross"
+date: "22/09/20"
+header-includes:
+  - \usepackage{placeins}
+output:
+  pdf_document:
+     number_sections: true
+     toc: true
+     toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.width = 6,
+  fig.asp = 0.618,
+  out.width = "120%",
+  fig.align = "center",
+  root.dir = '../'
+)
+pacman::p_load(tidyverse,readxl,kableExtra,ggplot2,lubridate)
+```
+
+\newpage
+
+
+# n = 20000, offset = 0, gamma mean = 3 variance = 6
+
+```{r, echo=FALSE}
+
+setwd("../data/n_20000_offset_0_gamma_32_2_22.09.20/")
+
+N3 <- read.csv("20000allpc_days_-3_sc3DL.csv")
+N2 <- read.csv("20000allpc_days_-2_sc3DL.csv")
+N1 <- read.csv("20000allpc_days_-1_sc3DL.csv")
+N0 <- read.csv("20000allpc_days_0_sc3DL.csv")
+P1 <- read.csv("20000allpc_days_1_sc3DL.csv")
+P2 <- read.csv("20000allpc_days_2_sc3DL.csv")
+
+df <- rbind(N3,N2,N1,N0,P1,P2)
+
+```
+
+## Case numbers 
+
+```{r, echo = FALSE}
+
+df %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`),
+            median = median(`cases`),
+            min = min(`cases`),
+            max = max(`cases`),
+            n_sims = n()) %>%
+  kable() %>% kable_styling(full_width  = FALSE)
+
+```
+
+
+```{r, echo = FALSE, crop = NULL, warning = FALSE}
+
+df %>% 
+  mutate(`pc` = as.factor(`pc`)) %>%
+  mutate(`DAYS` = as.factor(`DAYS`)) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  geom_boxplot() +
+  xlab("Days") +  
+  facet_wrap(~efficiency) +
+  ylim(0,200) +
+  ggtitle("Box plot of cases (axis limited at 200)")
+
+
+df %>% 
+  mutate(`pc` = as.factor(`pc`)) %>%
+  mutate(`DAYS` = as.factor(`DAYS`)) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  geom_violin() +
+  xlab("Days") +  
+  facet_wrap(~efficiency) +
+  ylim(0,200) + 
+  ggtitle("Violin plot of cases (axis limited at 200)")
+
+```
+
+\newpage
+
+```{r, echo = FALSE, crop = NULL}
+
+df %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`),
+            median = median(`cases`),
+            min = min(`cases`),
+            max = max(`cases`),
+            n_sims = n()) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean cases") +
+  labs(y="mean cases") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+df %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`),
+            median = median(`cases`),
+            min = min(`cases`),
+            max = max(`cases`),
+            n_sims = n()) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=median, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Median cases") +
+  labs(y="median cases") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+\newpage
+
+## Cases prevented 
+
+```{r, echo = FALSE, crop = NULL}
+
+baseline_mean <- df %>%
+  filter(pc==0) %>%
+  summarise(mean(cases)) 
+baseline_mean <- baseline_mean$`mean(cases)`
+  
+df %>%
+  filter(pc > 0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`)) %>%
+  mutate(change_mean = (baseline_mean - mean)/baseline_mean* 100) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=change_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean percentage of cases prevented") +
+  labs(y="mean % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+```{r, echo = FALSE, crop = NULL}
+
+baseline_median <- df %>%
+  filter(pc==0) %>%
+  summarise(median(cases)) 
+baseline_median <- baseline_median$`median(cases)`
+  
+df %>%
+  filter(pc > 0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(median = median(`cases`)) %>%
+  mutate(change_mean = (baseline_median - median)/baseline_median* 100) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=change_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Median percentage of cases prevented") +
+  labs(y="median % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+\newpage
+
+## Cases prevented (proportion)
+
+
+```{r, echo = FALSE, crop = NULL}
+
+df %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=prop_cases_prevented_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean proportion of cases prevented") +
+  labs(y="mean proportion") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+## Actual generation interval
+
+
+```{r, echo = FALSE, crop = NULL}
+
+df %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=actual_gen_times_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean generation interval") +
+  labs(y="mean generation interval") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+\newpage
+
+# n = 20000, offset = 1, gamma mean = 2 variance = 1
+
+
+```{r, echo=FALSE}
+
+setwd("../data/n_20000_offset_1_gamma_2.5_.5_22.09.20/")
+
+N3 <- read.csv("allpc_days_-3_sc3DL.csv")
+N2 <- read.csv("allpc_days_-2_sc3DL.csv")
+N1 <- read.csv("allpc_days_-1_sc3DL.csv")
+N0 <- read.csv("allpc_days_0_sc3DL.csv")
+P1 <- read.csv("allpc_days_1_sc3DL.csv")
+P2 <- read.csv("allpc_days_2_sc3DL.csv")
+
+df2 <- rbind(N3,N2,N1,N0,P1,P2)
+
+```
+
+
+## Case numbers 
+
+
+```{r, echo = FALSE}
+
+df2 %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`),
+            median = median(`cases`),
+            min = min(`cases`),
+            max = max(`cases`),
+            n_sims = n()) %>%
+  kable() %>% kable_styling(full_width  = FALSE)
+
+```
+
+```{r, echo = FALSE, crop = NULL, warning = FALSE}
+
+df2 %>% 
+  mutate(`pc` = as.factor(`pc`)) %>%
+  mutate(`DAYS` = as.factor(`DAYS`)) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  geom_boxplot() +
+  xlab("Days") +  
+  facet_wrap(~efficiency) +
+  ylim(0,200) +
+  ggtitle("Box plot of cases (axis limited at 200)")
+
+
+df2 %>% 
+  mutate(`pc` = as.factor(`pc`)) %>%
+  mutate(`DAYS` = as.factor(`DAYS`)) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x= DAYS, y=cases, fill = DAYS)) +
+  geom_violin() +
+  xlab("Days") +  
+  facet_wrap(~efficiency) +
+  ylim(0,200) + 
+  ggtitle("Violin plot of cases (axis limited at 200)")
+
+```
+
+\newpage
+
+```{r, echo = FALSE, crop = NULL}
+
+df2 %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`),
+            median = median(`cases`),
+            min = min(`cases`),
+            max = max(`cases`),
+            n_sims = n()) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean cases") +
+  labs(y="mean cases") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+df2 %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`),
+            median = median(`cases`),
+            min = min(`cases`),
+            max = max(`cases`),
+            n_sims = n()) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=median, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Median cases") +
+  labs(y="median cases") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+\newpage
+
+## Cases prevented (summary statistics)
+
+```{r, echo = FALSE, crop = NULL}
+
+baseline_mean <- df2 %>%
+  filter(pc==0) %>%
+  summarise(mean(cases)) 
+baseline_mean <- baseline_mean$`mean(cases)`
+  
+df2 %>%
+  filter(pc > 0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(mean = mean(`cases`)) %>%
+  mutate(change_mean = (baseline_mean - mean)/baseline_mean* 100) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=change_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean percentage of cases prevented") +
+  labs(y="mean % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+```{r, echo = FALSE, crop = NULL}
+
+baseline_median <- df2 %>%
+  filter(pc==0) %>%
+  summarise(median(cases)) 
+baseline_median <- baseline_median$`median(cases)`
+  
+df2 %>%
+  filter(pc > 0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(median = median(`cases`)) %>%
+  mutate(change_mean = (baseline_median - median)/baseline_median* 100) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=change_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Median percentage of cases prevented") +
+  labs(y="median % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+\newpage
+
+## Cases prevented (proportion)
+
+
+```{r, echo = FALSE, crop = NULL}
+
+df2 %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=prop_cases_prevented_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean proportion of cases prevented") +
+  labs(y="mean proportion") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+## Actual generation interval
+
+
+```{r, echo = FALSE, crop = NULL}
+
+df2 %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x=`DAYS`, y=actual_gen_times_mean, group=`efficiency`)) +
+  geom_line(aes(color=`efficiency`)) +
+  geom_point(aes(color=`efficiency`)) +
+  ggtitle("Mean generation interval") +
+  labs(y="mean generation interval") + scale_color_brewer(palette="Paired") +
+  theme_bw()
+
+```
+
+

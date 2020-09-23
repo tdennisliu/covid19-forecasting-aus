@@ -307,7 +307,7 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-        sns.kdeplot(prop_cases_prevented,ax=ax, label='Actual',density=True,bins=20)
+        sns.kdeplot(prop_cases_prevented,ax=ax, label='Actual')
 
         plt.savefig("./model/contact_tracing/figs/prop_cases_prevented/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 

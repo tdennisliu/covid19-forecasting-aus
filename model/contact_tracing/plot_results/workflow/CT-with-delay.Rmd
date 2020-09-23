@@ -150,26 +150,6 @@ df %>%
   theme_bw()
 
 
-plot <- df %>%
-  filter(pc > 0) %>%
-  mutate(`pc` = as.factor(`pc`)) %>%
-  group_by(`DAYS`,`pc`) %>%
-  summarise(mean = mean(`cases`)) %>%
-  mutate(change_mean = (baseline_mean - mean)/baseline_mean* 100) %>%
-  mutate(efficiency = pc) %>%
-  filter(DAYS <1) 
-
-# %>%
-#   mutate()
-# 
-#   ggplot(aes(x=`DAYS`, y=change_mean, group=`efficiency`)) +
-#   geom_line(aes(color=`efficiency`)) +
-#   geom_point(aes(color=`efficiency`)) +
-#   ggtitle("Mean percentage of cases prevented") +
-#   labs(y="mean % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
-#   theme_bw()
-
-
 
 ```
 
@@ -193,6 +173,42 @@ df %>%
   ggtitle("Median percentage of cases prevented") +
   labs(y="median % cases stopped", x="Days relative to symptom onset") + scale_color_brewer(palette="Paired") +
   theme_bw()
+
+```
+
+\newpage
+
+```{r, echo = FALSE, crop = NULL, warning=FALSE}
+
+# df %>%
+#   filter(pc > 0) %>%
+#   mutate(`pc` = as.factor(`pc`)) %>%
+#   group_by(`DAYS`,`pc`) %>%
+#   summarise(median = median(`cases`)) %>%
+#   mutate(change_median = (baseline_median - median)/baseline_median* 100) %>%
+#   mutate(efficiency = pc) %>%
+#   filter(DAYS <1) %>%
+#   group_by(pc) %>%
+#   mutate(Marginal = -(lead(change_median) -change_median)) %>%
+#   kable() %>%
+#   kable_styling(full_width = FALSE)
+
+plot <- df %>%
+  filter(pc > 0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(median = median(`cases`)) %>%
+  mutate(change_median = (baseline_median - median)/baseline_median* 100) %>%
+  mutate(efficiency = pc) %>%
+  filter(DAYS <1) %>%
+  group_by(pc) %>%
+  mutate(Marginal = -(lead(change_median) -change_median)) %>%
+  filter(DAYS <0) %>%
+  ggplot(aes(y=Marginal,x=as.factor(DAYS),fill=`efficiency`))+
+  geom_col(width=.4, position = "dodge")
+
+plot + theme_bw() +
+  labs(y="Marginal benefit from Day x to (x-1)", x="Days relative to symptom onset")
 
 ```
 
@@ -385,6 +401,44 @@ df2 %>%
   theme_bw()
 
 ```
+
+
+\newpage
+
+```{r, echo = FALSE, crop = NULL, warning=FALSE}
+
+# df2 %>%
+#   filter(pc > 0) %>%
+#   mutate(`pc` = as.factor(`pc`)) %>%
+#   group_by(`DAYS`,`pc`) %>%
+#   summarise(median = median(`cases`)) %>%
+#   mutate(change_median = (baseline_median - median)/baseline_median* 100) %>%
+#   mutate(efficiency = pc) %>%
+#   filter(DAYS <1) %>%
+#   group_by(pc) %>%
+#   mutate(Marginal = -(lead(change_median) -change_median)) %>%
+#   kable() %>%
+#   kable_styling(full_width = FALSE)
+
+plot <- df2 %>%
+  filter(pc > 0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  group_by(`DAYS`,`pc`) %>%
+  summarise(median = median(`cases`)) %>%
+  mutate(change_median = (baseline_median - median)/baseline_median* 100) %>%
+  mutate(efficiency = pc) %>%
+  filter(DAYS <1) %>%
+  group_by(pc) %>%
+  mutate(Marginal = -(lead(change_median) -change_median)) %>%
+  filter(DAYS <0) %>%
+  ggplot(aes(y=Marginal,x=as.factor(DAYS),fill=`efficiency`))+
+  geom_col(width=.4, position = "dodge")
+
+plot + theme_bw() +
+  labs(y="Marginal benefit from Day x to (x-1)", x="Days relative to symptom onset")
+
+```
+
 
 \newpage
 

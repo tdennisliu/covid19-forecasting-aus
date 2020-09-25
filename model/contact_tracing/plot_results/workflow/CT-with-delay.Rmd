@@ -62,19 +62,31 @@ df %>%
 ```
 
 
-```{r, echo = FALSE, crop = NULL, warning = FALSE}
+```{r, echo = FALSE, crop = NULL, warning = FALSE, fig.height=8}
 
 df %>% 
+  filter(`pc`!=0) %>%
   mutate(`pc` = as.factor(`pc`)) %>%
   mutate(`DAYS` = as.factor(`DAYS`)) %>%
   mutate(efficiency = pc) %>%
   ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 5000)) +
+  coord_cartesian(ylim = c(0, 2500)) +
   ggtitle("Box plot of cases (axis limited at 5000)")
 
+df %>% 
+  filter(`pc`!=0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  mutate(`DAYS` = as.factor(`DAYS`)) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
+  geom_boxplot(outlier.shape=NA) +
+  xlab("Days") +  
+  facet_wrap(~DAYS) +
+  coord_cartesian(ylim = c(0, 150)) +
+  ggtitle("Box plot of cases (axis limited at 150)")
 
 #df %>% 
 #  mutate(`pc` = as.factor(`pc`)) %>%
@@ -290,19 +302,31 @@ df2 %>%
 
 ```
 
-```{r, echo = FALSE, crop = NULL, warning = FALSE}
+```{r, echo = FALSE, crop = NULL, warning = FALSE,fig.height=8}
 
 df2 %>% 
+  filter(`pc`!=0) %>%
   mutate(`pc` = as.factor(`pc`)) %>%
   mutate(`DAYS` = as.factor(`DAYS`)) %>%
   mutate(efficiency = pc) %>%
   ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
   coord_cartesian(ylim = c(0, 5000)) +
   ggtitle("Box plot of cases (axis limited at 5000)")
 
+df %>% 
+  filter(`pc`!=0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  mutate(`DAYS` = as.factor(`DAYS`)) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
+  geom_boxplot(outlier.shape=NA) +
+  xlab("Days") +  
+  facet_wrap(~DAYS) +
+  coord_cartesian(ylim = c(0, 150)) +
+  ggtitle("Box plot of cases (axis limited at 150)")
 
 #df2 %>% 
 #  mutate(`pc` = as.factor(`pc`)) %>%
@@ -518,19 +542,31 @@ df2 %>%
 
 ```
 
-```{r, echo = FALSE, crop = NULL, warning = FALSE}
+```{r, echo = FALSE, crop = NULL, warning = FALSE, fig.height=8}
 
 df2 %>% 
+  filter(`pc`!=0) %>%
   mutate(`pc` = as.factor(`pc`)) %>%
   mutate(`DAYS` = as.factor(`DAYS`)) %>%
   mutate(efficiency = pc) %>%
   ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 5000)) +
+  coord_cartesian(ylim = c(0, 2500)) +
   ggtitle("Box plot of cases (axis limited at 5000)")
 
+df %>% 
+  filter(`pc`!=0) %>%
+  mutate(`pc` = as.factor(`pc`)) %>%
+  mutate(`DAYS` = as.factor(`DAYS`)) %>%
+  mutate(efficiency = pc) %>%
+  ggplot(aes(x= efficiency, y=cases, fill = efficiency)) +
+  geom_boxplot(outlier.shape=NA) +
+  xlab("Days") +  
+  facet_wrap(~DAYS) +
+  coord_cartesian(ylim = c(0, 150)) +
+  ggtitle("Box plot of cases (axis limited at 150)")
 ```
 
 \newpage

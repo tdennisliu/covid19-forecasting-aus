@@ -561,9 +561,11 @@ class Forecast:
                             # action_time = self.people[parent_key].detection_time + 
                             # 2* draw from distrubtion
                             if self.people[parent_key].detected!=1:
+                                #if parent is not traced
                                 action_time = detect_time + 2*next(self.get_action_time)
                             else:
-                                #parent was detected, and now case is routine detected
+                                #parent was traced, 
+                                # and now case is routine detected
                                 # Take minimum of routine isolation
                                 # and parents isoaltion time
                                 action_time = min(

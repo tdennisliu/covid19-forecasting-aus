@@ -1,7 +1,7 @@
 import matplotlib 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import sns
+import seaborn as sns
 import pandas as pd
 from numpy.random import beta, gamma
 
@@ -38,8 +38,8 @@ if __name__ == '__main__':
     
     #time to isolation gamma parameters
     t_a_offset = 1 #number of days minimum to isolation
-    t_a_shape = 1
-    t_a_scale = 2
+    t_a_shape = 2
+    t_a_scale = 1
 
     #number of iterations
     n=20000

@@ -3,7 +3,7 @@
 #SBATCH --qos=express
 #SBATCH -N 1
 #SBATCH -n 10
-#SBATCH --time=03:00:00
+#SBATCH --time=10:00:00
 #SBATCH --mem=30GB
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END

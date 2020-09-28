@@ -1186,14 +1186,14 @@ class Forecast:
         df = df.sort_values(by='date')
         
         ## calculate window of cases to measure against
-        if df.date.values[-1] >90:
+        if df.date.values[-1] >60:
             #if final day of data is later than day 90, then remove first 90 days
-            self.cases_to_subtract = sum(df.local.values[:(self.end_time -90)])
+            self.cases_to_subtract = sum(df.local.values[:(self.end_time -60)])
         else:
             self.cases_to_subtract = 0
 
         self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = max(100,3*(sum(df.local.values) - self.cases_to_subtract)  + sum(df.imported.values))
+        self.max_backcast_cases = max(100,2*(sum(df.local.values) - self.cases_to_subtract)  + sum(df.imported.values))
         #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time

@@ -411,14 +411,17 @@ class Forecast:
     
     def choose_random_item(self, items,weights=None):
         from numpy.random import random
+        r = random()
         if weights is None:
             #Create uniform weights
-            weights = [1/len(items)] * len(items)
-        r = random()
-        for i,item in enumerate(items):
-            r-= weights[i]
-            if r <0:
-                return item
+            #weights = [1/len(items)] * len(items)
+            index = int(r*len(items))
+            return items[index]
+        else:
+            for i,item in enumerate(items):
+                r-= weights[i]
+                if r <0:
+                    return item
         
             
     def new_symp_cases(self,num_new_cases:int):

@@ -73,8 +73,8 @@ df %>%
   geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 2500)) +
-  ggtitle("Box plot of cases (axis limited at 5000)")
+  coord_cartesian(ylim = c(0, 3000)) +
+  ggtitle("Box plot of cases (axis limited at 3000)")
 
 df %>% 
   filter(`pc`!=0) %>%
@@ -85,8 +85,8 @@ df %>%
   geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 150)) +
-  ggtitle("Box plot of cases (axis limited at 150)")
+  coord_cartesian(ylim = c(0, 100)) +
+  ggtitle("Box plot of cases (axis limited at 100)")
 
 #df %>% 
 #  mutate(`pc` = as.factor(`pc`)) %>%
@@ -313,8 +313,8 @@ df2 %>%
   geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 5000)) +
-  ggtitle("Box plot of cases (axis limited at 5000)")
+  coord_cartesian(ylim = c(0, 4000)) +
+  ggtitle("Box plot of cases (axis limited at 4000)")
 
 df %>% 
   filter(`pc`!=0) %>%
@@ -325,8 +325,8 @@ df %>%
   geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 150)) +
-  ggtitle("Box plot of cases (axis limited at 150)")
+  coord_cartesian(ylim = c(0, 100)) +
+  ggtitle("Box plot of cases (axis limited at 100)")
 
 #df2 %>% 
 #  mutate(`pc` = as.factor(`pc`)) %>%
@@ -553,8 +553,8 @@ df2 %>%
   geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 2500)) +
-  ggtitle("Box plot of cases (axis limited at 5000)")
+  coord_cartesian(ylim = c(0, 4000)) +
+  ggtitle("Box plot of cases (axis limited at 4000)")
 
 df %>% 
   filter(`pc`!=0) %>%
@@ -565,8 +565,8 @@ df %>%
   geom_boxplot(outlier.shape=NA) +
   xlab("Days") +  
   facet_wrap(~DAYS) +
-  coord_cartesian(ylim = c(0, 150)) +
-  ggtitle("Box plot of cases (axis limited at 150)")
+  coord_cartesian(ylim = c(0, 100)) +
+  ggtitle("Box plot of cases (axis limited at 100)")
 ```
 
 \newpage

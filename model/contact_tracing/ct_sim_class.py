@@ -438,7 +438,7 @@ class Forecast:
         """
         Generate offspring for each parent, check if they travel
         """
-        
+        from heapq import heappush
         from math import ceil
         from numpy.random import random, gamma
 
@@ -588,7 +588,7 @@ class Forecast:
                             #case before tracing window, 
                             # action time already assigned if detected
                             # through routine detection
-                            self.infected_queue.append(len(self.people))
+                            heappush(self.infected_queue, (inf_time,len(self.people)))
                             
                         #elif  (self.people[parent_key].detection_time - DAYS) < inf_time < (self.people[parent_key].action_time):
                         # elif ((self.people[parent_key].detection_time - DAYS) < inf_time) and (inf_time < (self.people[parent_key].action_time)):   
@@ -607,19 +607,18 @@ class Forecast:
                                 #will not trigger tertiary cases to be 
                                 # contact traced unless routine detected.
                                 isdetected = 2 
-                                self.infected_queue.append(len(self.people))
+                                heappush(self.infected_queue, (inf_time,len(self.people)))
                             
 
                             else:
                                 #failed to be traced
                                 # if detected in routine detection, 
                                 # isolation time already assigned
-                                self.infected_queue.append(len(self.people))
+                                heappush(self.infected_queue, (inf_time,len(self.people)))
 
-                                
                     else:
                         #parent undetected
-                        self.infected_queue.append(len(self.people))
+                        heappush(self.infected_queue, (inf_time,len(self.people)))
                         
 
                     #add person to tracked people
@@ -665,7 +664,7 @@ class Forecast:
         """
         Simulate forward until end_time
         """
-        from collections import deque
+        from heapq import heappush, heappop
         from math import ceil
         import gc
         np.random.seed(seed)
@@ -692,11 +691,11 @@ class Forecast:
         #Record day 0 cases
         self.cases[0,:] = self.current.copy() 
         #Create queue for infected people
-        self.infected_queue = deque()
+        self.infected_queue = []
         #Assign people to infected queue
         for key, person in self.people.items():
             #add to the queue
-            self.infected_queue.append(key)
+            heappush(self.infected_queue, (person.infection_time,key))
             #Record their times
             if person.infection_time> end_time:
                 #initial undetected cases have slim chance to be infected 
@@ -719,6 +718,8 @@ class Forecast:
             #            self.observed_cases[max(0,ceil(person.detection_time)), 1] +=1
             #    else:
                     print("ERROR: not right category")
+        
+
 
         #Record initial inferred obs including importations.
         self.inferred_initial_obs = self.observed_cases[0,:].copy() 
@@ -732,7 +733,7 @@ class Forecast:
         reinitialising_window = 0
         self.daycount= 0
         while len(self.infected_queue)>0:
-            day_end = self.people[self.infected_queue[0]].infection_time
+            day_end = self.people[self.infected_queue[0][1]].infection_time
             if day_end < self.forecast_date:
                 if self.inf_backcast_counter> self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim
@@ -758,13 +759,13 @@ class Forecast:
 
             
             ## stop if parent infection time greater than end time
-            if self.people[self.infected_queue[0]].infection_time >end_time:
-                self.infected_queue.popleft()
+            if self.people[self.infected_queue[0][1]].infection_time >end_time:
+                heappop(self.infected_queue)
                 print("queue had someone exceed end_time!!")
             else:
                 
                 #take approproate Reff based on parent's infection time
-                curr_time = self.people[self.infected_queue[0]].infection_time
+                curr_time = self.people[self.infected_queue[0][1]].infection_time
                 if type(self.Reff)==int:
                     Reff = 1
                     print("using flat Reff")
@@ -782,7 +783,7 @@ class Forecast:
                             continue
                         break
                 #generate new cases with times
-                parent_key = self.infected_queue.popleft()
+                parent_time, parent_key = heappop(self.infected_queue)
                 #recorded within generate new cases
                 self.generate_new_cases(parent_key,Reff=Reff,k = self.k) 
         #self.people.clear()
@@ -1118,7 +1119,7 @@ class Forecast:
         df = df.sort_values(by='date')
 
         self.max_cases = max(500000,10*sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = max(100,4*sum(df.local.values) + sum(df.imported.values))
+        self.max_backcast_cases = 100#max(100,4*sum(df.local.values) + sum(df.imported.values))
         #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time

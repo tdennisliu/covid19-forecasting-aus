@@ -42,8 +42,11 @@ if __name__ == '__main__':
     t_a_scale = 1
 
     #number of iterations
-    n=20000
-
+    if len(argv)>2:
+        n=int(argv[2])
+    else:
+        n = 20000
+    print("Number of simulations: %i" % n )
     time_end = 30
     state = 'NSW'
     case_file_date = None #'24Jul'
@@ -307,13 +310,13 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-        sns.kdeplot(prop_cases_prevented,ax=ax, label='Actual')
+        ax.hist(prop_cases_prevented, label='Actual')
 
         plt.savefig("./model/contact_tracing/figs/prop_cases_prevented/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)
-        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc"+str(t_a_scale)+"DL.csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc"+str(t_a_scale)+"heap.csv", sep=',',index=False)
     pool.close()
     pool.join()
     print("Finished DAYS %i" % DAYS)

@@ -6,5 +6,5 @@ days=(60 67 74 81 88 95 102 109 116 123 130 137 144 151 158 165 172)
 
 for (( i=0; i<=16; i++ ))
 do
-    sbatch phoenix_all_states.sh 5000 ${days[i]} ${dates[$i]}
+    sbatch phoenix_all_states.sh 8000 ${days[i]} ${dates[$i]}
 done

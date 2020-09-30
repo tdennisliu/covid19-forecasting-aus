@@ -1119,7 +1119,7 @@ class Forecast:
         df = df.sort_values(by='date')
 
         self.max_cases = max(500000,10*sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = 100#max(100,4*sum(df.local.values) + sum(df.imported.values))
+        self.max_backcast_cases = max(100,4*sum(df.local.values) + sum(df.imported.values))
         #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time

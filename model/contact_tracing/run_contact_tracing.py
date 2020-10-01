@@ -211,7 +211,7 @@ if __name__ == '__main__':
 
     #generation_times_by_sim ={}
     generation_times_by_pc = {}
-
+    die_out_by_pc = {}
     #set up dataframe
 
     df = pd.DataFrame(
@@ -228,6 +228,7 @@ if __name__ == '__main__':
         pc_dict[p_c] = []
         prop_cases_prevented_by_pc[p_c] =[]
         generation_times_by_pc[p_c] =[]
+        die_out_by_pc[p_c] = []
 
     for p_c in p_c_list:
         kwargs = {
@@ -239,6 +240,7 @@ if __name__ == '__main__':
         }
         prop_cases_prevented = []
         actual_gen_times = []
+        die_out = {}
         #lose the ordering with parallel processing unless we record to dict?
         for cases_array, observed_cases_array, params in pool.imap_unordered(worker,
             [(Model,'simulate_then_reset',time_end, N, N, kwargs) 
@@ -253,18 +255,21 @@ if __name__ == '__main__':
 
             CasesTotal = Cases #+ CasesAfter
             
+
             pc_100_dict[num_sim] = CasesTotal
             
             prop_cases_prevented_by_sim[num_sim] = np.mean(
                 params['secondary_cases'])
 
-
+            die_out[num_sim]=params['cases_after']==0
         
         #record results back in order into orginal list
         for N in range(n):
             pc_dict[p_c].append(pc_100_dict[N])
             prop_cases_prevented_by_pc[p_c].append(prop_cases_prevented)
             generation_times_by_pc[p_c].append(actual_gen_times)
+            die_out_by_pc[p_c].append(die_out[N])
+
         temp = pd.DataFrame()
         temp.index.name = 'sim'
         temp['cases'] = pc_dict[p_c]
@@ -276,6 +281,7 @@ if __name__ == '__main__':
         temp['actual_gen_times_25'] = np.quantile(actual_gen_times, 0.25)
         temp['actual_gen_times_75'] = np.quantile(actual_gen_times, 0.75)
         temp['avg_daily_growth_rate'] = (temp.cases/(sum(initial_cases)))**(1/time_end)
+        temp['die_out'] = die_out_by_pc[p_c]
 
         temp['sim'] = temp.index
         temp['pc'] = p_c

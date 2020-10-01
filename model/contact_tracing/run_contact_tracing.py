@@ -275,6 +275,7 @@ if __name__ == '__main__':
         temp['actual_gen_times_mean'] = np.mean(actual_gen_times)
         temp['actual_gen_times_25'] = np.quantile(actual_gen_times, 0.25)
         temp['actual_gen_times_75'] = np.quantile(actual_gen_times, 0.75)
+        temp['avg_daily_growth_rate'] = (temp.cases/(sum(initial_cases)))**(1/time_end)
 
         temp['sim'] = temp.index
         temp['pc'] = p_c

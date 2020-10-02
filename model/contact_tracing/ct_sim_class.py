@@ -627,11 +627,11 @@ class Forecast:
                     self.people[len(self.people)] = Person(parent_key, inf_time, detect_time,isdetected, 
                     category,action_time=action_time)
                     #Laura
-            if num_offspring>0:
+            #if num_offspring>0:
                 #Laura
                 #record actual number of secondary cases
                 #prop_cases_prevented = (case_prevented_counter)/num_offspring
-                self.secondary_cases.append(num_offspring - case_prevented_counter)
+            self.secondary_cases.append(num_offspring - case_prevented_counter)
             
         return None
     

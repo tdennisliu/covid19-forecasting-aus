@@ -324,7 +324,7 @@ if __name__ == '__main__':
         plt.savefig("./model/contact_tracing/figs/secondary_cases/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
         #record and print to csv
-        file_name = "allpc_days_"+str(DAYS)
+        file_name = "allpc_days_"+str(DAYS)+"init_"+str(initial_cases[0])
         df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc"+str(t_a_scale)+"heap.csv", sep=',',index=False)
     pool.close()
     pool.join()

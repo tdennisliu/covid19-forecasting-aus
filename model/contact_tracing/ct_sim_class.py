@@ -204,7 +204,7 @@ class Forecast:
         from itertools import cycle
         for time in cycle(self.action_times):
             yield time    
-    def initialise_sim(self,curr_time=0,sim_undectected=True):
+    def initialise_sim(self,curr_time=0,sim_undetected=True):
         """
         Given some number of cases in self.initial_state (copied),
         simulate undetected cases in each category and their 
@@ -273,7 +273,7 @@ class Forecast:
                 
                 #self.cases[max(0,ceil(new_person.infection_time)), 2] +=1
                 
-        if sim_undectected:
+        if sim_undetected:
             #Laura
             #num undetected is nbinom (num failures given num detected)
             if self.current[2]==0:
@@ -685,7 +685,7 @@ class Forecast:
         self.observed_cases[0,:] = self.initial_state.copy()
 
         #Initalise undetected cases and add them to current
-        self.initialise_sim(sim_undectected=sim_undectected)
+        self.initialise_sim(sim_undetected=sim_undetected)
         #number of cases after end time
         self.cases_after = 0 #gets incremented in generate new cases
 

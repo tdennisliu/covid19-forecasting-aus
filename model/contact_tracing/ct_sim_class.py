@@ -459,13 +459,13 @@ class Forecast:
                 num_offspring = nbinom.rvs(n=k, p = 1- self.qua_ai*Reff/(self.qua_ai*Reff + k))
             else:
                 num_offspring = nbinom.rvs(n=k, p = 1- self.alpha_i*Reff/(self.alpha_i*Reff + k))
-        
+        #Laura
+        case_prevented_counter =0
         if num_offspring >0:  
             
             num_sympcases = self.new_symp_cases(num_offspring)
             
-            #Laura
-            case_prevented_counter =0
+            
 
             if self.people[parent_key].category=='A':
                 child_times = []

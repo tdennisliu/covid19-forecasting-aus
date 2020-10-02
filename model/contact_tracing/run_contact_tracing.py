@@ -206,8 +206,8 @@ if __name__ == '__main__':
 
     pc_dict = {}
 
-    prop_cases_prevented_by_sim = {}
-    prop_cases_prevented_by_pc = {}
+    secondary_cases_by_sim = {}
+    secondary_cases_by_pc = {}
 
     #generation_times_by_sim ={}
     generation_times_by_pc = {}
@@ -217,16 +217,16 @@ if __name__ == '__main__':
     df = pd.DataFrame(
         columns=[
             'sim','pc','cases',
-            'prop_cases_prevented_mean',
-            'prop_cases_prevented_25',
-            'prop_cases_prevented_75',
+            'secondary_cases_mean',
+            'secondary_cases_25',
+            'secondary_cases_75',
             'actual_gen_times_mean',
             'actual_gen_times_25',
             'actual_gen_times_75',
             ])
     for p_c in p_c_list:
         pc_dict[p_c] = []
-        prop_cases_prevented_by_pc[p_c] =[]
+        secondary_cases_by_pc[p_c] =[]
         generation_times_by_pc[p_c] =[]
         die_out_by_pc[p_c] = []
 
@@ -238,7 +238,7 @@ if __name__ == '__main__':
             "t_a_scale":t_a_scale,
             "t_a_offset":t_a_offset,
         }
-        prop_cases_prevented = []
+        secondary_cases = []
         actual_gen_times = []
         die_out = {}
         #lose the ordering with parallel processing unless we record to dict?
@@ -250,7 +250,7 @@ if __name__ == '__main__':
             Cases = params['Model_people']
             #CasesAfter = params['cases_after']
 
-            prop_cases_prevented.extend(params['secondary_cases'])
+            secondary_cases.extend(params['secondary_cases'])
             actual_gen_times.extend(params['generation_times'])
 
             CasesTotal = Cases #+ CasesAfter
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
             pc_100_dict[num_sim] = CasesTotal
             
-            prop_cases_prevented_by_sim[num_sim] = np.mean(
+            secondary_cases_by_sim[num_sim] = np.mean(
                 params['secondary_cases'])
 
             die_out[num_sim]=params['cases_after']==0
@@ -266,7 +266,7 @@ if __name__ == '__main__':
         #record results back in order into orginal list
         for N in range(n):
             pc_dict[p_c].append(pc_100_dict[N])
-            prop_cases_prevented_by_pc[p_c].append(prop_cases_prevented)
+            secondary_cases_by_pc[p_c].append(secondary_cases)
             generation_times_by_pc[p_c].append(actual_gen_times)
             die_out_by_pc[p_c].append(die_out[N])
 
@@ -274,9 +274,9 @@ if __name__ == '__main__':
         temp.index.name = 'sim'
         temp['cases'] = pc_dict[p_c]
 
-        temp['prop_cases_prevented_mean'] = np.mean(prop_cases_prevented)
-        temp['prop_cases_prevented_25'] = np.quantile(prop_cases_prevented, 0.25)
-        temp['prop_cases_prevented_75'] = np.quantile(prop_cases_prevented, 0.75)
+        temp['secondary_cases_mean'] = np.mean(secondary_cases)
+        temp['secondary_cases_25'] = np.quantile(secondary_cases, 0.25)
+        temp['secondary_cases_75'] = np.quantile(secondary_cases, 0.75)
         temp['actual_gen_times_mean'] = np.mean(actual_gen_times)
         temp['actual_gen_times_25'] = np.quantile(actual_gen_times, 0.25)
         temp['actual_gen_times_75'] = np.quantile(actual_gen_times, 0.75)
@@ -298,7 +298,7 @@ if __name__ == '__main__':
         )
         os.makedirs("./model/contact_tracing/figs/",exist_ok=True)
         os.makedirs("./model/contact_tracing/figs/gen_interval/",exist_ok=True)
-        os.makedirs("./model/contact_tracing/figs/prop_cases_prevented/",exist_ok=True)
+        os.makedirs("./model/contact_tracing/figs/secondary_cases/",exist_ok=True)
         os.makedirs("./model/contact_tracing/results/",exist_ok=True)
 
         plot_name="pc_"+str(p_c) +"_DAYS"+str(DAYS)
@@ -317,9 +317,9 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
-        ax.hist(prop_cases_prevented, label='Actual')
+        ax.hist(secondary_cases, label='Actual')
 
-        plt.savefig("./model/contact_tracing/figs/prop_cases_prevented/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
+        plt.savefig("./model/contact_tracing/figs/secondary_cases/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)

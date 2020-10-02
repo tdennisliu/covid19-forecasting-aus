@@ -204,7 +204,7 @@ class Forecast:
         from itertools import cycle
         for time in cycle(self.action_times):
             yield time    
-    def initialise_sim(self,curr_time=0):
+    def initialise_sim(self,curr_time=0,sim_undectected=True):
         """
         Given some number of cases in self.initial_state (copied),
         simulate undetected cases in each category and their 
@@ -273,63 +273,64 @@ class Forecast:
                 
                 #self.cases[max(0,ceil(new_person.infection_time)), 2] +=1
                 
-
-        #num undetected is nbinom (num failures given num detected)
-        if self.current[2]==0:
-            num_undetected_s = nbinom.rvs(1,self.qs*self.qua_qs_factor)
-        else:
-            num_undetected_s = nbinom.rvs(self.current[2],self.qs*self.qua_qs_factor)
-        
-        ## Laura ,skip this for contact tracing
-        #if self.current[0]==0:
-        #    num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
-        #else:
-        #    num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
-        num_undetected_i = 0
-
-        ######
-        total_s = num_undetected_s + self.current[2]
-
-        #infer some non detected asymp at initialisation
-        if total_s==0:
-            num_undetected_a = nbinom.rvs(1, self.ps)
-        else:
-            num_undetected_a = nbinom.rvs(total_s, self.ps)
-
-        #simulate cases that will be detected within the next week
-        #for n in range(1,8):
-            #just symptomatic?
-            #self.people[len(self.people)] = Person(0, -1*next(self.get_inf_time) , n, 0, 'S')
-        if curr_time==0:
-            #Add each undetected case into people
-            for n in range(num_undetected_i):
-                self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
-                self.current[0] +=1
-            for n in range(num_undetected_a):
-                self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
-                self.current[1] +=1
-            for n in range(num_undetected_s):
-                self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'S')
-                self.current[2] +=1
-        else:
-            #reinitialised, so add these cases back onto cases
-             #Add each undetected case into people
-            for n in range(num_undetected_i):
-                new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
-                self.infected_queue.append(len(self.people))
-                self.people[len(self.people)] = new_person
-                self.cases[max(0,ceil(new_person.infection_time)),0] +=1
-            for n in range(num_undetected_a):
-                new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
-                self.infected_queue.append(len(self.people))
-                self.people[len(self.people)] = new_person
-                self.cases[max(0,ceil(new_person.infection_time)),1] +=1
-            for n in range(num_undetected_s):
-                new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'S')
-                self.infected_queue.append(len(self.people))
-                self.people[len(self.people)] = new_person
-                self.cases[max(0,ceil(new_person.infection_time)),2] +=1
+        if sim_undectected:
+            #Laura
+            #num undetected is nbinom (num failures given num detected)
+            if self.current[2]==0:
+                num_undetected_s = nbinom.rvs(1,self.qs*self.qua_qs_factor)
+            else:
+                num_undetected_s = nbinom.rvs(self.current[2],self.qs*self.qua_qs_factor)
             
+            ## Laura ,skip this for contact tracing
+            #if self.current[0]==0:
+            #    num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
+            #else:
+            #    num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
+            num_undetected_i = 0
+
+            ######
+            total_s = num_undetected_s + self.current[2]
+
+            #infer some non detected asymp at initialisation
+            if total_s==0:
+                num_undetected_a = nbinom.rvs(1, self.ps)
+            else:
+                num_undetected_a = nbinom.rvs(total_s, self.ps)
+
+            #simulate cases that will be detected within the next week
+            #for n in range(1,8):
+                #just symptomatic?
+                #self.people[len(self.people)] = Person(0, -1*next(self.get_inf_time) , n, 0, 'S')
+            if curr_time==0:
+                #Add each undetected case into people
+                for n in range(num_undetected_i):
+                    self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
+                    self.current[0] +=1
+                for n in range(num_undetected_a):
+                    self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
+                    self.current[1] +=1
+                for n in range(num_undetected_s):
+                    self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'S')
+                    self.current[2] +=1
+            else:
+                #reinitialised, so add these cases back onto cases
+                #Add each undetected case into people
+                for n in range(num_undetected_i):
+                    new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
+                    self.infected_queue.append(len(self.people))
+                    self.people[len(self.people)] = new_person
+                    self.cases[max(0,ceil(new_person.infection_time)),0] +=1
+                for n in range(num_undetected_a):
+                    new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
+                    self.infected_queue.append(len(self.people))
+                    self.people[len(self.people)] = new_person
+                    self.cases[max(0,ceil(new_person.infection_time)),1] +=1
+                for n in range(num_undetected_s):
+                    new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'S')
+                    self.infected_queue.append(len(self.people))
+                    self.people[len(self.people)] = new_person
+                    self.cases[max(0,ceil(new_person.infection_time)),2] +=1
+                
         return None
 
     def read_in_Reff(self):
@@ -660,7 +661,7 @@ class Forecast:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
     def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8,
-     t_a_shape = 3/2, t_a_scale=2, t_a_offset=0 ):
+        t_a_shape = 3/2, t_a_scale=2, t_a_offset=0,sim_undectected=True ):
         """
         Simulate forward until end_time
         """
@@ -684,7 +685,7 @@ class Forecast:
         self.observed_cases[0,:] = self.initial_state.copy()
 
         #Initalise undetected cases and add them to current
-        self.initialise_sim()
+        self.initialise_sim(sim_undectected=sim_undectected)
         #number of cases after end time
         self.cases_after = 0 #gets incremented in generate new cases
 

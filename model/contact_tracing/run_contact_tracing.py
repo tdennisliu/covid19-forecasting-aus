@@ -41,6 +41,7 @@ if __name__ == '__main__':
     t_a_shape = 2
     t_a_scale = 1
 
+    sim_undetected = False
     #number of iterations
     if len(argv)>2:
         n=int(argv[2])
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     case_file_date = None #'24Jul'
     #Reff_file_date = '2020-07-20'
     Reff_file_date = '2020-08-06'
-    #Number of initial symptomatic and asymptomatic cases respectively
+    #Number of initial, detected symptomatic and asymptomatic cases respectively
     initial_cases = [10,2]
 
     local_detection = {
@@ -237,6 +238,7 @@ if __name__ == '__main__':
             "t_a_shape":t_a_shape,
             "t_a_scale":t_a_scale,
             "t_a_offset":t_a_offset,
+            "sim_undetected":sim_undetected,
         }
         secondary_cases = []
         actual_gen_times = []

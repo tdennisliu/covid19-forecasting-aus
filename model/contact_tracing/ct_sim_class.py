@@ -10,13 +10,13 @@ class Person:
     # Laura
     # default action_time to 0. This allows for code that doesn’t involve contact tracing (undetected cases) 
     # to continue without modification.
-    def __init__(self,parent, infection_time,detection_time, detected,category:str, action_time = 1000):
+    def __init__(self,parent, infection_time,symp_onset_time, detected,category:str, action_time = 1000):
         """
         Category is one of 'I','A','S' for Imported, Asymptomatic and Symptomatic
         """
         self.parent = parent
         self.infection_time = infection_time
-        self.detection_time = detection_time
+        self.symp_onset_time = symp_onset_time
         self.detected = detected
         self.category = category
         # Laura
@@ -176,7 +176,7 @@ class Forecast:
         """
 
         self.inf_times = np.random.gamma(i/j, j, size =size) #shape and scale
-        self.detect_times = np.random.gamma(m/n,n, size = size)
+        self.symp_times = np.random.gamma(m/n,n, size = size)
         self.action_times = self.t_a_offset + np.random.gamma(self.t_a_shape, self.t_a_scale, size = size)
         return None
     
@@ -189,17 +189,17 @@ class Forecast:
         for time in cycle(self.inf_times):
             yield time
     
-    def iter_detect_time(self):
+    def iter_symp_time(self):
         """
-        access Next detect_time
+        access Next symp_time
         """
         from itertools import cycle
-        for time in cycle(self.detect_times):
+        for time in cycle(self.symp_times):
             yield time
 
     def iter_action_time(self):
         """
-        access Next detect_time
+        access Next action_time
         """
         from itertools import cycle
         for time in cycle(self.action_times):
@@ -237,7 +237,7 @@ class Forecast:
             #Grab now and iterate through samples to save simulation
             self.generate_times(size=10000)
             self.get_inf_time = self.iter_inf_time()
-            self.get_detect_time = self.iter_detect_time()
+            self.get_symp_time = self.iter_symp_time()
             self.get_action_time = self.iter_action_time()
 
             #counters for terminating early
@@ -259,14 +259,14 @@ class Forecast:
                 self.infected_queue.append(len(self.people))
                 
                 inf_time = next(self.get_inf_time)
-                detection_time = next(self.get_detect_time)
+                symp_onset_time = next(self.get_symp_time)
                 if person <- num_symp:
                     new_person = Person(-1, 
-                    curr_time-1*detection_time ,
+                    curr_time-1*symp_onset_time ,
                     curr_time, 1, 'S')
                 else:
                     new_person = Person(-1, 
-                    curr_time-1*detection_time ,
+                    curr_time-1*symp_onset_time ,
                     curr_time, 1, 'A')
                 
                 self.people[len(self.people)] = new_person
@@ -507,7 +507,7 @@ class Forecast:
                     #within forecast time, AND
                     # case was not prevented by isolation
                     detection_rv = random()
-                    detect_time = inf_time + next(self.get_detect_time)
+                    symp_time = inf_time + next(self.get_symp_time)
                         
                     isdetected = 0 
                     
@@ -530,23 +530,23 @@ class Forecast:
                             # Laura
                             # if parent is undetected, assign a new time to action 
                             if self.people[parent_key].detected!=1:
-                                action_time = detect_time + next(self.get_action_time)
+                                action_time = symp_time + next(self.get_action_time)
                             else:
                                 #parent was detected, and now case is routine detected
                                 # Take minimum of routine isolation
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    detect_time + next(self.get_action_time)
+                                    symp_time + next(self.get_action_time)
                                      )
                                 
-                            if detect_time < self.cases.shape[0]:
-                                self.observed_cases[max(0,ceil(detect_time)-1),2] += 1
+                            if symp_time < self.cases.shape[0]:
+                                self.observed_cases[max(0,ceil(symp_time)-1),2] += 1
                             #if case undetected, case gets default action time
                     else:
                         category = 'A'
                         self.cases[max(0,ceil(inf_time)-1),1] += 1
-                        #detect_time = 0
+                        #symp_time = 0
                         if self.test_campaign_date is not None:
                         #see if case is during a testing campaign
                             if inf_time <self.test_campaign_date:
@@ -558,15 +558,15 @@ class Forecast:
                         if detection_rv < detect_prob:
                             #case detected
                             isdetected=1
-                            #detect_time = inf_time + next(self.get_detect_time)
+                            #symp_time = inf_time + next(self.get_symp_time)
                             # Laura 
                             # Get absolute action time, 
                             # if parent is not detected, assign an action time 
-                            # action_time = self.people[parent_key].detection_time + 
+                            # action_time = self.people[parent_key].symp_onset_time + 
                             # 2* draw from distrubtion
                             if self.people[parent_key].detected!=1:
                                 #if parent is not traced
-                                action_time = detect_time + 2*next(self.get_action_time)
+                                action_time = symp_time + 2*next(self.get_action_time)
                             else:
                                 #parent was traced, 
                                 # and now case is routine detected
@@ -574,10 +574,10 @@ class Forecast:
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    detect_time +2*next(self.get_action_time)
+                                    symp_time +2*next(self.get_action_time)
                                     )
-                            if detect_time < self.cases.shape[0]:
-                                self.observed_cases[max(0,ceil(detect_time)-1),1] += 1
+                            if symp_time < self.cases.shape[0]:
+                                self.observed_cases[max(0,ceil(symp_time)-1),1] += 1
 
                     # Laura 
                     #add new infected to queue
@@ -585,14 +585,14 @@ class Forecast:
                     if self.people[parent_key].detected==1:
                         #only check contact tracing if parent was detected
 
-                        if inf_time < self.people[parent_key].detection_time + self.DAYS:
+                        if inf_time < self.people[parent_key].symp_onset_time + self.DAYS:
                             #case before tracing window, 
                             # action time already assigned if detected
                             # through routine detection
                             heappush(self.infected_queue, (inf_time,len(self.people)))
                             
-                        #elif  (self.people[parent_key].detection_time - DAYS) < inf_time < (self.people[parent_key].action_time):
-                        # elif ((self.people[parent_key].detection_time - DAYS) < inf_time) and (inf_time < (self.people[parent_key].action_time)):   
+                        #elif  (self.people[parent_key].symp_onset_time - DAYS) < inf_time < (self.people[parent_key].action_time):
+                        # elif ((self.people[parent_key].symp_onset_time - DAYS) < inf_time) and (inf_time < (self.people[parent_key].action_time)):   
                         elif inf_time < self.people[parent_key].action_time:   
                             
                             x_rn = random()
@@ -624,7 +624,7 @@ class Forecast:
 
                     #add person to tracked people
                     # Laura # add action_time when recording
-                    self.people[len(self.people)] = Person(parent_key, inf_time, detect_time,isdetected, 
+                    self.people[len(self.people)] = Person(parent_key, inf_time, symp_time,isdetected, 
                     category,action_time=action_time)
                     #Laura
             #if num_offspring>0:
@@ -708,15 +708,15 @@ class Forecast:
             #else:
             #    if person.category=='S':
             #        self.cases[max(0,ceil(person.infection_time)),2] +=1
-            #        if (person.detection_time < end_time) & (person.detection_time!=0):
-            #            self.observed_cases[max(0,ceil(person.detection_time)), 2] +=1
+            #        if (person.symp_onset_time < end_time) & (person.symp_onset_time!=0):
+            #            self.observed_cases[max(0,ceil(person.symp_onset_time)), 2] +=1
             #    elif person.category=='I':
                     #Imports recorded on creation in sim
             #        continue
             #    elif person.category=='A':
             #        self.cases[max(0,ceil(person.infection_time)),1] +=1
-            #        if (person.detection_time < end_time) & (person.detection_time!=0):
-            #            self.observed_cases[max(0,ceil(person.detection_time)), 1] +=1
+            #        if (person.symp_onset_time < end_time) & (person.symp_onset_time!=0):
+            #            self.observed_cases[max(0,ceil(person.symp_onset_time)), 1] +=1
             #    else:
                     print("ERROR: not right category")
         
@@ -741,6 +741,7 @@ class Forecast:
                     )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                     self.num_too_many+=1
                     self.bad_sim = True
+                    print(self.cases)
                     break
             else:
                 #check max cases for after forecast date

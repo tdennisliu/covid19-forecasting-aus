@@ -54,7 +54,7 @@ if __name__ == '__main__':
     #Reff_file_date = '2020-07-20'
     Reff_file_date = '2020-08-06'
     #Number of initial, detected symptomatic and asymptomatic cases respectively
-    initial_cases = [10,2]
+    initial_cases = [5,1]
 
     local_detection = {
                 'NSW':0.5, #0.8 #0.2 #0.556,#0.65,

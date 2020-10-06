@@ -705,6 +705,14 @@ class Forecast:
                     self.num_too_many+=1
                     self.bad_sim = True
                     break
+                elif self.inf_backcast_counter - self.cases_to_subtract_now > self.max_nowcast_cases:
+                    print("Sim "+str(self.num_of_sim
+                    )+" in "+self.state+" has > "+str(
+                        self.max_nowcast_cases - self.cases_to_subtract_now
+                        )+" cases in nowcast. Ending")
+                    self.num_too_many+=1
+                    self.bad_sim = True
+                    break
             else:
                 #check max cases for after forecast date
                 if self.inf_forecast_counter>self.max_cases:
@@ -1189,11 +1197,15 @@ class Forecast:
         if df.date.values[-1] >60:
             #if final day of data is later than day 90, then remove first 90 days
             self.cases_to_subtract = sum(df.local.values[:(self.end_time -60)])
+            self.cases_to_subtract_now = sum(df.local.values[:(self.end_time -14)])
         else:
             self.cases_to_subtract = 0
+            self.cases_to_subtract_now = 0
 
         self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
         self.max_backcast_cases = max(100,2*(sum(df.local.values) - self.cases_to_subtract)  + sum(df.imported.values))
+
+        self.max_nowcast_cases = max(10, 2*(sum(df.local.values) - self.cases_to_subtract_now)  + sum(df.imported.values))
         #self.max_cases = max(self.max_cases, 1000)
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time

@@ -363,6 +363,14 @@ for data_date in cprs_dates:
     mob_forecast_date = df_forecast.date.min()
     mob_samples = 100
 
+    state_key = {
+        'NSW':'1',
+        'QLD':'2',
+        'SA':'3',
+        'TAS':'4',
+        'VIC':'5',
+        'WA':'6',
+    }
     for typ in forecast_type:
         state_R={}
         for state in states:
@@ -402,8 +410,11 @@ for data_date in cprs_dates:
                 df1 =df_state.loc[df_state.date<=ban]
                 X1 = df1[predictors] #N by K
                 
-                
-                sim_R = np.tile(samples.R_L.values, (df_state.shape[0],mob_samples))
+                #sample the right R_L
+                if state in ("ACT","NT"):
+                    sim_R = np.tile(samples.R_L.values, (df_state.shape[0],mob_samples))
+                else:
+                    sim_R = np.tile(samples['R_Li['+state_key[state]+']'].values, (df_state.shape[0],mob_samples))
 
 
                 #set initial pre ban values of md to 1

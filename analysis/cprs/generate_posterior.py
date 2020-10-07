@@ -108,14 +108,16 @@ parameters {
     vector[K] bet; //coefficients
     real<lower=0> R_I; //base level imports,
     real<lower=0> R_L; //base level local
+    vector<lower=0>[j] R_Li; //state level estimates
+    real<lower=0> sig; //state level variance
     real<lower=0> theta_md; // md weighting
     matrix<lower=0,upper=1>[N,j] prop_md; // proportion who are md'ing
     matrix<lower=0,upper=1>[N_v,j_v] prop_md_v;
     matrix<lower=0,upper=1>[N,j] brho; //estimate of proportion of imported cases
-    matrix[N,K] noise[j];
+    matrix<lower=0,upper=1>[N,K] noise[j];
     
     matrix<lower=0,upper=1>[N_v,j_v] brho_v; //estimate of proportion of imported cases
-    matrix[N_v,K] noise_v[j_v];
+    matrix<lower=0,upper=1>[N_v,K] noise_v[j_v];
 }
 transformed parameters {
     matrix<lower=0>[N,j] mu_hat;
@@ -132,7 +134,7 @@ transformed parameters {
             
             md[n,i] = pow(1+theta_md , -1*prop_md[n,i]);
             
-            mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_L*(
+            mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_Li[j]*(
             (1-policy[n]) + md[n,i]*policy[n] )*inv_logit(
             noise[j][n,:]*(bet)); //mean estimate
         }
@@ -141,8 +143,8 @@ transformed parameters {
         for (n in 1:N_v){
             
             md_v[n,i] = pow(1+theta_md ,-1*prop_md_v[n,i]);
-            
-            mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_L*(
+            //Need to index states properly!
+            mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[j_v]*(
                 (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
                 noise_v[i][n,:]*(bet)); //mean estimate
         }
@@ -155,10 +157,10 @@ model {
     //md ~ beta(7,3);
     
     
-    R_L ~ gamma(2.4*2.4/0.2,2.4/0.2);
+    R_L ~ gamma(2.4*2.4/0.2,2.4/0.2); //hyper-prior
     R_I ~ gamma(0.5*0.5/.2,0.5/.2);
-
- 
+    sig ~ exponential(5); //mean is 1/5
+    R_Li ~ gamma( R_L*R_L/sig, R_L/sig); //partial pooling of state level estimates
     for (i in 1:j) {
         for (n in 1:N){
             prop_md[n,i] ~ beta(1 + count_md[i][n], 1+ respond_md[i][n] - count_md[i][n]);
@@ -390,8 +392,8 @@ for data_date in cprs_dates:
 
     filename = "stan_posterior_fit" + data_date.strftime("%Y-%m-%d") + ".txt"
     with open(results_dir+filename, 'w') as f:
-        print(fit.stansummary(pars=['bet','R_I','R_L','theta_md']), file=f)
-    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','brho','theta_md','brho_v'])
+        print(fit.stansummary(pars=['bet','R_I','R_L','R_Li','theta_md','sig']), file=f)
+    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','R_Li','brho','theta_md','brho_v'])
 
     # Plot ratio of imported to total cases
     # First phase
@@ -483,9 +485,13 @@ for data_date in cprs_dates:
     ax.set_yticks([0,2,3],minor=False)
     ax.set_yticklabels([0,2,3],minor=False)
     ax.set_ylim((0,3))
-    ax.set_xticklabels(['R_I','R_L0','R_L0 prior','R_I prior'])
+    #state labels in alphabetical
+    ax.set_xticklabels(['R_I','R_L0',
+    'R_L0 NSW','R_L0 QLD','R_L0 SA','R_L0 TAS','R_L0 VIC','R_L0 WA',
+    'R_L0 prior','R_I prior'])
+    ax.tick_params('x',rotation=45)
     ax.yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
-    plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"R_md_priors.png",dpi = 144)
+    plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"R_priors.png",dpi = 144)
 
     posterior = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))] 
                                 ] 
@@ -546,7 +552,9 @@ for data_date in cprs_dates:
 
     var_to_csv = predictors
     samples_mov_gamma[predictors] = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))]]
-    var_to_csv = ['R_I']+['R_L']+['theta_md']+predictors
+    var_to_csv = ['R_I']+['R_L']+['theta_md']+predictors + [
+        'R_Li['+str(i+1)+']' for i in range(len(states_to_fit))
+        ]
 
 
     samples_mov_gamma[var_to_csv].to_hdf('data/soc_mob_posterior'+data_date.strftime("%Y-%m-%d")+'.h5',key='samples')

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import nbinom, erlang, beta, binom, gamma, poisson, beta
+from math import floor
 import matplotlib.pyplot as plt
 import os
 class Person:
@@ -74,84 +75,7 @@ class Forecast:
                 test_campaign_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
             self.test_campaign_factor = test_campaign_factor
         else:
-            self.test_campaign_date = None
-        #import model parameters
-        self.a_dict = {
-            'ACT': {
-                1:2,
-                2:22,
-                3:31*1.3,
-                4:17,
-                5:15,
-                6:3,
-            },
-            'NSW': {
-                1: 90,
-                2: 408,
-                3: 694*1.3,
-                4: 380,
-                5: 313,
-                6: 297,
-            },
-            'NT': {
-                1: 3,
-                2: 4,
-                3: 7*1.3,
-                4: 9,
-                5: 6,
-                6: 4,
-            },
-            'QLD': {
-                1:61,
-                2:190,
-                3:305*1.3,
-                4:162,
-                5:87,
-                6:27,
-            },
-            'SA': {
-                1:14,
-                2:68,
-                3:115*1.3,
-                4:67,
-                5:26,
-                6:10
-            },
-            'TAS':{
-                1:6,
-                2:14,
-                3:33*1.3,
-                4:20,
-                5:9,
-                6:2,
-            },
-            'VIC': {
-                1:58,
-                2:202,
-                3:222*1.3,
-                4:146,
-                5:84,
-                6:182,
-            },
-            'WA': {
-                1:15,
-                2:73,
-                3:154*1.3,
-                4:114,
-                5:110,
-                6:83
-            },
-        }
-        #changes below also need to be changed in simulate
-        self.b_dict = {
-            1: 6.2,
-            2: 7.2,
-            3: 5.2,
-            4: 5.2,
-            5: 22.2,
-            6: 159.2 ## this needs to change for
-                    # each change in forecast date
-        }
+            self.test_campaign_date = None     
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.datapath = os.path.join(dir_path,'data/')
@@ -335,7 +259,7 @@ class Forecast:
                 self.R_I = df_forecast.loc[
                     (df_forecast.type=='R_I')&
                     (df_forecast.state==self.state),
-                    self.num_of_sim%2000]
+                    self.num_of_sim%2000].values
 
             #R_L here 
             df_forecast = df_forecast.loc[df_forecast.type==self.forecast_R]
@@ -383,14 +307,19 @@ class Forecast:
     
     def choose_random_item(self, items,weights=None):
         from numpy.random import random
+        r = random()
         if weights is None:
             #Create uniform weights
-            weights = [1/len(items)] * len(items)
-        r = random()
-        for i,item in enumerate(items):
-            r-= weights[i]
-            if r <0:
-                return item
+            #weights = [1/len(items)] * len(items)
+            index = floor(r*len(items))
+
+            return items[index]
+
+        else:
+            for i,item in enumerate(items):
+                r-= weights[i]
+                if r <0:
+                    return item
         
             
     def new_symp_cases(self,num_new_cases:int):
@@ -699,16 +628,16 @@ class Forecast:
         while len(self.infected_queue)>0:
             day_end = self.people[self.infected_queue[0]].infection_time
             if day_end < self.forecast_date:
-                if self.inf_backcast_counter - self.cases_to_subtract > self.max_backcast_cases:
+                if self.inf_backcast_counter - self.cases_to_subtract - self.imported_total > self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                     self.num_too_many+=1
                     self.bad_sim = True
                     break
-                elif self.inf_backcast_counter - self.cases_to_subtract_now > self.max_nowcast_cases:
+                elif False:#self.inf_backcast_counter - self.cases_to_subtract_now -self.imported_total> self.max_nowcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(
-                        self.max_nowcast_cases - self.cases_to_subtract_now
+                        self.max_nowcast_cases
                         )+" cases in nowcast. Ending")
                     self.num_too_many+=1
                     self.bad_sim = True
@@ -1168,17 +1097,19 @@ class Forecast:
         
             if len(glob.glob(path)) >1:
                 print("Using an arbritary file")
-        df = df.loc[df.STATE==self.state]
-
-        #Set imported cases, local cases have 1101 as first 4 digits
-        df.PLACE_OF_ACQUISITION.fillna('00038888',inplace=True) #Fill blanks with simply unknown
 
         df['date_inferred'] = df.TRUE_ONSET_DATE
         df.loc[df.TRUE_ONSET_DATE.isna(),'date_inferred'] = df.loc[df.TRUE_ONSET_DATE.isna()].NOTIFICATION_DATE - timedelta(days=5)
         df.loc[df.date_inferred.isna(),'date_inferred'] = df.loc[df.date_inferred.isna()].NOTIFICATION_RECEIVE_DATE - timedelta(days=6)
 
+        #Set imported cases, local cases have 1101 as first 4 digits
+        df.PLACE_OF_ACQUISITION.fillna('00038888',inplace=True) #Fill blanks with simply unknown
         df['imported'] = df.PLACE_OF_ACQUISITION.apply(lambda x: 1 if x[-4:]=='8888' and x != '00038888' else 0)
         df['local'] = 1 - df.imported
+
+        self.import_cases_model(df)
+        
+        df = df.loc[df.STATE==self.state]
                 
         if self.state=='VIC':
             #data quality issue
@@ -1196,23 +1127,64 @@ class Forecast:
         ## calculate window of cases to measure against
         if df.date.values[-1] >60:
             #if final day of data is later than day 90, then remove first 90 days
-            self.cases_to_subtract = sum(df.local.values[:(self.end_time -60)])
-            self.cases_to_subtract_now = sum(df.local.values[:(self.end_time -14)])
+            self.cases_to_subtract = sum(df.local.values[:-60])
+            self.cases_to_subtract_now = sum(df.local.values[:-14])
         else:
             self.cases_to_subtract = 0
             self.cases_to_subtract_now = 0
-
+        self.imported_total = sum(df.imported.values)
         self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = max(100,2*(sum(df.local.values) - self.cases_to_subtract)  + sum(df.imported.values))
+        self.max_backcast_cases = max(100,2*(sum(df.local.values) - self.cases_to_subtract))
 
-        self.max_nowcast_cases = max(10, 2*(sum(df.local.values) - self.cases_to_subtract_now)  + sum(df.imported.values))
-        #self.max_cases = max(self.max_cases, 1000)
+        self.max_nowcast_cases = max(10, 1.25*(sum(df.local.values) - self.cases_to_subtract_now))
+        print("Local cases in last 14 days is %i" % (sum(df.local.values) - self.cases_to_subtract_now) )
         df = df.set_index('date')
         #fill missing dates with 0 up to end_time
         df = df.reindex(range(self.end_time), fill_value=0)
         self.actual = df.local.to_dict()
        
         return None
+
+    def import_cases_model(self, df):
+        """
+        Generate model for imports
+        """
+        days = self.end_time
+        def period_dates(date):
+            from datetime import timedelta
+            #subtract 4 from date to infer period of entry when infected
+            date = date-timedelta(days=4)
+            if date <= pd.to_datetime('2020-03-01',format='%Y-%m-%d'):
+                return 0
+            elif date <= pd.to_datetime('2020-03-06',format='%Y-%m-%d'):
+                return 1
+            elif date <= pd.to_datetime('2020-03-13',format='%Y-%m-%d'):
+                return 2
+            elif date <= pd.to_datetime('2020-03-18',format='%Y-%m-%d'):
+                return 3
+            elif date <= pd.to_datetime('2020-03-23',format='%Y-%m-%d'):
+                return 4
+            elif date <= pd.to_datetime('2020-04-14',format='%Y-%m-%d'):
+                return 5
+            else:
+                return 6
+        
+        df ['period'] = df.date_inferred.apply(period_dates)
+        prior = [1,1/5]
+        num_days = [6,7,5,5,22,days - 6-7-5-5-22]
+        alphas = df.groupby(['STATE','period']).imported.sum() + prior[0]
+
+        betas = prior[1]+np.array(num_days)
+        self.a_dict = {
+            self.state : {
+                i+1 : alphas.loc[(self.state, i+1)] for i in range(len(betas))
+            }
+        }
+
+        self.b_dict = { i+1: betas[i] for i in range(len(betas))
+        }
+        return None
+
 
     def p_travel(self):
         """

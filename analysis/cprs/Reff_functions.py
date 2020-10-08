@@ -300,7 +300,13 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                       scale=0.2/df.loc[df.date=='2020-03-01','mean'].mean(),
                                 size=df_state.shape[0]
                             )
-
+                if type(R)==dict:
+                    if states_initials[state] != ['ACT','NT']:
+                        #if state, use inferred
+                        sim_R = np.tile(R[states_initials[state]][:samples_sim.shape[0]], (df_state.shape[0],1))
+                    else:
+                        #if territory, use generic R_L
+                        sim_R = np.tile(samples_sim.R_L.values, (df_state.shape[0],1))
                 else:
                     sim_R = np.tile(samples_sim.R_L.values, (df_state.shape[0],1))
                 mu_hat = 2 *md*sim_R* expit(logodds)

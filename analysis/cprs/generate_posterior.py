@@ -266,7 +266,10 @@ for data_date in cprs_dates:
     sec_states=sorted(['NSW','VIC'])
     sec_start_date = '2020-05-01'
     if data_date > pd.to_datetime("2020-05-12"):
-        possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
+        if data_date < pd.to_datetime("2020-09-14"):
+            possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
+        else:
+            possible_end_date = pd.to_datetime("2020-09-14")
     else:
         possible_end_date = pd.to_datetime("2020-05-11")
     sec_end_date = possible_end_date.strftime('%Y-%m-%d')
@@ -528,9 +531,13 @@ for data_date in cprs_dates:
     plt.savefig(
         results_dir+data_date.strftime("%Y-%m-%d")+'mobility_posteriors.png', dpi =144)
 
+
+    RL_by_state = { state: samples_mov_gamma[
+        'R_Li['+str(i)+']'].values for state, i in state_index.items()
+    }
     ax3 =predict_plot(samples_mov_gamma,df.loc[(df.date>=start_date)&(df.date<=end_date)],gamma=True,
                     moving=True,split=split,grocery=True,ban = ban,
-                    R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
+                    R=RL_by_state, var= True, md_arg=md,
                     rho=states_to_fit, R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[start_date:end_date])#by states....
     for ax in ax3:
         for a in ax:
@@ -540,7 +547,7 @@ for data_date in cprs_dates:
         results_dir+data_date.strftime("%Y-%m-%d")+"total_Reff_allstates.png", dpi=144)
 
     ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
-                    R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
+                    R=RL_by_state, var= True, md_arg=md,
                     rho=sec_states, second_phase=True,
                      R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
     for ax in ax4:

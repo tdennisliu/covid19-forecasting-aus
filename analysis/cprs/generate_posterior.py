@@ -103,6 +103,8 @@ data {
     vector[N_v] count_md_v[j_v]; //count of always
     vector[N_v] respond_md_v[j_v]; // num respondants
 
+    int map_to_state_index[j_v];// indices of second wave to map to first
+
 }
 parameters {
     vector[K] bet; //coefficients
@@ -144,7 +146,9 @@ transformed parameters {
             
             md_v[n,i] = pow(1+theta_md ,-1*prop_md_v[n,i]);
             //Need to index states properly!
-            mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[j_v]*(
+            mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[
+                map_to_state_index[j_v]
+                ]*(
                 (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
                 noise_v[i][n,:]*(bet)); //mean estimate
         }
@@ -348,7 +352,7 @@ for data_date in cprs_dates:
     policy = dfX.loc[dfX.state==states_to_fit[0],'post_policy']
 
 
-
+    state_index = { state : i+1  for i, state in enumerate(states_to_fit)}
     ##Make state by state arrays
     input_data ={
         'N': dfX.loc[dfX.state==states_to_fit[0]].shape[0],
@@ -376,6 +380,7 @@ for data_date in cprs_dates:
         'respond_md':respond_by_state,
         'count_md_v':sec_count_by_state,
         'respond_md_v':sec_respond_by_state,
+        'map_to_state_index': [state_index[state] for state in sec_states]
 
     }
 

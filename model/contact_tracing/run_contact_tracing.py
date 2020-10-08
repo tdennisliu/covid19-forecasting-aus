@@ -41,6 +41,18 @@ if __name__ == '__main__':
     t_a_shape = 2
     t_a_scale = 1
 
+    t_p_shape = 1
+    t_p_scale = 1
+    t_p_offset = 0    
+        
+    t_t_shape = 1
+    t_t_scale = 1
+    t_t_offset =1
+
+    t_n_shape = 1
+    t_n_scale = 1
+    t_n_offset = 1
+
     sim_undetected = False
     #number of iterations
     if len(argv)>2:
@@ -307,9 +319,23 @@ if __name__ == '__main__':
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
 
+        Model.t_p_shape = t_p_shape
+        Model.t_p_scale = t_p_scale
+        Model.t_p_offset = t_p_offset        
+        
+        Model.t_t_shape = t_t_shape
+        Model.t_t_scale = t_t_scale
+        Model.t_t_offset = t_t_offset
+
+        Model.t_n_shape = t_n_shape
+        Model.t_n_scale = t_n_scale
+        Model.t_n_offset = t_n_offset
+
         Model.t_a_shape = t_a_shape
         Model.t_a_scale = t_a_scale
         Model.t_a_offset = t_a_offset
+
+
         Model.generate_times()
         ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
         ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)

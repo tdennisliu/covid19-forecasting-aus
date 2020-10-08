@@ -10,7 +10,8 @@ class Person:
     # Laura
     # default action_time to 0. This allows for code that doesn’t involve contact tracing (undetected cases) 
     # to continue without modification.
-    def __init__(self,parent, infection_time,symp_onset_time, detected,category:str, action_time = 1000):
+    def __init__(self,parent, infection_time,symp_onset_time, detected,category:str, 
+    present_time=1000,test_time =1000,action_time = 1000,notify_PHU_time=1000):
         """
         Category is one of 'I','A','S' for Imported, Asymptomatic and Symptomatic
         """
@@ -23,7 +24,11 @@ class Person:
         # Add action time to Person object
         # Default action time is 1000 to move it outside of any 
         # simulation window.
+        self.present_time = present_time
+        self.test_time = test_time
+        self.notify_PHU_time = notify_PHU_time
         self.action_time = action_time
+
     
 class Forecast:
     """
@@ -177,6 +182,9 @@ class Forecast:
 
         self.inf_times = np.random.gamma(i/j, j, size =size) #shape and scale
         self.symp_times = np.random.gamma(m/n,n, size = size)
+        self.present_times = self.t_p_offset + np.random.gamma(self.t_p_shape, self.t_p_scale, size = size)
+        self.test_times = self.t_t_offset + np.random.gamma(self.t_t_shape, self.t_t_scale, size = size)
+        self.notify_times = self.t_n_offset + np.random.gamma(self.t_n_shape, self.t_n_scale, size = size)
         self.action_times = self.t_a_offset + np.random.gamma(self.t_a_shape, self.t_a_scale, size = size)
         return None
     
@@ -204,6 +212,31 @@ class Forecast:
         from itertools import cycle
         for time in cycle(self.action_times):
             yield time    
+
+    def iter_present_time(self):
+        """
+        access Next test_time
+        """
+        from itertools import cycle
+        for time in cycle(self.present_times):
+            yield time     
+    
+    def iter_test_time(self):
+        """
+        access Next test_time
+        """
+        from itertools import cycle
+        for time in cycle(self.test_times):
+            yield time 
+
+    def iter_notify_time(self):
+        """
+        access Next notify_time
+        """
+        from itertools import cycle
+        for time in cycle(self.notify_times):
+            yield time 
+
     def initialise_sim(self,curr_time=0,sim_undetected=True):
         """
         Given some number of cases in self.initial_state (copied),
@@ -238,6 +271,11 @@ class Forecast:
             self.generate_times(size=10000)
             self.get_inf_time = self.iter_inf_time()
             self.get_symp_time = self.iter_symp_time()
+
+            ## Laura get new times
+            self.get_present_time = self.iter_present_time()
+            self.get_test_time = self.iter_test_time()
+            self.get_notify_time = self.iter_notify_time()
             self.get_action_time = self.iter_action_time()
 
             #counters for terminating early
@@ -661,6 +699,9 @@ class Forecast:
             return nbinom.rvs(a, 1-1/(b+1),size=size)
 
     def simulate(self, end_time,sim,seed,DAYS=2, p_c =0.8,
+        t_p_offset = 1, t_p_shape =1, t_p_scale = 1,
+        t_t_shape = 1/1, t_t_scale=1, t_t_offset=1,
+        t_n_shape = 1/1, t_n_scale = 1/1,t_n_offset = 0,
         t_a_shape = 3/2, t_a_scale=2, t_a_offset=0,sim_undetected=True ):
         """
         Simulate forward until end_time
@@ -674,6 +715,21 @@ class Forecast:
 
         self.DAYS = DAYS
         self.p_c = p_c
+
+        # Laura new times
+        ## present times
+        self.t_p_offset = t_p_offset
+        self.t_p_shape = t_p_shape
+        self.t_p_scale = t_p_scale
+        ## test times
+        self.t_t_shape = t_t_shape
+        self.t_t_scale = t_t_scale
+        self.t_t_offset = t_t_offset
+        ## notification times
+        self.t_n_shape = t_n_shape
+        self.t_n_scale = t_n_scale
+        self.t_n_offset = t_n_offset
+        ## action times for contacts
         self.t_a_shape = t_a_shape
         self.t_a_scale = t_a_scale
         self.t_a_offset = t_a_offset

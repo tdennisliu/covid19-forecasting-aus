@@ -529,6 +529,11 @@ class Forecast:
                 # add an action_time = end of sim + 10
                 #  when an offspring is first examined:
                 action_time = self.end_time+10
+                #every case needs a present time to be simulated, 
+                # will be overwritten if detected.
+                present_time = inf_time +5 
+                test_time = self.end_time+10
+                notify_time = self.end_time+10
 
                 if inf_time > self.forecast_date:
                     self.inf_forecast_counter +=1
@@ -568,14 +573,17 @@ class Forecast:
                             # Laura
                             # if parent is undetected, assign a new time to action 
                             if self.people[parent_key].detected!=1:
-                                action_time = symp_time + next(self.get_action_time)
+                                present_time = symp_time + next(self.get_present_time)
+                                test_time = present_time + next(self.get_test_time)
+                                notify_time = test_time + next(self.get_notify_time)
+                                action_time = notify_time + next(self.get_action_time)
                             else:
                                 #parent was detected, and now case is routine detected
                                 # Take minimum of routine isolation
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    symp_time + next(self.get_action_time)
+                                    symp_time + next(self.get_present_time)
                                      )
                                 
                             if symp_time < self.cases.shape[0]:
@@ -604,7 +612,11 @@ class Forecast:
                             # 2* draw from distrubtion
                             if self.people[parent_key].detected!=1:
                                 #if parent is not traced
-                                action_time = symp_time + 2*next(self.get_action_time)
+                                #### Vary this present_time factor!
+                                present_time = inf_time + 10*next(self.get_present_time)
+                                test_time = present_time + next(self.get_test_time)
+                                notify_time = test_time + next(self.get_notify_time)
+                                action_time = notify_time + next(self.get_action_time)
                             else:
                                 #parent was traced, 
                                 # and now case is routine detected
@@ -612,7 +624,7 @@ class Forecast:
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    symp_time +2*next(self.get_action_time)
+                                    inf_time +10*next(self.get_present_time)
                                     )
                             if symp_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(symp_time)-1),1] += 1
@@ -627,7 +639,7 @@ class Forecast:
                             #case before tracing window, 
                             # action time already assigned if detected
                             # through routine detection
-                            heappush(self.infected_queue, (inf_time,len(self.people)))
+                            heappush(self.infected_queue, (present_time,len(self.people)))
                             
                         #elif  (self.people[parent_key].symp_onset_time - DAYS) < inf_time < (self.people[parent_key].action_time):
                         # elif ((self.people[parent_key].symp_onset_time - DAYS) < inf_time) and (inf_time < (self.people[parent_key].action_time)):   
@@ -646,24 +658,25 @@ class Forecast:
                                 #will not trigger tertiary cases to be 
                                 # contact traced unless routine detected.
                                 isdetected = 2 
-                                heappush(self.infected_queue, (inf_time,len(self.people)))
+                                heappush(self.infected_queue, (present_time,len(self.people)))
                             
 
                             else:
                                 #failed to be traced
                                 # if detected in routine detection, 
                                 # isolation time already assigned
-                                heappush(self.infected_queue, (inf_time,len(self.people)))
+                                heappush(self.infected_queue, (present_time,len(self.people)))
 
                     else:
                         #parent undetected
-                        heappush(self.infected_queue, (inf_time,len(self.people)))
+                        heappush(self.infected_queue, (present_time,len(self.people)))
                         
 
                     #add person to tracked people
                     # Laura # add action_time when recording
                     self.people[len(self.people)] = Person(parent_key, inf_time, symp_time,isdetected, 
-                    category,action_time=action_time)
+                    category,present_time = present_time,test_time = test_time,
+                    notify_PHU_time = notify_time, action_time=action_time)
                     #Laura
             #if num_offspring>0:
                 #Laura

@@ -3,6 +3,7 @@ import pandas as pd
 from scipy.stats import nbinom, erlang, beta, binom, poisson, beta
 import matplotlib.pyplot as plt
 import os
+from math import floor
 class Person:
     """
     Individuals in the forecast
@@ -454,7 +455,7 @@ class Forecast:
         if weights is None:
             #Create uniform weights
             #weights = [1/len(items)] * len(items)
-            index = int(r*len(items))
+            index = floor(r*len(items))
             return items[index]
         else:
             for i,item in enumerate(items):
@@ -499,6 +500,13 @@ class Forecast:
                 num_offspring = nbinom.rvs(n=k, p = 1- self.alpha_i*Reff/(self.alpha_i*Reff + k))
         #Laura
         case_prevented_counter =0
+        
+        #check if exceeded number of tests today yet
+        if self.tests_todo>self.test_capacity:
+            test_delay = self.tests_todo//self.test_capacity
+        else:
+            test_delay = 0
+        
         if num_offspring >0:  
             
             num_sympcases = self.new_symp_cases(num_offspring)
@@ -514,11 +522,21 @@ class Forecast:
                 # LAURA
                 if self.people[parent_key].detected >= 1:
                     #if parent detected
-                    if inf_time> self.people[parent_key].action_time:
-                        #infection occurs after isolation
-                        #infection never occurs, skip
-                        case_prevented_counter +=1
-                        continue
+                    if self.people[parent_key].detected ==1:
+                        # parent was routine detected, isolates on notification
+                        if inf_time> self.people[parent_key].notify_PHU_time:
+                            #infection occurs after isolation
+                            #infection never occurs, skip
+                            case_prevented_counter +=1
+                            continue
+                    elif self.people[parent_key].detected >1:
+                        #parent was traced, child isolates at action time
+                        if inf_time> self.people[parent_key].action_time:
+                            #infection occurs after isolation
+                            #infection never occurs, skip
+                            case_prevented_counter +=1
+                            continue
+
                     else:
                         #infection does occur
 
@@ -571,11 +589,12 @@ class Forecast:
                             #case detected
                             isdetected=1
                             # Laura
-                            # if parent is undetected, assign a new time to action 
+                            present_time = symp_time + next(self.get_present_time)
+                            test_time = present_time + test_delay+ next(self.get_test_time)
+                            notify_time = test_time + next(self.get_notify_time)
+                            # if parent is not detected, assign a new time to action 
                             if self.people[parent_key].detected!=1:
-                                present_time = symp_time + next(self.get_present_time)
-                                test_time = present_time + next(self.get_test_time)
-                                notify_time = test_time + next(self.get_notify_time)
+
                                 action_time = notify_time + next(self.get_action_time)
                             else:
                                 #parent was detected, and now case is routine detected
@@ -583,7 +602,7 @@ class Forecast:
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    symp_time + next(self.get_present_time)
+                                    present_time
                                      )
                                 
                             if symp_time < self.cases.shape[0]:
@@ -610,12 +629,12 @@ class Forecast:
                             # if parent is not detected, assign an action time 
                             # action_time = self.people[parent_key].symp_onset_time + 
                             # 2* draw from distrubtion
+                            #### Vary this present_time factor!
+                            present_time = inf_time + 10*next(self.get_present_time)
+                            test_time = present_time + test_delay+ next(self.get_test_time)
+                            notify_time = test_time + next(self.get_notify_time)
                             if self.people[parent_key].detected!=1:
                                 #if parent is not traced
-                                #### Vary this present_time factor!
-                                present_time = inf_time + 10*next(self.get_present_time)
-                                test_time = present_time + next(self.get_test_time)
-                                notify_time = test_time + next(self.get_notify_time)
                                 action_time = notify_time + next(self.get_action_time)
                             else:
                                 #parent was traced, 
@@ -624,12 +643,15 @@ class Forecast:
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    inf_time +10*next(self.get_present_time)
+                                    present_time
                                     )
                             if symp_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(symp_time)-1),1] += 1
 
                     # Laura 
+                    if isdetected==1:
+                        ## add tests to be done if detected
+                        self.tests_todo += 1
                     #add new infected to queue
                     # contact trace day before parent's detection time
                     if self.people[parent_key].detected==1:
@@ -657,6 +679,10 @@ class Forecast:
                                 # cases still prevented by isolation, but 
                                 #will not trigger tertiary cases to be 
                                 # contact traced unless routine detected.
+                                if isdetected==0:
+                                    #if undetected before, add it's test to 
+                                    # the counter
+                                    self.tests_todo +=1
                                 isdetected = 2 
                                 heappush(self.infected_queue, (present_time,len(self.people)))
                             
@@ -747,6 +773,8 @@ class Forecast:
         self.t_a_scale = t_a_scale
         self.t_a_offset = t_a_offset
 
+        self.tests_todo=0
+        self.test_capacity = 2000
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)
@@ -766,6 +794,7 @@ class Forecast:
         for key, person in self.people.items():
             #add to the queue
             heappush(self.infected_queue, (person.infection_time,key))
+            self.tests_todo +=1
             #Record their times
             if person.infection_time> end_time:
                 #initial undetected cases have slim chance to be infected 
@@ -801,9 +830,16 @@ class Forecast:
         n_resim = 0
         self.bad_sim = False
         reinitialising_window = 0
-        self.daycount= 0
+        self.daycounter= 0
         while len(self.infected_queue)>0:
             day_end = self.people[self.infected_queue[0][1]].infection_time
+
+            #check if new day
+            if floor(day_end) > self.daycounter:
+                #new test day
+                self.daycounter = floor(day_end) 
+                self.tests_todo = max(0, self.tests_todo - self.test_capacity)    
+            #Check if exceeding cases
             if day_end < self.forecast_date:
                 if self.inf_backcast_counter> self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim

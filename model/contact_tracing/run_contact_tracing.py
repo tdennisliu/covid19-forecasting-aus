@@ -234,8 +234,8 @@ if __name__ == '__main__':
             'secondary_cases_25',
             'secondary_cases_75',
             'actual_gen_times_mean',
-            'actual_gen_times_25',
-            'actual_gen_times_75',
+            #'actual_gen_times_25',
+            #'actual_gen_times_75',
             ])
     for p_c in p_c_list:
         pc_dict[p_c] = []
@@ -292,8 +292,8 @@ if __name__ == '__main__':
         temp['secondary_cases_25'] = np.quantile(secondary_cases, 0.25)
         temp['secondary_cases_75'] = np.quantile(secondary_cases, 0.75)
         temp['actual_gen_times_mean'] = np.mean(actual_gen_times)
-        temp['actual_gen_times_25'] = np.quantile(actual_gen_times, 0.25)
-        temp['actual_gen_times_75'] = np.quantile(actual_gen_times, 0.75)
+        #temp['actual_gen_times_25'] = np.quantile(actual_gen_times, 0.25)
+        #temp['actual_gen_times_75'] = np.quantile(actual_gen_times, 0.75)
         temp['avg_daily_growth_rate'] = (temp.cases/(sum(initial_cases)))**(1/time_end)
         temp['die_out'] = die_out_by_pc[p_c]
 

@@ -362,6 +362,8 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
 
             df_hat = pd.DataFrame(R_eff_hat.T)
 
+            if states_initials[state] not in rho:
+                continue
             #plot actual R_eff
             ax[i//3,i%3].plot(df_state.date, df_state['mean'], label='R_eff from Price et al',color='C1')
             ax[i//3,i%3].fill_between(df_state.date, df_state['bottom'], df_state['top'],color='C1', alpha=0.3)

@@ -492,7 +492,7 @@ for data_date in cprs_dates:
     ax.set_yticks([1],minor=True,)
     ax.set_yticks([0,2,3],minor=False)
     ax.set_yticklabels([0,2,3],minor=False)
-    ax.set_ylim((0,3))
+    ax.set_ylim((0,4))
     #state labels in alphabetical
     ax.set_xticklabels(['R_I','R_L0',
     'R_L0 NSW','R_L0 QLD','R_L0 SA','R_L0 TAS','R_L0 VIC','R_L0 WA',

@@ -523,14 +523,14 @@ class Forecast:
                 if self.people[parent_key].detected >= 1:
                     #if parent detected
                     if self.people[parent_key].detected ==1:
-                        # parent was routine detected, isolates on notification
+                        # parent was routine detected, isolated on notification
                         if inf_time> self.people[parent_key].notify_PHU_time:
                             #infection occurs after isolation
                             #infection never occurs, skip
                             case_prevented_counter +=1
                             continue
                     elif self.people[parent_key].detected >1:
-                        #parent was traced, child isolates at action time
+                        #parent was a traced case, isolated at action time
                         if inf_time> self.people[parent_key].action_time:
                             #infection occurs after isolation
                             #infection never occurs, skip
@@ -602,7 +602,7 @@ class Forecast:
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    present_time
+                                    notify_time
                                      )
                                 
                             if symp_time < self.cases.shape[0]:
@@ -643,7 +643,7 @@ class Forecast:
                                 # and parents isoaltion time
                                 action_time = min(
                                     self.people[parent_key].action_time,
-                                    present_time
+                                    notify_time
                                     )
                             if symp_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(symp_time)-1),1] += 1

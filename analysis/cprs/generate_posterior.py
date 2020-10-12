@@ -134,7 +134,7 @@ transformed parameters {
             
             mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_L*(
             (1-policy[n]) + md[n,i]*policy[n] )*inv_logit(
-            noise[j][n,:]*(bet)); //mean estimate
+            noise[i][n,:]*(bet)); //mean estimate
         }
     }
     for (i in 1:j_v){

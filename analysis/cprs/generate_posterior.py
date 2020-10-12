@@ -19,7 +19,7 @@ from Reff_functions import *
 from Reff_constants import *
 
 
-iterations=5000
+iterations=2000
 chains=2
 
 ### Read in md surveys
@@ -117,6 +117,7 @@ parameters {
     matrix<lower=0,upper=1>[N_v,j_v] prop_md_v;
     matrix<lower=0,upper=1>[N,j] brho; //estimate of proportion of imported cases
     matrix<lower=0,upper=1>[N,K] noise[j];
+    real<lower=0> R_temp;
     
     matrix<lower=0,upper=1>[N_v,j_v] brho_v; //estimate of proportion of imported cases
     matrix<lower=0,upper=1>[N_v,K] noise_v[j_v];
@@ -126,6 +127,7 @@ transformed parameters {
     matrix<lower=0>[N_v,j_v] mu_hat_v;
     matrix<lower=0>[N,j] md; //micro distancing
     matrix<lower=0>[N_v,j_v] md_v; 
+
     
      
     for (i in 1:j) {
@@ -136,34 +138,44 @@ transformed parameters {
             
             md[n,i] = pow(1+theta_md , -1*prop_md[n,i]);
             
-            mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_Li[j]*(
+            mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_Li[i]*(
             (1-policy[n]) + md[n,i]*policy[n] )*inv_logit(
-            noise[j][n,:]*(bet)); //mean estimate
+            Mob[i][n,:]*(bet)); //mean estimate
         }
     }
     for (i in 1:j_v){
         for (n in 1:N_v){
             
             md_v[n,i] = pow(1+theta_md ,-1*prop_md_v[n,i]);
-            //Need to index states properly!
-            mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[
-                map_to_state_index[j_v]
+            if (map_to_state_index[i] == 5) {
+                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*(R_temp+2*R_Li[
+                map_to_state_index[i]
+                ])*(
+                (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
+                Mob_v[i][n,:]*(bet)
+                ); //mean estimate
+            }
+            else {
+                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[
+                map_to_state_index[i]
                 ]*(
                 (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
-                noise_v[i][n,:]*(bet)); //mean estimate
+                Mob_v[i][n,:]*(bet)); //mean estimate
+            }
         }
     }
     
 }
 model {
     bet ~ normal(0,1);
-    theta_md ~ lognormal(0,1);
+    theta_md ~ lognormal(0,0.5);
     //md ~ beta(7,3);
     
     
-    R_L ~ gamma(2.4*2.4/0.2,2.4/0.2); //hyper-prior
+    R_L ~ gamma(1.8*1.8/0.01,1.8/0.01); //hyper-prior
+    R_temp ~ gamma(0.5*0.5/.2,0.5/.2); //prior on extra boost for VIC
     R_I ~ gamma(0.5*0.5/.2,0.5/.2);
-    sig ~ exponential(5); //mean is 1/5
+    sig ~ exponential(50); //mean is 1/5
     R_Li ~ gamma( R_L*R_L/sig, R_L/sig); //partial pooling of state level estimates
     for (i in 1:j) {
         for (n in 1:N){
@@ -264,14 +276,14 @@ for data_date in cprs_dates:
 
     ##Second wave inputs
     sec_states=sorted(['NSW','VIC'])
-    sec_start_date = '2020-05-01'
-    if data_date > pd.to_datetime("2020-05-12"):
-        if data_date < pd.to_datetime("2020-09-14"):
+    sec_start_date = '2020-06-01'
+    if data_date > pd.to_datetime("2020-06-12"):
+        if data_date < pd.to_datetime("2020-10-01"):
             possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
         else:
-            possible_end_date = pd.to_datetime("2020-09-14")
+            possible_end_date = pd.to_datetime("2020-09-21")
     else:
-        possible_end_date = pd.to_datetime("2020-05-11")
+        possible_end_date = pd.to_datetime("2020-06-01")
     sec_end_date = possible_end_date.strftime('%Y-%m-%d')
     #min('2020-08-14',possible_end_date.strftime('%Y-%m-%d')) #all we have for now
 
@@ -400,8 +412,8 @@ for data_date in cprs_dates:
 
     filename = "stan_posterior_fit" + data_date.strftime("%Y-%m-%d") + ".txt"
     with open(results_dir+filename, 'w') as f:
-        print(fit.stansummary(pars=['bet','R_I','R_L','R_Li','theta_md','sig']), file=f)
-    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','R_Li','brho','theta_md','brho_v'])
+        print(fit.stansummary(pars=['bet','R_I','R_L','R_Li','R_temp','theta_md','sig']), file=f)
+    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','R_Li','R_temp','sig','brho','theta_md','brho_v'])
 
     # Plot ratio of imported to total cases
     # First phase
@@ -484,6 +496,12 @@ for data_date in cprs_dates:
     samples_mov_gamma['R_I_prior'] = np.random.gamma(
     0.5**2/0.2, .2/0.5, size=samples_mov_gamma.shape[0])
 
+    samples_mov_gamma['R_L_national'] = np.random.gamma(
+        samples_mov_gamma.R_L.values **2/ samples_mov_gamma.sig.values,
+        samples_mov_gamma.sig.values / samples_mov_gamma.R_L.values
+    )
+    df_R_values = pd.melt(samples_mov_gamma[[col for col in samples_mov_gamma if 'R' in col]])
+    print(df_R_values.variable.unique())
     sns.violinplot(x='variable',y='value',
                 data=pd.melt(samples_mov_gamma[[col for col in samples_mov_gamma if 'R' in col]]),
                 ax=ax,
@@ -494,9 +512,9 @@ for data_date in cprs_dates:
     ax.set_yticklabels([0,2,3],minor=False)
     ax.set_ylim((0,4))
     #state labels in alphabetical
-    ax.set_xticklabels(['R_I','R_L0',
-    'R_L0 NSW','R_L0 QLD','R_L0 SA','R_L0 TAS','R_L0 VIC','R_L0 WA',
-    'R_L0 prior','R_I prior'])
+    ax.set_xticklabels(['R_I','R_L0 mean',
+    'R_L0 NSW','R_L0 QLD','R_L0 SA','R_L0 TAS','R_L0 VIC','R_L0 WA','R_temp',
+    'R_L0 prior','R_I prior','R_L0 national'])
     ax.tick_params('x',rotation=45)
     ax.yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
     plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"R_priors.png",dpi = 144)
@@ -564,7 +582,7 @@ for data_date in cprs_dates:
 
     var_to_csv = predictors
     samples_mov_gamma[predictors] = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))]]
-    var_to_csv = ['R_I']+['R_L']+['theta_md']+predictors + [
+    var_to_csv = ['R_I']+['R_L','sig']+['theta_md']+predictors + [
         'R_Li['+str(i+1)+']' for i in range(len(states_to_fit))
         ]
 

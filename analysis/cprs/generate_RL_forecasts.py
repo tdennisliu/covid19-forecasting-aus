@@ -414,6 +414,12 @@ for data_date in cprs_dates:
                 if state in ("ACT","NT"):
                     sim_R = np.tile(samples.R_L.values, (df_state.shape[0],mob_samples))
                 else:
+                    #if state =='VIC':
+                    #    sim_R = np.tile(
+                    #        samples['R_Li['+state_key[state]+']'].values + samples['R_temp'].values,
+                    #         (df_state.shape[0],mob_samples)
+                    #         )
+                    #else:
                     sim_R = np.tile(samples['R_Li['+state_key[state]+']'].values, (df_state.shape[0],mob_samples))
 
 

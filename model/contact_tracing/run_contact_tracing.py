@@ -350,16 +350,16 @@ if __name__ == '__main__':
 
 
         Model.generate_times()
-        ax.hist(actual_gen_times, label='Actual',density=True,bins=20)
-        ax.hist(Model.inf_times, label='Orginal', density=True,alpha=0.4,bins=20)
+        ax.hist(actual_gen_times,range=(0,20), label='Actual',density=True,bins=20)
+        ax.hist(Model.inf_times,range=(0,20), label='Orginal', density=True,alpha=0.4,bins=20)
         plt.legend()
         plt.savefig("./model/contact_tracing/figs/gen_interval/"+str(n)+plot_name+"actual_gen_dist.png",dpi=300)
 
         #Plot actual generation time against original generation time
         fig,ax = plt.subplots(figsize=(12,9))
-
-        ax.hist(secondary_cases, label='Actual')
-
+        bins = np.arange(0, 10 + 1.5) - 0.5
+        ax.hist(secondary_cases,range=(0,10),bins=bins,label='Actual')
+        ax.set_xticks(bins + 0.5)
         plt.savefig("./model/contact_tracing/figs/secondary_cases/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
         #record and print to csv

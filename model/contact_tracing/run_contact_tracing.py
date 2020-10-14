@@ -37,21 +37,24 @@ if __name__ == '__main__':
     #########
     
     #time to isolation gamma parameters
-    t_a_offset = 1 #number of days minimum to isolation
-    t_a_shape = 2
-    t_a_scale = 1
+    t_a_offset = 0 #number of days minimum to isolation
+    t_a_shape = 1
+    t_a_scale = 0.01
 
     t_p_shape = 1
     t_p_scale = 1
-    t_p_offset = 0    
+    t_p_offset = 0.5    
         
     t_t_shape = 1
-    t_t_scale = 1
-    t_t_offset =1
+    t_t_scale = 0.5
+    t_t_offset =0.5
 
     t_n_shape = 1
-    t_n_scale = 1
-    t_n_offset = 1
+    t_n_scale = 0.5
+    t_n_offset = 0
+
+    generations_traced = 1
+    test_capacity = 2000000
 
     sim_undetected = False
     #number of iterations
@@ -249,8 +252,18 @@ if __name__ == '__main__':
             "p_c":p_c,
             "t_a_shape":t_a_shape,
             "t_a_scale":t_a_scale,
-            "t_a_offset":t_a_offset,
+            "t_a_offset":t_a_offset,            
+            "t_p_shape":t_p_shape,
+            "t_p_scale":t_p_scale,
+            "t_p_offset":t_p_offset,            
+            "t_t_shape":t_t_shape,
+            "t_t_scale":t_t_scale,
+            "t_t_offset":t_t_offset,
+            "t_n_shape":t_n_shape,
+            "t_n_scale":t_n_scale,
+            "t_n_offset":t_n_offset,
             "sim_undetected":sim_undetected,
+            "generations_traced": generations_traced,
         }
         secondary_cases = []
         actual_gen_times = []

@@ -503,7 +503,7 @@ class Forecast:
         
         #check if exceeded number of tests today yet
         if self.tests_todo>self.test_capacity:
-            test_delay = self.tests_todo//self.test_capacity
+            test_delay = 0#self.tests_todo//self.test_capacity
         else:
             test_delay = 0
         
@@ -537,12 +537,10 @@ class Forecast:
                             case_prevented_counter +=1
                             continue
 
-                    else:
-                        #infection does occur
-
-                        #generation interval even if undetected?
-                        self.generation_times.append(
-                            inf_time - self.people[parent_key].infection_time)
+                #infection does occur
+                #recording generation interval even if undetected
+                self.generation_times.append(
+                                inf_time - self.people[parent_key].infection_time)
                 # Laura
                 # add an action_time = end of sim + 10
                 #  when an offspring is first examined:
@@ -593,13 +591,15 @@ class Forecast:
                             test_time = present_time + test_delay+ next(self.get_test_time)
                             notify_time = test_time + next(self.get_notify_time)
                             # if parent is not detected, assign a new time to action 
-                            if self.people[parent_key].detected!=1:
+                            if (self.people[parent_key].detected==0) & (
+                                self.people[parent_key].detected>self.generations_traced
+                            ):
 
                                 action_time = notify_time + next(self.get_action_time)
                             else:
                                 #parent was detected, and now case is routine detected
                                 # Take minimum of routine isolation
-                                # and parents isoaltion time
+                                # and parents isolation time
                                 action_time = min(
                                     self.people[parent_key].action_time,
                                     notify_time
@@ -633,9 +633,11 @@ class Forecast:
                             present_time = inf_time + 10*next(self.get_present_time)
                             test_time = present_time + test_delay+ next(self.get_test_time)
                             notify_time = test_time + next(self.get_notify_time)
-                            if self.people[parent_key].detected!=1:
+                            if (self.people[parent_key].detected==0) & (
+                                self.people[parent_key].detected>self.generations_traced
+                            ):
                                 #if parent is not traced
-                                action_time = notify_time + next(self.get_action_time)
+                                action_time = notify_time  + next(self.get_action_time)
                             else:
                                 #parent was traced, 
                                 # and now case is routine detected
@@ -654,8 +656,11 @@ class Forecast:
                         self.tests_todo += 1
                     #add new infected to queue
                     # contact trace day before parent's detection time
-                    if self.people[parent_key].detected==1:
-                        #only check contact tracing if parent was detected
+                    if (self.people[parent_key].detected<=self.generations_traced) & (
+                        self.people[parent_key].detected >0
+                    ) :
+                        #only check contact tracing if parent is within generations traced
+                        #and detected
 
                         if inf_time < self.people[parent_key].symp_onset_time + self.DAYS:
                             #case before tracing window, 
@@ -683,7 +688,10 @@ class Forecast:
                                     #if undetected before, add it's test to 
                                     # the counter
                                     self.tests_todo +=1
-                                isdetected = 2 
+                                    #inherit plus 1 on parents detection number
+                                    # and was not routine detected
+                                    isdetected = self.people[parent_key].detected +1 
+                                
                                 heappush(self.infected_queue, (present_time,len(self.people)))
                             
 
@@ -741,7 +749,8 @@ class Forecast:
         t_p_offset = 1, t_p_shape =1, t_p_scale = 1,
         t_t_shape = 1/1, t_t_scale=1, t_t_offset=1,
         t_n_shape = 1/1, t_n_scale = 1/1,t_n_offset = 0,
-        t_a_shape = 3/2, t_a_scale=2, t_a_offset=0,sim_undetected=True ):
+        t_a_shape = 3/2, t_a_scale=2, t_a_offset=0,
+        generations_traced=1, test_capacity=2000,sim_undetected=True ):
         """
         Simulate forward until end_time
         """
@@ -773,8 +782,10 @@ class Forecast:
         self.t_a_scale = t_a_scale
         self.t_a_offset = t_a_offset
 
+        self.generations_traced = generations_traced
+
         self.tests_todo=0
-        self.test_capacity = 2000
+        self.test_capacity = test_capacity
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)

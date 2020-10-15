@@ -157,7 +157,12 @@ if __name__ == '__main__':
     # give action_times to each initial case
 
     for i,cat in enumerate(initial_people):
-        people[i] = Person(0,0,0,1,cat, action_time = t_a_offset + gamma(t_a_shape,t_a_scale))
+        people[i] = Person(0,0,0,1,cat, 
+        action_time = t_a_offset + gamma(t_a_shape,t_a_scale),
+        present_time= t_p_offset + gamma(t_p_shape, t_p_scale),
+        test_time = t_t_offset + gamma(t_t_shape, t_t_scale),
+        notify_PHU_time= t_n_offset + gamma(t_n_shape, t_n_scale)
+        )
         
     #create forecast object    
     if state in ['VIC']:
@@ -364,7 +369,7 @@ if __name__ == '__main__':
 
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)+"init_"+str(initial_cases[0])
-        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc"+str(t_a_scale)+"heap.csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc"+str(t_a_scale)+"heap_gens"+str(generations_traced)+".csv", sep=',',index=False)
     pool.close()
     pool.join()
     print("Finished DAYS %i" % DAYS)

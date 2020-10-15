@@ -700,7 +700,8 @@ class Forecast:
                                 # if detected in routine detection, 
                                 # isolation time already assigned
                                 heappush(self.infected_queue, (present_time,len(self.people)))
-
+                        else:
+                            heappush(self.infected_queue, (present_time,len(self.people)))
                     else:
                         #parent undetected
                         heappush(self.infected_queue, (present_time,len(self.people)))

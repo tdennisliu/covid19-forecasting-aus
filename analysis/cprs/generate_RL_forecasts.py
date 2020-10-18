@@ -84,6 +84,9 @@ for data_date in cprs_dates:
     prop = prop_all.loc[:data_date]
     df_google = df_google_all.loc[df_google_all.date<=data_date]
     
+    #Simple interpolation for missing vlaues in Google data
+    df_google = df_google.interpolate(method='linear',axis=0)
+
     #forecast time parameters
     n_training =28
     today = data_date.strftime('%Y-%m-%d')

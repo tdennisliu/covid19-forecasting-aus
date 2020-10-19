@@ -98,7 +98,7 @@ for i, state in enumerate(states):
         include_history=True)
 
     future['cap'] = pop[state]
-
+    future['floor'] = 0
     df_forecast = m.predict(future)
     forecast = m.predictive_samples(future)
     fig1 = m.plot(

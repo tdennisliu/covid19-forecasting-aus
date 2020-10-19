@@ -140,11 +140,7 @@ transformed parameters {
             
             mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_Li[i]*(
             (1-policy[n]) + md[n,i]*policy[n] )*inv_logit(
-<<<<<<< HEAD
-            noise[i][n,:]*(bet)); //mean estimate
-=======
             Mob[i][n,:]*(bet)); //mean estimate
->>>>>>> state-level-R
         }
     }
     for (i in 1:j_v){

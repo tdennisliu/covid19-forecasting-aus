@@ -103,25 +103,31 @@ data {
     vector[N_v] count_md_v[j_v]; //count of always
     vector[N_v] respond_md_v[j_v]; // num respondants
 
+    int map_to_state_index[j_v];// indices of second wave to map to first
+
 }
 parameters {
     vector[K] bet; //coefficients
     real<lower=0> R_I; //base level imports,
     real<lower=0> R_L; //base level local
+    vector<lower=0>[j] R_Li; //state level estimates
+    real<lower=0> sig; //state level variance
     real<lower=0> theta_md; // md weighting
     matrix<lower=0,upper=1>[N,j] prop_md; // proportion who are md'ing
     matrix<lower=0,upper=1>[N_v,j_v] prop_md_v;
     matrix<lower=0,upper=1>[N,j] brho; //estimate of proportion of imported cases
-    matrix[N,K] noise[j];
+    matrix<lower=0,upper=1>[N,K] noise[j];
+    //real<lower=0> R_temp;
     
     matrix<lower=0,upper=1>[N_v,j_v] brho_v; //estimate of proportion of imported cases
-    matrix[N_v,K] noise_v[j_v];
+    matrix<lower=0,upper=1>[N_v,K] noise_v[j_v];
 }
 transformed parameters {
     matrix<lower=0>[N,j] mu_hat;
     matrix<lower=0>[N_v,j_v] mu_hat_v;
     matrix<lower=0>[N,j] md; //micro distancing
     matrix<lower=0>[N_v,j_v] md_v; 
+
     
      
     for (i in 1:j) {
@@ -132,38 +138,54 @@ transformed parameters {
             
             md[n,i] = pow(1+theta_md , -1*prop_md[n,i]);
             
-            mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_L*(
+            mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_Li[i]*(
             (1-policy[n]) + md[n,i]*policy[n] )*inv_logit(
+<<<<<<< HEAD
             noise[i][n,:]*(bet)); //mean estimate
+=======
+            Mob[i][n,:]*(bet)); //mean estimate
+>>>>>>> state-level-R
         }
     }
     for (i in 1:j_v){
         for (n in 1:N_v){
             
             md_v[n,i] = pow(1+theta_md ,-1*prop_md_v[n,i]);
-            
-            mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_L*(
+            if (map_to_state_index[i] == 5) {
+                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*(2*R_Li[
+                map_to_state_index[i]
+                ])*(
                 (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
-                noise_v[i][n,:]*(bet)); //mean estimate
+                Mob_v[i][n,:]*(bet)
+                ); //mean estimate
+            }
+            else {
+                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[
+                map_to_state_index[i]
+                ]*(
+                (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
+                Mob_v[i][n,:]*(bet)); //mean estimate
+            }
         }
     }
     
 }
 model {
     bet ~ normal(0,1);
-    theta_md ~ lognormal(0,1);
+    theta_md ~ lognormal(0,0.5);
     //md ~ beta(7,3);
     
     
-    R_L ~ gamma(2.4*2.4/0.2,2.4/0.2);
+    R_L ~ gamma(1.8*1.8/0.01,1.8/0.01); //hyper-prior
+    //R_temp ~ gamma(0.5*0.5/.2,0.5/.2); //prior on extra boost for VIC
     R_I ~ gamma(0.5*0.5/.2,0.5/.2);
-
- 
+    sig ~ exponential(50); //mean is 1/5
+    R_Li ~ gamma( R_L*R_L/sig, R_L/sig); //partial pooling of state level estimates
     for (i in 1:j) {
         for (n in 1:N){
             prop_md[n,i] ~ beta(1 + count_md[i][n], 1+ respond_md[i][n] - count_md[i][n]);
             brho[n,i] ~ beta( 1+ imported[n,i], 1+ local[n,i]); //ratio imported/ (imported + local)
-            noise[i][n,:] ~ normal( Mob[i][n,:] , Mob_std[i][n,:]);
+            //noise[i][n,:] ~ normal( Mob[i][n,:] , Mob_std[i][n,:]);
             mu_hat[n,i] ~ gamma( Reff[n,i]*Reff[n,i]/(sigma2[n,i]), Reff[n,i]/sigma2[n,i]); //Stan uses shape/inverse scale
         }
     }
@@ -171,7 +193,7 @@ model {
         for (n in 1:N_v){
             prop_md_v[n,i] ~ beta(1 + count_md_v[i][n], 1+ respond_md_v[i][n] - count_md_v[i][n]);
             brho_v[n,i] ~ beta( 1+ imported_v[n,i], 1+ local_v[n,i]); //ratio imported/ (imported + local)
-            noise_v[i][n,:] ~ normal( Mob_v[i][n,:] , Mob_v_std[i][n,:]);
+            //noise_v[i][n,:] ~ normal( Mob_v[i][n,:] , Mob_v_std[i][n,:]);
             mu_hat_v[n,i] ~ gamma( Reff_v[n,i]*Reff_v[n,i]/(sigma2_v[n,i]), Reff_v[n,i]/sigma2_v[n,i]);
         }
     }
@@ -258,11 +280,14 @@ for data_date in cprs_dates:
 
     ##Second wave inputs
     sec_states=sorted(['NSW','VIC'])
-    sec_start_date = '2020-05-01'
-    if data_date > pd.to_datetime("2020-05-12"):
-        possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
+    sec_start_date = '2020-06-01'
+    if data_date > pd.to_datetime("2020-06-12"):
+        if data_date < pd.to_datetime("2020-10-01"):
+            possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
+        else:
+            possible_end_date = pd.to_datetime("2020-09-21")
     else:
-        possible_end_date = pd.to_datetime("2020-05-11")
+        possible_end_date = pd.to_datetime("2020-06-01")
     sec_end_date = possible_end_date.strftime('%Y-%m-%d')
     #min('2020-08-14',possible_end_date.strftime('%Y-%m-%d')) #all we have for now
 
@@ -346,7 +371,7 @@ for data_date in cprs_dates:
     policy = dfX.loc[dfX.state==states_to_fit[0],'post_policy']
 
 
-
+    state_index = { state : i+1  for i, state in enumerate(states_to_fit)}
     ##Make state by state arrays
     input_data ={
         'N': dfX.loc[dfX.state==states_to_fit[0]].shape[0],
@@ -374,6 +399,7 @@ for data_date in cprs_dates:
         'respond_md':respond_by_state,
         'count_md_v':sec_count_by_state,
         'respond_md_v':sec_respond_by_state,
+        'map_to_state_index': [state_index[state] for state in sec_states]
 
     }
 
@@ -390,8 +416,8 @@ for data_date in cprs_dates:
 
     filename = "stan_posterior_fit" + data_date.strftime("%Y-%m-%d") + ".txt"
     with open(results_dir+filename, 'w') as f:
-        print(fit.stansummary(pars=['bet','R_I','R_L','theta_md']), file=f)
-    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','brho','theta_md','brho_v'])
+        print(fit.stansummary(pars=['bet','R_I','R_L','R_Li','theta_md','sig']), file=f)
+    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','R_Li','sig','brho','theta_md','brho_v'])
 
     # Plot ratio of imported to total cases
     # First phase
@@ -474,6 +500,12 @@ for data_date in cprs_dates:
     samples_mov_gamma['R_I_prior'] = np.random.gamma(
     0.5**2/0.2, .2/0.5, size=samples_mov_gamma.shape[0])
 
+    samples_mov_gamma['R_L_national'] = np.random.gamma(
+        samples_mov_gamma.R_L.values **2/ samples_mov_gamma.sig.values,
+        samples_mov_gamma.sig.values / samples_mov_gamma.R_L.values
+    )
+    df_R_values = pd.melt(samples_mov_gamma[[col for col in samples_mov_gamma if 'R' in col]])
+    print(df_R_values.variable.unique())
     sns.violinplot(x='variable',y='value',
                 data=pd.melt(samples_mov_gamma[[col for col in samples_mov_gamma if 'R' in col]]),
                 ax=ax,
@@ -482,10 +514,14 @@ for data_date in cprs_dates:
     ax.set_yticks([1],minor=True,)
     ax.set_yticks([0,2,3],minor=False)
     ax.set_yticklabels([0,2,3],minor=False)
-    ax.set_ylim((0,3))
-    ax.set_xticklabels(['R_I','R_L0','R_L0 prior','R_I prior'])
+    ax.set_ylim((0,4))
+    #state labels in alphabetical
+    ax.set_xticklabels(['R_I','R_L0 mean',
+    'R_L0 NSW','R_L0 QLD','R_L0 SA','R_L0 TAS','R_L0 VIC','R_L0 WA',#'R_temp',
+    'R_L0 prior','R_I prior','R_L0 national'])
+    ax.tick_params('x',rotation=45)
     ax.yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
-    plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"R_md_priors.png",dpi = 144)
+    plt.savefig(results_dir+data_date.strftime("%Y-%m-%d")+"R_priors.png",dpi = 144)
 
     posterior = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))] 
                                 ] 
@@ -517,9 +553,13 @@ for data_date in cprs_dates:
     plt.savefig(
         results_dir+data_date.strftime("%Y-%m-%d")+'mobility_posteriors.png', dpi =144)
 
+
+    RL_by_state = { state: samples_mov_gamma[
+        'R_Li['+str(i)+']'].values for state, i in state_index.items()
+    }
     ax3 =predict_plot(samples_mov_gamma,df.loc[(df.date>=start_date)&(df.date<=end_date)],gamma=True,
                     moving=True,split=split,grocery=True,ban = ban,
-                    R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
+                    R=RL_by_state, var= True, md_arg=md,
                     rho=states_to_fit, R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[start_date:end_date])#by states....
     for ax in ax3:
         for a in ax:
@@ -529,7 +569,7 @@ for data_date in cprs_dates:
         results_dir+data_date.strftime("%Y-%m-%d")+"total_Reff_allstates.png", dpi=144)
 
     ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
-                    R=samples_mov_gamma.R_L.values, var= True, md_arg=md,
+                    R=RL_by_state, var= True, md_arg=md,
                     rho=sec_states, second_phase=True,
                      R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
     for ax in ax4:
@@ -546,7 +586,9 @@ for data_date in cprs_dates:
 
     var_to_csv = predictors
     samples_mov_gamma[predictors] = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))]]
-    var_to_csv = ['R_I']+['R_L']+['theta_md']+predictors
+    var_to_csv = ['R_I']+['R_L','sig']+['theta_md']+predictors + [
+        'R_Li['+str(i+1)+']' for i in range(len(states_to_fit))
+        ]
 
 
     samples_mov_gamma[var_to_csv].to_hdf('data/soc_mob_posterior'+data_date.strftime("%Y-%m-%d")+'.h5',key='samples')

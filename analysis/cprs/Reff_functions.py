@@ -300,7 +300,13 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                       scale=0.2/df.loc[df.date=='2020-03-01','mean'].mean(),
                                 size=df_state.shape[0]
                             )
-
+                if type(R)==dict:
+                    if states_initials[state] != ['ACT','NT']:
+                        #if state, use inferred
+                        sim_R = np.tile(R[states_initials[state]][:samples_sim.shape[0]], (df_state.shape[0],1))
+                    else:
+                        #if territory, use generic R_L
+                        sim_R = np.tile(samples_sim.R_L.values, (df_state.shape[0],1))
                 else:
                     sim_R = np.tile(samples_sim.R_L.values, (df_state.shape[0],1))
                 mu_hat = 2 *md*sim_R* expit(logodds)
@@ -356,6 +362,10 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
 
             df_hat = pd.DataFrame(R_eff_hat.T)
 
+            if states_initials[state] not in rho:
+                if i//3==1:
+                    ax[i//3,i%3].tick_params(axis='x',rotation=90)
+                continue
             #plot actual R_eff
             ax[i//3,i%3].plot(df_state.date, df_state['mean'], label='R_eff from Price et al',color='C1')
             ax[i//3,i%3].fill_between(df_state.date, df_state['bottom'], df_state['top'],color='C1', alpha=0.3)

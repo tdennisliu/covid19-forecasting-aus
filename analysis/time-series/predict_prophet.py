@@ -67,28 +67,52 @@ results = pd.DataFrame()
 df_prophet = pd.DataFrame()
 df_prophet['ds'] = cases.index.values[:-truncation]
 
-fig,ax = plt.subplots(ncols=2, nrows=3, sharex=True)
-fig2, ax2 = plt.subplots(ncols=2, nrows=3, sharex=True)
-
+fig,ax = plt.subplots(ncols=2, nrows=4, sharex=True, figsize=(12,9))
 os.makedirs("./results/prophet/"+data_date.strftime("%m-%d"), exist_ok=True)
+
+##Pop from Rob's work
+pop = {
+    'NSW': 5730000,
+    'VIC': 5191000,
+    'SA': 1408000,
+    'WA': 2385000,
+    'TAS': 240342,
+    'NT': 154280,
+    'ACT': 410199,
+    'QLD': 2560000,
+        }
 
 for i, state in enumerate(states):
     #loop over each state. Parallelise?
     #initialise model 
-    m = Prophet(mcmc_samples=1000)
+    m = Prophet(mcmc_samples=1000,growth='logistic')
     
     df_prophet['y'] = cases[state].values[:-truncation]
+    df_prophet['cap'] = pop[state]
+    df_prophet['floor'] = 0
 
+    
     m.fit(df_prophet)
     future = m.make_future_dataframe(
         periods = truncation+forecast_length,
         include_history=True)
+
+    future['cap'] = pop[state]
+
     df_forecast = m.predict(future)
     forecast = m.predictive_samples(future)
-    print(forecast)
-    fig1 = m.plot(df_forecast,ax=ax[i//2,i%2])
+    fig1 = m.plot(
+        df_forecast,
+        ax=ax[i//2,i%2], 
+        plot_cap=False,
+        xlabel='Date of Symptom Onset',
+        ylabel='Local cases'
+        )
 
-    fig2 = m.plot_components(df_forecast)
+    fig2 = m.plot_components(
+        df_forecast,
+        plot_cap=False
+        )
     
     fig2.savefig("./results/prophet/"+data_date.strftime("%m-%d")+"/"+state+"components.png",dpi=144)
     
@@ -98,5 +122,7 @@ for i, state in enumerate(states):
     temp['date'] = future.ds
 
     results = results.append(temp)
-fig.savefig("./results/prophet/"+data_date.strftime("%m-%d")+"/forecast.png",dpi=144)
-results.to_csv("./results/prophet"+data_date.srftime("%m-%d")+".csv")
+    if i>=6:
+        ax[i//2,i%2].tick_params(axis='x', rotation=45)
+fig.savefig("./results/prophet/"+data_date.strftime("%m-%d")+"/forecast.png",dpi=300)
+results.to_csv("./results/prophet"+data_date.strftime("%m-%d")+".csv")

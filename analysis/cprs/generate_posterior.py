@@ -175,7 +175,7 @@ model {
     R_L ~ gamma(1.8*1.8/0.01,1.8/0.01); //hyper-prior
     //R_temp ~ gamma(0.5*0.5/.2,0.5/.2); //prior on extra boost for VIC
     R_I ~ gamma(0.5*0.5/.2,0.5/.2);
-    sig ~ exponential(50); //mean is 1/5
+    sig ~ exponential(20); //mean is 1/5
     R_Li ~ gamma( R_L*R_L/sig, R_L/sig); //partial pooling of state level estimates
     for (i in 1:j) {
         for (n in 1:N){

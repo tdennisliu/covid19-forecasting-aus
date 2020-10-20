@@ -340,7 +340,7 @@ for i,state in enumerate(states):
     if i< len(states)-2:
         ax.set_xticklabels([])
         ax.set_xlabel('')
-        
+plt.savefig("figs/"+forecast_type+"asymp_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=144)
 ## Imported cases
 fig = plt.figure(figsize=(12,18))
 gs = fig.add_gridspec(4,2)
@@ -397,6 +397,7 @@ for i,state in enumerate(states):
         ax.set_xlabel('')
                 
 plt.tight_layout()
+plt.savefig("figs/"+forecast_type+"imported_unobs_"+str(n_sims)+"days_"+str(days)+'.png',dpi=144)
 
 ## Local cases, spaghetti plot
 fig = plt.figure(figsize=(12,18))

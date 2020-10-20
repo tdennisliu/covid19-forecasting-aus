@@ -16,6 +16,12 @@ dic_states={
     'type':[],
     'bottom':[],
     'lower':[],
+    'lower10':[],
+    'upper10':[],
+    'lower15':[],
+    'upper15':[],
+    'lower20':[],
+    'upper20':[],
     'median':[],
     'upper':[],
     'top':[],
@@ -33,11 +39,17 @@ for state in states:
     for var in vars_l:
 
 
-        quantiles = df.loc[var].quantile([0.05,0.25,0.5,0.75,0.95],axis=0)
+        quantiles = df.loc[var].quantile([0.05,0.1,0.15,0.2,0.25,0.5,0.75,0.8,0.85,0.9,0.95],axis=0)
         dic_states['state'].extend([state]*len(dates))
         dic_states['date'].extend(df.columns)
         dic_states['type'].extend([var]*len(dates))
         dic_states['bottom'].extend(quantiles.loc[0.05])
+        dic_states['lower10'].extend(quantiles.loc[0.1])
+        dic_states['upper10'].extend(quantiles.loc[0.9])
+        dic_states['lower15'].extend(quantiles.loc[0.15])
+        dic_states['upper15'].extend(quantiles.loc[0.85])
+        dic_states['lower20'].extend(quantiles.loc[0.2])
+        dic_states['upper20'].extend(quantiles.loc[0.8])
         dic_states['lower'].extend(quantiles.loc[0.25])
         dic_states['median'].extend(quantiles.loc[0.50])
         dic_states['upper'].extend(quantiles.loc[0.75])
@@ -52,3 +64,5 @@ plots.to_parquet('./results/quantiles'+forecast_type+start_date+"sim_"+str(n_sim
 with open( 
     "./results/good_sims"+str(n_sims)+"days_"+str(days)+".json",'w' ) as file:
     json.dump(good_sims_by_state, file)
+
+import analysis.forecast_plots

@@ -310,6 +310,13 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                 else:
                     sim_R = np.tile(samples_sim.R_L.values, (df_state.shape[0],1))
                 mu_hat = 2 *md*sim_R* expit(logodds)
+                if states_initials[state] == 'VIC':
+                    #add temporary Reff boost
+                    first_index = df_state.loc[
+                        (df_state.date>="2020-06-01")].shape[0]
+                    end_index = df_state.loc[
+                        (df_state.date<="2020-07-01")].shape[0]
+                    mu_hat[first_index:end_index,:] += samples_sim['R_temp'].values
                 if winter:
                     mu_hat = (1+samples_sim['winter'].values)*mu_hat
                 if rho:

@@ -117,7 +117,7 @@ parameters {
     matrix<lower=0,upper=1>[N_v,j_v] prop_md_v;
     matrix<lower=0,upper=1>[N,j] brho; //estimate of proportion of imported cases
     matrix<lower=0,upper=1>[N,K] noise[j];
-    //real<lower=0> R_temp;
+    real<lower=0> R_temp;
     
     matrix<lower=0,upper=1>[N_v,j_v] brho_v; //estimate of proportion of imported cases
     matrix<lower=0,upper=1>[N_v,K] noise_v[j_v];
@@ -147,13 +147,13 @@ transformed parameters {
         for (n in 1:N_v){
             
             md_v[n,i] = pow(1+theta_md ,-1*prop_md_v[n,i]);
-            if (map_to_state_index[i] == 5) {
-                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*(2*R_Li[
+            if ((map_to_state_index[i] == 5) && (n < 30 )) {
+                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*(R_temp+(2*R_Li[
                 map_to_state_index[i]
                 ])*(
                 (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
                 Mob_v[i][n,:]*(bet)
-                ); //mean estimate
+                )); //mean estimate
             }
             else {
                 mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[
@@ -173,7 +173,7 @@ model {
     
     
     R_L ~ gamma(1.8*1.8/0.01,1.8/0.01); //hyper-prior
-    //R_temp ~ gamma(0.5*0.5/.2,0.5/.2); //prior on extra boost for VIC
+    R_temp ~ gamma(0.5*0.5/.2,0.5/.2); //prior on extra boost for VIC
     R_I ~ gamma(0.5*0.5/.2,0.5/.2);
     sig ~ exponential(20); //mean is 1/5
     R_Li ~ gamma( R_L*R_L/sig, R_L/sig); //partial pooling of state level estimates
@@ -412,8 +412,9 @@ for data_date in cprs_dates:
 
     filename = "stan_posterior_fit" + data_date.strftime("%Y-%m-%d") + ".txt"
     with open(results_dir+filename, 'w') as f:
-        print(fit.stansummary(pars=['bet','R_I','R_L','R_Li','theta_md','sig']), file=f)
-    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','R_Li','sig','brho','theta_md','brho_v'])
+        print(fit.stansummary(pars=['bet','R_I','R_L','R_Li','theta_md','sig','R_temp']), file=f)
+    samples_mov_gamma = fit.to_dataframe(pars=['bet','R_I','R_L','R_Li','R_temp',
+        'sig','brho','theta_md','brho_v'])
 
     # Plot ratio of imported to total cases
     # First phase
@@ -513,7 +514,7 @@ for data_date in cprs_dates:
     ax.set_ylim((0,4))
     #state labels in alphabetical
     ax.set_xticklabels(['R_I','R_L0 mean',
-    'R_L0 NSW','R_L0 QLD','R_L0 SA','R_L0 TAS','R_L0 VIC','R_L0 WA',#'R_temp',
+    'R_L0 NSW','R_L0 QLD','R_L0 SA','R_L0 TAS','R_L0 VIC','R_L0 WA','R_temp',
     'R_L0 prior','R_I prior','R_L0 national'])
     ax.tick_params('x',rotation=45)
     ax.yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
@@ -582,7 +583,7 @@ for data_date in cprs_dates:
 
     var_to_csv = predictors
     samples_mov_gamma[predictors] = samples_mov_gamma[['bet['+str(i)+']' for i in range(1,1+len(predictors))]]
-    var_to_csv = ['R_I']+['R_L','sig']+['theta_md']+predictors + [
+    var_to_csv = ['R_I']+['R_L','sig','R_temp']+['theta_md']+predictors + [
         'R_Li['+str(i+1)+']' for i in range(len(states_to_fit))
         ]
 

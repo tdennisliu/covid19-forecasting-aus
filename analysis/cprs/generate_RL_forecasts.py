@@ -417,12 +417,6 @@ for data_date in cprs_dates:
                 if state in ("ACT","NT"):
                     sim_R = np.tile(samples.R_L.values, (df_state.shape[0],mob_samples))
                 else:
-                    #if state =='VIC':
-                    #    sim_R = np.tile(
-                    #        samples['R_Li['+state_key[state]+']'].values + samples['R_temp'].values,
-                    #         (df_state.shape[0],mob_samples)
-                    #         )
-                    #else:
                     sim_R = np.tile(samples['R_Li['+state_key[state]+']'].values, (df_state.shape[0],mob_samples))
 
 
@@ -525,6 +519,14 @@ for data_date in cprs_dates:
                     logodds = np.concatenate((logodds, logodds_sample ), axis =1)
 
             R_L = 2* md *sim_R * expit( logodds ) 
+            if state == 'VIC':
+                #add temporary Reff boost
+                first_index = df_state.loc[
+                    (df_state.date>="2020-06-01")].shape[0]
+                end_index = df_state.loc[
+                    (df_state.date<="2020-07-01")].shape[0]
+                R_L[first_index:end_index,:] += np.tile(
+                    samples['R_temp'].values, (1,mob_samples))
 
             R_L_lower = np.percentile(R_L,25,axis=1)
             R_L_upper = np.percentile(R_L,75,axis=1)

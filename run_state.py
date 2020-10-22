@@ -32,8 +32,8 @@ start_date = '2020-03-01'
 case_file_date = pd.to_datetime(argv[3]).strftime("%d%b")#None #'24Jul'
 Reff_file_date = argv[3]#'2020-08-25'
 forecast_date = argv[3]#'2020-08-25'
-test_campaign_date = '2020-06-25'
-test_campaign_factor = 1.25
+test_campaign_date = '2020-06-01'
+test_campaign_factor = 10
 
 if pd.to_datetime(argv[3]) < pd.to_datetime('2020-06-02'):
     if pd.to_datetime(argv[3]).day <10:
@@ -45,11 +45,11 @@ abc =False
 
 
 local_detection = {
-            'NSW':0.8,#0.556,#0.65,
+            'NSW':0.9,#0.556,#0.65,
             'QLD':0.9,#0.353,#0.493,#0.74,
             'SA':0.7,#0.597,#0.75,
             'TAS':0.4,#0.598,#0.48,
-            'VIC':0.75,#0.558,#0.77,
+            'VIC':0.35,#0.558,#0.77,
             'WA':0.7,#0.409,#0.509,#0.66,
             'ACT':0.95,#0.557,#0.65,
             'NT':0.95,#0.555,#0.71
@@ -121,7 +121,7 @@ for state in states:
         #XBstate = 'SA'
         forecast_dict[state] = Forecast(current[state],
         state,start_date,people,
-        alpha_i= 1, k =0.1,gam_list=gam,
+        alpha_i= 1, k =0.1,gam_list=gam, #alpha_i is impact of importations after April 15th
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
@@ -134,7 +134,7 @@ for state in states:
         state,start_date,people,
         alpha_i= 1, k =0.1,gam_list=gam,
         qs_list=qs_prior,qi_list=qi_prior,qa_list=qa_prior,
-        qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
+        qua_ai=2,qua_qi_factor=1,qua_qs_factor=1, #qua_ai is impact of importations before April 15th
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
         cross_border_state=None,cases_file_date=case_file_date,
         ps_list = ps_prior,Reff_file_date=Reff_file_date

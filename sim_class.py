@@ -37,7 +37,7 @@ class Forecast:
         #start date sets day 0 in script to start_date
         self.start_date = pd.to_datetime(start_date,format='%Y-%m-%d')
         self.quarantine_change_date = pd.to_datetime(
-            '2020-04-01',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
+            '2020-04-15',format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
         self.initial_people = people.copy() #detected people only
         self.Reff = Reff
         self.alpha_i = alpha_i
@@ -400,8 +400,7 @@ class Forecast:
                                 else:
                                     #cross border seed happened after forecast
                                     self.travel_cases_after +=1
-                else:
-                    self.inf_backcast_counter +=1
+
                 #normal case within state
                 if self.people[parent_key].category=='A':
                     child_times.append(ceil(inf_time))
@@ -430,7 +429,8 @@ class Forecast:
                             detect_prob = self.qs
                         if detection_rv < detect_prob:
                             #case detected
-                            
+                            #only care about detected cases
+                            self.inf_backcast_counter +=1
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),2] += 1
 
@@ -1124,11 +1124,15 @@ class Forecast:
         df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
         df = df.sort_values(by='date')
         
+        df = df.set_index('date')
+        #fill missing dates with 0 up to end_time
+        df = df.reindex(range(self.end_time), fill_value=0)
         ## calculate window of cases to measure against
-        if df.date.values[-1] >60:
+        if df.index.values[-1] >60:
             #if final day of data is later than day 90, then remove first 90 days
-            self.cases_to_subtract = sum(df.local.values[:-60])
-            self.cases_to_subtract_now = sum(df.local.values[:-14])
+            forecast_days = self.end_time-self.forecast_date
+            self.cases_to_subtract = sum(df.local.values[:-1*(60+forecast_days)])
+            self.cases_to_subtract_now = sum(df.local.values[:-1*(14+forecast_days)])
         else:
             self.cases_to_subtract = 0
             self.cases_to_subtract_now = 0
@@ -1138,9 +1142,7 @@ class Forecast:
 
         self.max_nowcast_cases = max(10, 1.25*(sum(df.local.values) - self.cases_to_subtract_now))
         print("Local cases in last 14 days is %i" % (sum(df.local.values) - self.cases_to_subtract_now) )
-        df = df.set_index('date')
-        #fill missing dates with 0 up to end_time
-        df = df.reindex(range(self.end_time), fill_value=0)
+
         self.actual = df.local.to_dict()
        
         return None

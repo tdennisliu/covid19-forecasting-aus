@@ -237,6 +237,7 @@ for data_date in cprs_dates:
                 data_date.strftime("%Y-%m-%d")+"tau_4.csv",parse_dates=['INFECTION_DATES'])
     df_Reff['date'] = df_Reff.INFECTION_DATES
     df_Reff['state'] = df_Reff.STATE
+    print('data loaded')
     if data_date < pd.to_datetime('2020-06-02'):
         #no leading zero on early dates
         if data_date.day <10:

@@ -503,14 +503,16 @@ class Forecast:
         
         #check if exceeded number of tests today yet
         if self.tests_todo>self.test_capacity:
-            test_delay = 0#self.tests_todo//self.test_capacity
+            test_delay = self.tests_todo//self.test_capacity
         else:
             test_delay = 0
-        
+        if self.tracing_todo > self.trace_capacity:
+            PHU_delay = self.tracing_todo//self.trace_capacity
+        else:
+            PHU_delay = 0
         if num_offspring >0:  
             
             num_sympcases = self.new_symp_cases(num_offspring)
-            
             
 
             if self.people[parent_key].category=='A':
@@ -595,7 +597,7 @@ class Forecast:
                                 self.people[parent_key].detected>self.generations_traced
                             ):
 
-                                action_time = notify_time + next(self.get_action_time)
+                                action_time = notify_time + PHU_delay+next(self.get_action_time)
                             else:
                                 #parent was detected, and now case is routine detected
                                 # Take minimum of routine isolation
@@ -637,7 +639,7 @@ class Forecast:
                                 self.people[parent_key].detected>self.generations_traced
                             ):
                                 #if parent is not traced
-                                action_time = notify_time  + next(self.get_action_time)
+                                action_time = notify_time  + PHU_delay+next(self.get_action_time)
                             else:
                                 #parent was traced, 
                                 # and now case is routine detected
@@ -677,6 +679,7 @@ class Forecast:
                                 #case caught in contact tracing
                                 #inherit action time only if smaller
                                 # than your own from routine detection
+                                self.tracing_todo+=1
                                 action_time = min(
                                     self.people[parent_key].action_time,
                                     action_time)
@@ -751,7 +754,8 @@ class Forecast:
         t_t_shape = 1/1, t_t_scale=1, t_t_offset=1,
         t_n_shape = 1/1, t_n_scale = 1/1,t_n_offset = 0,
         t_a_shape = 3/2, t_a_scale=2, t_a_offset=0,
-        generations_traced=1, test_capacity=2000,sim_undetected=True ):
+        generations_traced=1, test_capacity=2000, trace_capacity=400,
+        sim_undetected=True ):
         """
         Simulate forward until end_time
         """
@@ -786,7 +790,9 @@ class Forecast:
         self.generations_traced = generations_traced
 
         self.tests_todo=0
+        self.tracing_todo=0
         self.test_capacity = test_capacity
+        self.trace_capacity = trace_capacity // self.generations_traced
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)
@@ -807,6 +813,7 @@ class Forecast:
             #add to the queue
             heappush(self.infected_queue, (person.infection_time,key))
             self.tests_todo +=1
+            self.tracing_todo +=1
             #Record their times
             if person.infection_time> end_time:
                 #initial undetected cases have slim chance to be infected 
@@ -850,7 +857,8 @@ class Forecast:
             if floor(day_end) > self.daycounter:
                 #new test day
                 self.daycounter = floor(day_end) 
-                self.tests_todo = max(0, self.tests_todo - self.test_capacity)    
+                self.tests_todo = max(0, self.tests_todo - self.test_capacity)
+                self.tracing_todo = max(0,self.tracing_todo - self.trace_capacity)    
             #Check if exceeding cases
             if day_end < self.forecast_date:
                 if self.inf_backcast_counter> self.max_backcast_cases:

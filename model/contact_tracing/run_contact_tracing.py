@@ -55,6 +55,7 @@ if __name__ == '__main__':
 
     generations_traced = 1
     test_capacity = 2000000
+    trace_capacity = 200000
 
     sim_undetected = False
     #number of iterations
@@ -269,6 +270,8 @@ if __name__ == '__main__':
             "t_n_offset":t_n_offset,
             "sim_undetected":sim_undetected,
             "generations_traced": generations_traced,
+            "test_capacity": test_capacity,
+            "trace_capacity": trace_capacity,
         }
         secondary_cases = []
         actual_gen_times = []

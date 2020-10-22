@@ -214,8 +214,8 @@ except:
 cprs_all_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
 cprs_dates = cprs_all_dates[cprs_all_dates!='2020-09-09']
 
-if argv[1]=='2020-09-09':
-    print("This won't run due to cprs date definitions, please comment out line 215.")
+#if argv[1]=='2020-09-09':
+#    print("This won't run due to cprs date definitions, please comment out line 215.")
 
 for data_date in cprs_dates:
     print(data_date)

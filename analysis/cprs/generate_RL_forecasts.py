@@ -27,7 +27,7 @@ plot_states = states.copy()
 surveys = pd.DataFrame()
 ##Improve this to read by glob.glob and get all of them
 
-    
+
 path = "data/md/Barometer wave*.csv"
 for file in glob.glob(path):
     surveys = surveys.append(pd.read_csv(file,parse_dates=['date']))
@@ -69,13 +69,14 @@ try:
 except:
     print("Running full validation dates")
     cprs_start_date = pd.to_datetime('2020-04-01')
-    cprs_end_date = pd.to_datetime('2020-07-22')
-cprs_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
+    cprs_end_date = pd.to_datetime('2020-10-07')
+cprs_all_dates = pd.date_range(cprs_start_date, cprs_end_date, freq='7D')
+cprs_dates = cprs_all_dates[cprs_all_dates!='2020-09-09']
 
 for data_date in cprs_dates:
     print(data_date)
     df_samples = read_in_posterior(date = data_date.strftime("%Y-%m-%d"))
-    
+
     one_month = data_date + timedelta(days= 42)
 
     days_from_March = one_month.dayofyear -pd.to_datetime('2020-03-01').dayofyear
@@ -83,7 +84,7 @@ for data_date in cprs_dates:
     ##filter out future info
     prop = prop_all.loc[:data_date]
     df_google = df_google_all.loc[df_google_all.date<=data_date]
-    
+
     #Simple interpolation for missing vlaues in Google data
     df_google = df_google.interpolate(method='linear',axis=0)
 
@@ -115,11 +116,11 @@ for data_date in cprs_dates:
     predictors.remove('residential_7days')
 
     mob_samples = 1000
-    
+
     axes = []
     figs = []
     for var in predictors:
-        
+
         fig, ax_states = plt.subplots(figsize=(7,8),nrows=4, ncols=2, sharex=True)
         axes.append(ax_states)
         fig.suptitle(var)
@@ -129,12 +130,12 @@ for data_date in cprs_dates:
     fig, ax_states = plt.subplots(figsize=(7,8),nrows=4, ncols=2, sharex=True)
     axes.append(ax_states)
     fig.suptitle(var)
-    figs.append(fig)    
-    
+    figs.append(fig)
+
     state_Rmed = {}
     state_sims = {}
     for i,state in enumerate(states):
-        
+
         rownum = int(i/2.)
         colnum = np.mod(i,2)
 
@@ -147,7 +148,7 @@ for data_date in cprs_dates:
                     scale = df_google[df_google['state'] == state][var+'_std'],
                )
         dates = df_google[df_google['state'] == state]['date']
-            
+
             #cap min and max at historical or (-50,0)
         minRmed_array = np.minimum(-50,np.amin(Rmed_array, axis = 0)) #1 by predictors by mob_samples size
         maxRmed_array = np.maximum(0,np.amax(Rmed_array, axis=0))
@@ -156,7 +157,7 @@ for data_date in cprs_dates:
             Rmed = Rmed_array[:,:,n]
             minRmed = minRmed_array[:,n]
             maxRmed = maxRmed_array[:,n]
-                
+
             R_diffs = np.diff(Rmed[-n_training:,:], axis=0)
 
 
@@ -168,15 +169,15 @@ for data_date in cprs_dates:
                                                     axis=0))#rows are sim, dates are columns
             sims[:,:,n] = np.maximum(minRmed, sims[:,:,n])
                 #dates of forecast to enter
-                
+
         dd = [dates.tolist()[-1] + timedelta(days=x) for x in range(1,n_forecast+1)]
 
 
         sims_med = np.median(sims,axis=2) #N by predictors
         sims_q25 = np.percentile(sims,25,axis=2)
         sims_q75 = np.percentile(sims,75,axis=2)
-        
-        
+
+
         ##forecast mircodistancing
         if state!='AUS':
             md_diffs = np.diff(prop[state].values[-n_training:])
@@ -193,7 +194,7 @@ for data_date in cprs_dates:
             #get dates
             dd_md = [prop[state].index[-1] + timedelta(days=x) for x in range(1,n_forecast+extra_days_md+1)]
 
-        
+
         for j, var in enumerate(predictors+['md_prop']):
             #Record data
             axs=axes[j]
@@ -211,7 +212,7 @@ for data_date in cprs_dates:
                 outdata['state'].extend([state]*len(dd_md))
                 outdata['date'].extend([d.strftime('%Y-%m-%d') for d in dd_md])
                 outdata['mean'].extend(np.mean(md_sims,axis=1))
-                
+
                 outdata['std'].extend(np.std(md_sims,axis=1))
 
             if state in plot_states:
@@ -235,14 +236,14 @@ for data_date in cprs_dates:
                     axs[rownum,colnum].plot(dd_md,np.median(md_sims,axis=1),'k')
                     axs[rownum,colnum].fill_between(dd_md, np.quantile(md_sims,0.25, axis=1),
                                                     np.quantile(md_sims,0.75,axis=1), color='k',alpha = 0.1)
-                    
+
                 axs[rownum,colnum].set_title(state)
                 axs[rownum,colnum].axhline(1,ls = '--', c = 'k')
                 axs[rownum,colnum].set_title(state)
                 axs[rownum,colnum].tick_params('x',rotation=90)
                 axs[rownum,colnum].xaxis.set_major_locator(plt.MaxNLocator(4))
                 fig.autofmt_xdate()
-            
+
         state_Rmed[state] = Rmed_array
         state_sims[state] = sims
     os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d"), exist_ok=True)
@@ -265,12 +266,12 @@ for data_date in cprs_dates:
     df_forecast = pd.pivot_table(df_out, columns=['type'],index=['date','state'],values=['mean'])
     df_std = pd.pivot_table(df_out, columns=['type'],index=['date','state'],values=['std'])
 
-    df_forecast_md = pd.pivot_table(df_md, columns=['state'],index=['date'],values=['mean']) 
-    df_forecast_md_std = pd.pivot_table(df_md, columns=['state'],index=['date'],values=['std']) 
+    df_forecast_md = pd.pivot_table(df_md, columns=['state'],index=['date'],values=['mean'])
+    df_forecast_md_std = pd.pivot_table(df_md, columns=['state'],index=['date'],values=['std'])
 
     #align with google order in columns
     df_forecast = df_forecast.reindex([('mean',val) for val in predictors],axis=1)
-    df_std = df_std.reindex([('std',val) for val in predictors],axis=1) 
+    df_std = df_std.reindex([('std',val) for val in predictors],axis=1)
     df_forecast.columns = predictors  #remove the tuple name of columns
     df_std.columns = predictors
 
@@ -281,11 +282,11 @@ for data_date in cprs_dates:
     df_forecast_md.columns = states
     df_forecast_md_std.columns = states
 
-    df_forecast = df_forecast.reset_index() 
+    df_forecast = df_forecast.reset_index()
     df_std = df_std.reset_index()
 
     df_forecast_md = df_forecast_md.reset_index()
-    df_forecast_md_std = df_forecast_md_std.reset_index() 
+    df_forecast_md_std = df_forecast_md_std.reset_index()
 
     df_forecast.date = pd.to_datetime(df_forecast.date)
     df_std.date = pd.to_datetime(df_std.date)
@@ -293,11 +294,11 @@ for data_date in cprs_dates:
     df_forecast_md.date = pd.to_datetime(df_forecast_md.date)
     df_forecast_md_std.date = pd.to_datetime(df_forecast_md_std.date)
 
-    df_R = df_google[['date','state']+mov_values + [val+'_std' for val in mov_values]] 
+    df_R = df_google[['date','state']+mov_values + [val+'_std' for val in mov_values]]
     df_R = pd.concat([df_R,df_forecast],ignore_index=True,sort=False)
     df_R['policy'] = (df_R.date>='2020-03-20').astype('int8')
 
-    
+
     df_md = pd.concat([prop,df_forecast_md.set_index('date')])
     #prop_std = pd.DataFrame(np.random.beta(1+survey_counts, 1+survey_respond), columns = survey_counts.columns, index = prop.index)
 
@@ -317,11 +318,11 @@ for data_date in cprs_dates:
             md = ((1+theta_md).T**(-1* prop_sim)).T
         else:
             md = (2*expit(-1*theta_md*prop_sim[:,np.newaxis]))
-            
-        
+
+
         row = i//2
         col = i%2
-        
+
         ax[row,col].plot(df_md[state].index, np.median(md,axis=1 ), label='Microdistancing')
         ax[row,col].fill_between(df_md[state].index, np.quantile(md,0.25,axis=1 ),np.quantile(md,0.75,axis=1 ),
                                 label='Microdistancing',
@@ -334,8 +335,8 @@ for data_date in cprs_dates:
         ax[row,col].set_title(state)
         ax[row,col].tick_params('x',rotation=20)
         ax[row,col].xaxis.set_major_locator(plt.MaxNLocator(4))
-        
-        
+
+
         ax[row,col].set_xticks([df_md[state].index.values[-n_forecast-extra_days_md]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
     fig.savefig("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/md_factor.png",dpi=144)
@@ -358,7 +359,7 @@ for data_date in cprs_dates:
         'std':[],
     }
     ban = '2020-03-20'
-    new_pol = '2020-06-01' #VIC and NSW allow gatherings of up to 20 people, other jurisdictions allow for 
+    new_pol = '2020-06-01' #VIC and NSW allow gatherings of up to 20 people, other jurisdictions allow for
 
     expo_decay=True
 
@@ -384,14 +385,14 @@ for data_date in cprs_dates:
             dd = df_state.date
             post_values = samples[predictors].values.T
             prop_sim = df_md[state].values
-            
+
                         #take right size of md to be N by N
             theta_md = np.tile(samples['theta_md'].values, (df_state.shape[0],mob_samples))
             if expo_decay:
                 md = ((1+theta_md).T**(-1* prop_sim)).T
             #else:
             #    md = (2*expit(-1*theta_md*prop_sim[:,np.newaxis]))
-            
+
             for n in range(mob_samples):
                 #add gaussian noise to predictors before forecast
                 df_state.loc[df_state.date<mob_forecast_date,predictors] = state_Rmed[state][:,:,n]/100#df_state.loc[
@@ -400,19 +401,19 @@ for data_date in cprs_dates:
                     #    (df_state.date<mob_forecast_date),
                     #    [val+'_std' for val in predictors]].values/100)
 
-                
+
                 #add gaussian noise to predictors after forecast
                 df_state.loc[df_state.date>=mob_forecast_date,predictors] = state_sims[state][:,:,n]/100
                 #df_state.loc[
                 #   df_state.date>=mob_forecast_date,predictors]/100 + np.random.normal(
                 #   loc= 0, scale = df_std.loc[(df_std.state==state,predictors)].values/100)
 
-                
+
                 #dd = df_state.date
 
                 df1 =df_state.loc[df_state.date<=ban]
                 X1 = df1[predictors] #N by K
-                
+
                 #sample the right R_L
                 if state in ("ACT","NT"):
                     sim_R = np.tile(samples.R_L.values, (df_state.shape[0],mob_samples))
@@ -432,7 +433,7 @@ for data_date in cprs_dates:
                 if n==0:
                     #initialise arrays (loggodds)
                     logodds = X1 @ post_values # N by K times (Nsamples by K )^T = Ndate by Nsamples
-                    
+
                     if typ =='R_L':
                         df2 = df_state.loc[(df_state.date>ban) & (df_state.date<new_pol)]
                         df3 = df_state.loc[df_state.date>=new_pol]
@@ -441,10 +442,10 @@ for data_date in cprs_dates:
 
                         #halve effect of md
                         #md[(X1.shape[0]+df2.shape[0]):,:] = 1- 0.5 *( 1 - md[(X1.shape[0]+df2.shape[0]):,:])
-                        
+
                         logodds = np.append(logodds,X2 @ post_values,axis=0)
                         logodds = np.append(logodds,X3 @ post_values,axis=0)
-                        
+
                         #md = np.append(md, ((1+theta_md).T**(-1* prop2)).T, axis=0)
                         #md = np.append(md, ((1+theta_md).T**(-1* prop3)).T, axis=0)
 
@@ -474,13 +475,13 @@ for data_date in cprs_dates:
                 else:
                     #concatenate to pre-existing logodds martrix
                     logodds1 = X1 @ post_values
-                    
+
                     if typ =='R_L':
                         df2 = df_state.loc[(df_state.date>ban) & (df_state.date<new_pol)]
                         df3 = df_state.loc[df_state.date>=new_pol]
                         X2 = df2[predictors]
                         X3 = df3[predictors]
-                        
+
                         prop2 = df_md.loc[ban:new_pol,state].values
                         prop3 = df_md.loc[new_pol:,state].values
 
@@ -489,7 +490,7 @@ for data_date in cprs_dates:
 
                         logodds2 = X2 @ post_values
                         logodds3 = X3 @ post_values
-                        
+
                         logodds_sample = np.append(logodds1, logodds2, axis=0)
                         logodds_sample = np.append(logodds_sample, logodds3, axis=0)
 
@@ -502,12 +503,12 @@ for data_date in cprs_dates:
                         #social mobility all at baseline implies R_l = R_L0
 
                         #md has no effect after June 1st
-                        
+
                         md[(X1.shape[0]+df2.shape[0]):,:] = 1
-                        
+
                         logodds2 = X2 @ post_values
                         logodds3 = X3 @ post_values
-                        
+
                         logodds_sample = np.append(logodds1, logodds2, axis=0)
                         logodds_sample = np.append(logodds_sample, logodds3, axis=0)
 
@@ -518,13 +519,13 @@ for data_date in cprs_dates:
                         X2 = df2[predictors]
 
                         logodds2 = X2 @ post_values
-                        
+
                         logodds_sample = np.append(logodds1, logodds2, axis=0)
-                    
+
                     ##concatenate to previous
                     logodds = np.concatenate((logodds, logodds_sample ), axis =1)
 
-            R_L = 2* md *sim_R * expit( logodds ) 
+            R_L = 2* md *sim_R * expit( logodds )
 
             R_L_lower = np.percentile(R_L,25,axis=1)
             R_L_upper = np.percentile(R_L,75,axis=1)
@@ -546,17 +547,17 @@ for data_date in cprs_dates:
             state_Rs['bottom'].extend(R_L_bottom)
             state_Rs['mean'].extend(np.mean(R_L,axis=1))
             state_Rs['std'].extend(np.std(R_L,axis=1))
-            
+
             state_R[state] = R_L
         typ_state_R[typ] = state_R
-        
-    
-    
+
+
+
     for state in states:
         #R_I
         R_I = samples['R_I'].values[:df_state.shape[0]]
-        
-        
+
+
         state_Rs['state'].extend([state]*df_state.shape[0])
         state_Rs['type'].extend(['R_I']*df_state.shape[0])
         state_Rs['date'].extend(dd.values)
@@ -567,7 +568,7 @@ for data_date in cprs_dates:
         state_Rs['bottom'].extend(np.repeat(np.percentile(R_I,5),df_state.shape[0]))
         state_Rs['mean'].extend(np.repeat(np.mean(R_I),df_state.shape[0]))
         state_Rs['std'].extend(np.repeat(np.std(R_I),df_state.shape[0]))
-        
+
     df_Rhats = pd.DataFrame().from_dict(state_Rs)
     df_Rhats = df_Rhats.set_index(['state','date','type'])
 
@@ -584,7 +585,7 @@ for data_date in cprs_dates:
                 temp['date'] = dd.values
                 temp['state'] = state
                 temp['type'] = typ
-                t = t.append(temp)   
+                t = t.append(temp)
         #R_I
         i = pd.DataFrame(np.tile(samples['R_I'].values,(len(dd.values),100)))
         i['date'] = dd.values
@@ -592,32 +593,32 @@ for data_date in cprs_dates:
         i['state'] = state
 
         t = t.append(i)
-            
+
         d = d.append(t)
-            
+
             #df_Rhats = df_Rhats.loc[(df_Rhats.state==state)&(df_Rhats.type=='R_L')].join( t)
 
     d = d.set_index(['state','date','type'])
     df_Rhats = df_Rhats.join(d)
     df_Rhats = df_Rhats.reset_index()
     df_Rhats.state = df_Rhats.state.astype(str)
-    df_Rhats.type = df_Rhats.type.astype(str)        
-    
+    df_Rhats.type = df_Rhats.type.astype(str)
+
     fig, ax = plt.subplots(figsize=(12,9), nrows=4,ncols=2,sharex=True, sharey=True)
 
     plt.locator_params(axis='x',nbins=2)
     for i,state in enumerate(plot_states):
-        
+
         row = i//2
         col = i%2
-        
+
         plot_df = df_Rhats.loc[(df_Rhats.state==state)& (df_Rhats.type=='R_L')]
-        
+
         ax[row,col].plot(plot_df.date, plot_df['mean'])
-        
+
         ax[row,col].fill_between( plot_df.date, plot_df['lower'],plot_df['upper'],alpha=0.4,color='C0')
         ax[row,col].fill_between( plot_df.date, plot_df['bottom'],plot_df['top'],alpha=0.4,color='C0')
-        
+
         ax[row,col].tick_params('x',rotation=20)
         ax[row,col].xaxis.set_major_locator(plt.MaxNLocator(4))
         ax[row,col].set_title(state)
@@ -626,7 +627,7 @@ for data_date in cprs_dates:
         ax[row,col].set_yticklabels([0,2,3],minor=False)
         ax[row,col].yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
         ax[row,col].set_ylim((0,3))
-        
+
         ax[row,col].set_xticks([plot_df.date.values[-n_forecast]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
     #fig.autofmt_xdate()

@@ -161,10 +161,10 @@ for data_date in cprs_dates:
 
 
             mu = np.mean(R_diffs, axis=0)
-            std = np.cov(R_diffs, rowvar=False) #columns are vars, rows are obs
+            cov = np.cov(R_diffs, rowvar=False) #columns are vars, rows are obs
             sims[:,:,n] = np.minimum(maxRmed,np.mean(Rmed[-7:,:],axis=0) + np.cumsum(np.random.multivariate_normal(mu,
-                                                                    std,
-                                                                    size=(n_forecast)),
+                                cov,
+                                size=(n_forecast)),
                                                     axis=0))#rows are sim, dates are columns
             sims[:,:,n] = np.maximum(minRmed, sims[:,:,n])
                 #dates of forecast to enter

@@ -219,6 +219,7 @@ cprs_dates = cprs_all_dates[cprs_all_dates!='2020-09-09']
 
 for data_date in cprs_dates:
     print(data_date)
+    print(data_date.strftime('%d%b%Y'))
 #data_date =  pd.to_datetime('2020-08-17')
 
     ## also filter Reff by 10 days!
@@ -246,6 +247,8 @@ for data_date in cprs_dates:
             df_state = read_in_cases(case_file_date=data_date.strftime('%d%b%Y'))
     else:
         df_state = read_in_cases(case_file_date=data_date.strftime('%d%b%Y'))
+
+    print('cases loaded')
     df_Reff = df_Reff.merge(df_state,how='left',left_on=['state','date'], right_on=['STATE','date_inferred']) #how = left to use Reff days, NNDSS missing dates
     df_Reff['rho_moving'] = df_Reff.groupby(['state'])['rho'].transform(lambda x: x.rolling(7,1).mean()) #minimum number of 1
 

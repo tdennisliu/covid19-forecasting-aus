@@ -140,3 +140,4 @@ dmypy.json
 # R project stuff:
 .Rproj.user
 .Rhistory
+data/Global_Mobility_Report.csv

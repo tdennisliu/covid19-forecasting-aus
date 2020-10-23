@@ -506,6 +506,15 @@ class Forecast:
             test_delay = self.tests_todo//self.test_capacity
         else:
             test_delay = 0
+
+        if (self.people[parent_key].detected>=1) & (
+            self.people[parent_key].detected<= self.generations_traced
+        ):
+            #Trace twice as many contacts as offspring, 
+            # but at least 5* gen_traced
+            self.tracing_todo+= max(num_offspring*2,5*self.generations_traced)
+        
+        #check if exceeded tracing capacity
         if self.tracing_todo > self.trace_capacity:
             PHU_delay = self.tracing_todo//self.trace_capacity
         else:
@@ -593,7 +602,7 @@ class Forecast:
                             test_time = present_time + test_delay+ next(self.get_test_time)
                             notify_time = test_time + next(self.get_notify_time)
                             # if parent is not detected, assign a new time to action 
-                            if (self.people[parent_key].detected==0) & (
+                            if (self.people[parent_key].detected==0) | (
                                 self.people[parent_key].detected>self.generations_traced
                             ):
 
@@ -679,7 +688,6 @@ class Forecast:
                                 #case caught in contact tracing
                                 #inherit action time only if smaller
                                 # than your own from routine detection
-                                self.tracing_todo+=1
                                 action_time = min(
                                     self.people[parent_key].action_time,
                                     action_time)

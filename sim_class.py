@@ -1175,7 +1175,13 @@ class Forecast:
         prior = [1,1/5]
         num_days = [6,7,5,5,22,days - 6-7-5-5-22]
         alphas = df.groupby(['STATE','period']).imported.sum() + prior[0]
-
+        
+        new_index= ((x,y) 
+        for x in ('NSW','VIC','SA','TAS','QLD','NT','ACT','WA')
+            for y in (0,1,2,3,4,5,6))
+        alphas = alphas.reindex(
+            new_index, fill_value=0
+        )
         betas = prior[1]+np.array(num_days)
         self.a_dict = {
             self.state : {

@@ -1191,8 +1191,6 @@ class Forecast:
 
         self.b_dict = { i+1: betas[i] for i in range(len(betas))
         }
-        print(self.a_dict)
-        print(self.b_dict)
         return None
 
 

@@ -1180,7 +1180,7 @@ class Forecast:
         for x in ('NSW','VIC','SA','TAS','QLD','NT','ACT','WA')
             for y in (0,1,2,3,4,5,6))
         alphas = alphas.reindex(
-            new_index, fill_value=0
+            new_index, fill_value=1 #fill with 1 to include prior
         )
         betas = prior[1]+np.array(num_days)
         self.a_dict = {
@@ -1191,6 +1191,8 @@ class Forecast:
 
         self.b_dict = { i+1: betas[i] for i in range(len(betas))
         }
+        print(self.a_dict)
+        print(self.b_dict)
         return None
 
 

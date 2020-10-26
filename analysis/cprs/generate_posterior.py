@@ -254,8 +254,7 @@ for data_date in cprs_dates:
 
     #some days have no cases, so need to fillna
     df_Reff['rho_moving'] = df_Reff.rho_moving.fillna(method='bfill')
-    df_Reff['local'] = df_Reff.local.fillna(0)
-    df_Reff['imported'] = df_Reff.imported.fillna(0)
+
 
     #shift counts to align with infection date not symptom date
     # dates should be complete at this point, no days skipped
@@ -265,7 +264,8 @@ for data_date in cprs_dates:
     df_Reff['imported'] = df_Reff.imported.shift(periods=-5)
     df_Reff['rho_moving'] = df_Reff.rho_moving.shift(periods=-5)
     df_Reff['rho'] = df_Reff.rho.shift(periods=-5)
-
+    df_Reff['local'] = df_Reff.local.fillna(0)
+    df_Reff['imported'] = df_Reff.imported.fillna(0)
     #Add Insight traffic
     #df_ai = read_AddInsight()
 
@@ -572,20 +572,22 @@ for data_date in cprs_dates:
     plt.savefig(
         results_dir+data_date.strftime("%Y-%m-%d")+"total_Reff_allstates.png", dpi=144)
 
-    ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
-                    R=RL_by_state, var= True, md_arg=md,
-                    rho=sec_states, second_phase=True,
-                     R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
-    for ax in ax4:
-        for a in ax:
-            a.set_ylim((0,3))
-            #a.set_xlim((start_date,end_date))
-    plt.savefig(
-        results_dir+data_date.strftime("%Y-%m-%d")+"Reff_sec_phase.png", dpi=144)
+    if df2X.shape[0]>0:
+        #plot only if there is second phase data
+        ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
+                        R=RL_by_state, var= True, md_arg=md,
+                        rho=sec_states, second_phase=True,
+                        R_I =samples_mov_gamma.R_I.values,prop=survey_X.loc[sec_start_date:sec_end_date])#by states....
+        for ax in ax4:
+            for a in ax:
+                a.set_ylim((0,3))
+                #a.set_xlim((start_date,end_date))
+        plt.savefig(
+            results_dir+data_date.strftime("%Y-%m-%d")+"Reff_sec_phase.png", dpi=144)
 
-    #remove plots from memory
-    fig.clear()
-    plt.close(fig)
+        #remove plots from memory
+        fig.clear()
+        plt.close(fig)
 
 
     var_to_csv = predictors

@@ -406,7 +406,7 @@ plt.savefig("figs/"+forecast_type+"imported_unobs_"+str(n_sims)+"days_"+str(days
 fig = plt.figure(figsize=(12,18))
 gs = fig.add_gridspec(4,2)
 
-plot_start = pd.to_datetime("today") - pd.to_timedelta(60,unit="D")
+plot_start = pd.to_datetime(data_date) - pd.to_timedelta(60,unit="D")
 dates_plot = pd.date_range(start = plot_start, periods=90)
 for i,state in enumerate(states):
     

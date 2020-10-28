@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from fbprophet import Prophet
-
+from sys import argv
 
 #####
 # Create time series estimate of Australia covid cases to
@@ -44,7 +44,7 @@ def read_in_cases(case_file_date='29Jun'):
     return df_state
 
 #inputs
-data_date = pd.to_datetime('2020-10-12')
+data_date = pd.to_datetime(argv[1])
 forecast_length = 28
 truncation = 10
 
@@ -85,7 +85,7 @@ pop = {
 for i, state in enumerate(states):
     #loop over each state. Parallelise?
     #initialise model 
-    m = Prophet(mcmc_samples=1000,growth='logistic')
+    m = Prophet(mcmc_samples=100,growth='logistic')
     
     df_prophet['y'] = cases[state].values[:-truncation]
     df_prophet['cap'] = pop[state]
@@ -95,7 +95,7 @@ for i, state in enumerate(states):
     m.fit(df_prophet)
     future = m.make_future_dataframe(
         periods = truncation+forecast_length,
-        include_history=True)
+        include_history=False)
 
     future['cap'] = pop[state]
     future['floor'] = 0
@@ -125,4 +125,4 @@ for i, state in enumerate(states):
     if i>=6:
         ax[i//2,i%2].tick_params(axis='x', rotation=45)
 fig.savefig("./results/prophet/"+data_date.strftime("%m-%d")+"/forecast.png",dpi=300)
-results.to_csv("./results/prophet"+data_date.strftime("%m-%d")+".csv")
+results.to_csv("./results/prophet/"+data_date.strftime("%m-%d")+".csv")

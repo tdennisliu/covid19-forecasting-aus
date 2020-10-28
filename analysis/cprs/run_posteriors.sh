@@ -10,8 +10,9 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=dennis.liu01@adelaide.edu.au
 
+module load arch/haswell
 module load Python/3.6.1-foss-2016b
-source $FASTDIR/virtualenvs/bin/activate
+source ../virtualenvs/bin/activate
 
 
 

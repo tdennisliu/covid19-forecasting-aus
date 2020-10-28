@@ -11,8 +11,9 @@
 #SBATCH --mail-user=dennis.liu01@adelaide.edu.au
 #SBATCH --array=0-7
 
+module load arch/haswell
 module load Python/3.6.1-foss-2016b
-source $FASTDIR/virtualenvs/bin/activate
+source ../virtualenvs/bin/activate
 
 states=("NSW" "VIC" "SA" "QLD" "TAS" "WA" "ACT" "NT")
 

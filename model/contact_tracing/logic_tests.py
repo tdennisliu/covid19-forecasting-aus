@@ -223,33 +223,37 @@ class TestGenerateCases(unittest.TestCase):
         #msg="Offspring not isolated and continued to infect others")
 
     def test_isolation(self):
-        self.Model.generate_new_cases(5,50,100,travel=False )
+        parent = 2
+        self.Model.generate_new_cases(parent,51,100,travel=False )
 
         any_after = False
         for key, person in self.Model.people.items():
-            if person.parent == 5:
+            if person.parent == parent:
                 if person.infection_time > 0:
                     any_after= True
             if any_after==True:
                 print("{} occurred after initial cases notification time".format(key))
                 break
         self.assertFalse(any_after,msg="Offspring occured after isolation")
-        for i in range(5, len(self.Model.people.keys())):
+        for i in range(parent, len(self.Model.people.keys())):
             if self.Model.people[i].detected==2:
                 print(self.Model.people[i].infection_time,self.Model.people[i].symp_onset_time)
-                if self.Model.people[i].symp_onset_time-self.Model.DAYS< self.Model.people[5].action_time:
+                if self.Model.people[i].symp_onset_time-self.Model.DAYS< self.Model.people[parent].action_time:
                     offspring = i
-                break
+                    break
         else:
             print("No offspring was not detected and then traced")
         print(self.Model.people[offspring].__dict__)
         self.Model.generate_new_cases(offspring,10,100,travel=False )
-        print(self.Model.people.keys())
         for i in self.Model.people.keys():
             if self.Model.people[i].parent==offspring:
-                print(i, self.Model.people[i].infection_time)
                 if self.Model.people[i].detected==3:
-                    print(self.Model.people[i].__dict__)
+                    self.assertAlmostEqual(
+                        self.Model.people[i].action_time, 
+                        self.Model.people[offspring].action_time,
+                        msg = "Action time inherited past 1 generation"
+                        )
+                
 
         for key, person in self.Model.people.items():
             if person.parent == offspring:

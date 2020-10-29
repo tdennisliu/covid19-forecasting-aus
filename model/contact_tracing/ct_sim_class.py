@@ -287,7 +287,7 @@ class Forecast:
             # obs time is day =0
             for person in self.people.keys():
                 self.people[person].infection_time = \
-                    self.people[person].symp_onset_time-1*next(self.get_inf_time)
+                    self.people[person].symp_onset_time-1*next(self.get_symp_time)
         else:
             #reinitialising, so actual people need times
             #assume all symptomatic
@@ -437,7 +437,7 @@ class Forecast:
             else:
                 #R_L0
                 for day in range(num_days):
-                    Reff_lookupstate[day] = 0.75*df.loc[state, [i for i in range(1000)]].values[0]
+                    Reff_lookupstate[day] = 0.55*df.loc[state, [i for i in range(1000)]].values[0]
                 print("Reff with mean %.2f" %np.mean(Reff_lookupstate[day]))
                 print("90\% CrI {}".format(np.quantile(Reff_lookupstate[day],(0.05,0.95))))
 
@@ -682,8 +682,7 @@ class Forecast:
                             
                         #elif  (self.people[parent_key].symp_onset_time - DAYS) < inf_time < (self.people[parent_key].action_time):
                         # elif ((self.people[parent_key].symp_onset_time - DAYS) < inf_time) and (inf_time < (self.people[parent_key].action_time)):   
-                        elif inf_time < self.people[parent_key].action_time:   
-                            
+                        else:   
                             x_rn = random()
                             if x_rn <= self.p_c:
                                 #case caught in contact tracing
@@ -703,6 +702,10 @@ class Forecast:
                                     #inherit plus 1 on parents detection number
                                     # and was not routine detected
                                     isdetected = self.people[parent_key].detected +1 
+
+                                    present_time = self.people[parent_key].action_time
+                                    test_time = present_time + test_delay+ next(self.get_test_time)
+                                    notify_time = test_time + next(self.get_notify_time)
                                 
                                 heappush(self.infected_queue, (present_time,len(self.people)))
                             
@@ -712,8 +715,6 @@ class Forecast:
                                 # if detected in routine detection, 
                                 # isolation time already assigned
                                 heappush(self.infected_queue, (present_time,len(self.people)))
-                        else:
-                            heappush(self.infected_queue, (present_time,len(self.people)))
                     else:
                         #parent undetected
                         heappush(self.infected_queue, (present_time,len(self.people)))
@@ -921,7 +922,7 @@ class Forecast:
                 #generate new cases with times
                 parent_time, parent_key = heappop(self.infected_queue)
                 #recorded within generate new cases
-                self.generate_new_cases(parent_key,Reff=Reff,k = self.k) 
+                self.generate_new_cases(parent_key,Reff=Reff,k = self.k, travel=False) 
         #self.people.clear()
   
         #LB needs people recorded, do not clear this attribute
@@ -1274,4 +1275,5 @@ class Forecast:
         self.people.clear()
         gc.collect()
         self.people = copy.deepcopy(people)
+        self.infected_queue = []
         return None

@@ -286,7 +286,8 @@ class Forecast:
             #assign infection time to those discovered
             # obs time is day =0
             for person in self.people.keys():
-                self.people[person].infection_time = -1*next(self.get_inf_time)
+                self.people[person].infection_time = \
+                    self.people[person].symp_onset_time-1*next(self.get_inf_time)
         else:
             #reinitialising, so actual people need times
             #assume all symptomatic

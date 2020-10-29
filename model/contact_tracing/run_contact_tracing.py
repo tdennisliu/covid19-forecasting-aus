@@ -39,7 +39,7 @@ if __name__ == '__main__':
     #time to isolation gamma parameters
     t_a_offset = 0 #number of days minimum to isolation
     t_a_shape = 1
-    t_a_scale = 0.01
+    t_a_scale = 1
 
     t_p_shape = 1
     t_p_scale = 1
@@ -69,8 +69,8 @@ if __name__ == '__main__':
     case_file_date = None #'24Jul'
     #Reff_file_date = '2020-07-20'
     Reff_file_date = '2020-08-06'
-    #Number of initial, detected symptomatic and asymptomatic cases respectively
-    initial_cases = [5,1]
+    #Number of initial, detected asymptomatic and symptomatic cases respectively
+    initial_cases = [1,5]
 
     local_detection = {
                 'NSW':0.5, #0.8 #0.2 #0.556,#0.65,
@@ -158,13 +158,19 @@ if __name__ == '__main__':
     # give action_times to each initial case
 
     for i,cat in enumerate(initial_people):
-        people[i] = Person(0,0,0,1,cat, 
-        action_time = t_a_offset + gamma(t_a_shape,t_a_scale),
-        present_time= t_p_offset + gamma(t_p_shape, t_p_scale),
-        test_time = t_t_offset + gamma(t_t_shape, t_t_scale),
-        notify_PHU_time= t_n_offset + gamma(t_n_shape, t_n_scale)
+        #people were detected today 
+        action_time = t_a_offset + gamma(t_a_shape,t_a_scale)
+        notify_PHU_time = 0
+        test_time  = -1*( t_n_offset + gamma(t_n_shape, t_n_scale))
+        present_time = test_time - (t_t_offset + gamma(t_t_shape, t_t_scale))
+        symp_time = present_time - (t_p_offset + gamma(t_p_shape, t_p_scale))
+
+        people[i] = Person(-1,0,symp_time,1,cat, 
+        action_time = action_time,
+        present_time=  present_time,
+        test_time = test_time,
+        notify_PHU_time= notify_PHU_time,
         )
-        
     #create forecast object    
     if state in ['VIC']:
         #XBstate = 'SA'

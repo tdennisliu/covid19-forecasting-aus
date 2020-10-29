@@ -226,6 +226,7 @@ class TestGenerateCases(unittest.TestCase):
         parent = 2
         self.Model.generate_new_cases(parent,51,100,travel=False )
 
+        #See if there are any cases after index cases isolation
         any_after = False
         for key, person in self.Model.people.items():
             if person.parent == parent:
@@ -235,26 +236,30 @@ class TestGenerateCases(unittest.TestCase):
                 print("{} occurred after initial cases notification time".format(key))
                 break
         self.assertFalse(any_after,msg="Offspring occured after isolation")
+
+        #Find an offspring who was traced and 
+        # has a tracing window that overlaps with before they were notified
+        # and isolated
         for i in range(parent, len(self.Model.people.keys())):
             if self.Model.people[i].detected==2:
-                print(self.Model.people[i].infection_time,self.Model.people[i].symp_onset_time)
                 if self.Model.people[i].symp_onset_time-self.Model.DAYS< self.Model.people[parent].action_time:
                     offspring = i
                     break
         else:
             print("No offspring was not detected and then traced")
-        print(self.Model.people[offspring].__dict__)
+
         self.Model.generate_new_cases(offspring,10,100,travel=False )
+        #check action time is inherited past one generation
         for i in self.Model.people.keys():
             if self.Model.people[i].parent==offspring:
                 if self.Model.people[i].detected==3:
                     self.assertAlmostEqual(
                         self.Model.people[i].action_time, 
                         self.Model.people[offspring].action_time,
-                        msg = "Action time inherited past 1 generation"
+                        msg = "Action time not inherited past 1 generation"
                         )
                 
-
+        #check in third generation no cases occured after isolation
         for key, person in self.Model.people.items():
             if person.parent == offspring:
                 if person.infection_time > self.Model.people[offspring].action_time:

@@ -26,8 +26,8 @@ if __name__ == '__main__':
     pool = mp.Pool(n_cpus)
 
 
-    DAYS_list = (-3,-2,-1,0,1,2)
-    DAYS = DAYS_list[int(argv[1])] #select right day from list
+    #DAYS_list = (-3,-2,-1,0,1,2)
+    DAYS = int(argv[1]) #select right day from list
 
     p_c_list = (0,0.5,0.75,0.9,1)
     p_c_list = p_c_list[::-1]
@@ -41,26 +41,26 @@ if __name__ == '__main__':
     t_a_shape = 1
     t_a_scale = 1
 
-    t_p_shape = 1
-    t_p_scale = 1
-    t_p_offset = 0.5    
+    t_p_shape = 1.03108
+    t_p_scale = 1/0.415
+    t_p_offset = 0  
         
-    t_t_shape = 1
-    t_t_scale = 0.5
-    t_t_offset =0.5
+    t_t_shape = 0
+    t_t_scale = 7.905380
+    t_t_offset =0
 
-    t_n_shape = 1
-    t_n_scale = 0.5
+    t_n_shape = 0.4533819
+    t_n_scale = 1/1.8200
     t_n_offset = 0
 
-    generations_traced = 1
+    generations_traced = argv[2]
     test_capacity = 2000000
     trace_capacity = 200000
 
     sim_undetected = False
     #number of iterations
-    if len(argv)>2:
-        n=int(argv[2])
+    if len(argv)>4:
+        n=int(argv[4])
     else:
         n = 20000
     print("Number of simulations: %i" % n )
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     initial_cases = [1,5]
 
     local_detection = {
-                'NSW':0.5, #0.8 #0.2 #0.556,#0.65,
+                'NSW':argv[3], #0.8 #0.2 #0.556,#0.65,
                 'QLD':0.9,#0.353,#0.493,#0.74,
                 'SA':0.7,#0.597,#0.75,
                 'TAS':0.4,#0.598,#0.48,
@@ -84,7 +84,7 @@ if __name__ == '__main__':
             }
 
     a_local_detection = {
-                'NSW':0.1,#0.556,#0.65,
+                'NSW':local_detection['NSW']/5,#0.556,#0.65,
                 'QLD':0.05,#0.353,#0.493,#0.74,
                 'SA':0.05,#0.597,#0.75,
                 'TAS':0.05,#0.598,#0.48,
@@ -378,7 +378,7 @@ if __name__ == '__main__':
 
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)+"init_"+str(initial_cases[0])
-        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_sc"+str(t_a_scale)+"heap_gens"+str(generations_traced)+".csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_detect"+argv[3]+"_gens"+str(generations_traced)+".csv", sep=',',index=False)
     pool.close()
     pool.join()
     print("Finished DAYS %i" % DAYS)

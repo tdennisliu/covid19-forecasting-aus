@@ -541,7 +541,7 @@ class Forecast:
                             #infection never occurs, skip
                             case_prevented_counter +=1
                             continue
-                    elif self.people[parent_key].detected >1:
+                    elif self.people[parent_key].detected <=self.generations_traced:
                         #parent was a traced case, isolated at action time
                         if inf_time> self.people[parent_key].action_time:
                             #infection occurs after isolation

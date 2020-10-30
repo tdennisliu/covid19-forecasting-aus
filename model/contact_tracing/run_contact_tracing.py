@@ -54,7 +54,7 @@ if __name__ == '__main__':
     t_n_scale = 1/1.8200
     t_n_offset = 0
 
-    generations_traced = argv[2]
+    generations_traced = int(argv[2])
     test_capacity = 2000000
     trace_capacity = 200000
 

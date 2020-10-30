@@ -29,7 +29,10 @@ if __name__ == '__main__':
     #DAYS_list = (-3,-2,-1,0,1,2)
     DAYS = int(argv[1]) #select right day from list
 
-    p_c_list = (0,0.5,0.75,0.9,1)
+    try:
+        p_c_list = int(argv[4])
+    except:
+        p_c_list = (0.5,0.75,0.9,1)
     p_c_list = p_c_list[::-1]
 
     ##########
@@ -59,10 +62,8 @@ if __name__ == '__main__':
 
     sim_undetected = False
     #number of iterations
-    if len(argv)>4:
-        n=int(argv[4])
-    else:
-        n = 20000
+
+    n = 10000
     print("Number of simulations: %i" % n )
     time_end = 30
     state = 'NSW'

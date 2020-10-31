@@ -124,7 +124,9 @@ if __name__ == '__main__':
 
 
 
-    print("Simulating state " +state)
+    #print("Simulating state " +state)
+    print("gens traced: %i " % generations_traced)
+    print("detect: %.2f" % local_detection['NSW'])
 
 
     current ={state: [0,initial_cases[0],initial_cases[1]]}

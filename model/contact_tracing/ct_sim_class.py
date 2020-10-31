@@ -541,7 +541,7 @@ class Forecast:
                             #infection never occurs, skip
                             case_prevented_counter +=1
                             continue
-                    elif self.people[parent_key].detected <=self.generations_traced:
+                    elif self.people[parent_key].detected <=self.generations_traced+1:
                         #parent was a traced case, isolated at action time
                         if inf_time> self.people[parent_key].action_time:
                             #infection occurs after isolation
@@ -802,7 +802,11 @@ class Forecast:
         self.tests_todo=0
         self.tracing_todo=0
         self.test_capacity = test_capacity
-        self.trace_capacity = trace_capacity // self.generations_traced
+        if self.generations_traced>0:
+            self.trace_capacity = trace_capacity // self.generations_traced
+        else:
+            #no tracing done, so set capacity at infinite
+            self.trace_capacity = 9000000
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
         self.observed_cases = np.zeros_like(self.cases)

@@ -141,3 +141,4 @@ dmypy.json
 .Rproj.user
 .Rhistory
 data/Global_Mobility_Report.csv
+*.csv

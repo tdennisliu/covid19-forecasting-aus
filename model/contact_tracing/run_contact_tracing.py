@@ -63,7 +63,7 @@ if __name__ == '__main__':
     if len(argv)>4:
         n = int(argv[4])
     else:
-        n = 10000
+        n = 20000
     print("Number of simulations: %i" % n )
     time_end = 30
     state = 'NSW'
@@ -379,6 +379,7 @@ if __name__ == '__main__':
         ax.set_xticks(bins + 0.5)
         plt.savefig("./model/contact_tracing/figs/secondary_cases/"+str(n)+plot_name+"actual_prop_cases_dist.png",dpi=300)
 
+        df['detect'] = local_detection['NSW']
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)+"init_"+str(initial_cases[0])
         df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_detect"+argv[3]+"_gens"+str(generations_traced)+".csv", sep=',',index=False)

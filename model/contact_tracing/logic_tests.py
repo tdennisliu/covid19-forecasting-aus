@@ -253,10 +253,10 @@ class TestGenerateCases(unittest.TestCase):
         for i in self.Model.people.keys():
             if self.Model.people[i].parent==offspring:
                 if self.Model.people[i].detected==3:
-                    self.assertAlmostEqual(
+                    self.assertGreaterEqual(
                         self.Model.people[i].action_time, 
                         self.Model.people[offspring].action_time,
-                        msg = "Action time not inherited past 1 generation"
+                        msg = "Action time must increase over generations"
                         )
                 
         #check in third generation no cases occured after isolation
@@ -265,7 +265,7 @@ class TestGenerateCases(unittest.TestCase):
                 if person.infection_time > self.Model.people[offspring].action_time:
                     any_after= True
             if any_after==True:
-                print("{} occurred after initial cases notification time".format(key))
+                print("{} occurred after initial cases isolation time".format(key))
                 break
         self.assertFalse(any_after,msg="Second gen offspring occured after isolation")
 

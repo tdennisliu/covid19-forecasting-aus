@@ -606,16 +606,21 @@ class Forecast:
                             if (self.people[parent_key].detected==0) | (
                                 self.people[parent_key].detected>self.generations_traced
                             ):
+                                #index case
+                                #isolate at notification
+                                action_time = notify_time #+ PHU_delay+next(self.get_action_time)
+                            #else:
+                                #parent was detected, but don't know if 
+                                # this case is succesfully traced
+                                # and now case is routine detected
 
-                                action_time = notify_time + PHU_delay+next(self.get_action_time)
-                            else:
-                                #parent was detected, and now case is routine detected
-                                # Take minimum of routine isolation
-                                # and parents isolation time
-                                action_time = min(
-                                    self.people[parent_key].action_time,
-                                    notify_time
-                                     )
+                                # Take minimum of notify time by routine
+                                # and tracing notification
+                                # test if this case will be traced later,
+                                #action_time = min(
+                                #    self.people[parent_key].action_time + PHU_delay + next(self.get_action_time)  ,
+                                #    notify_time
+                                #     )
                                 
                             if symp_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(symp_time)-1),2] += 1
@@ -648,17 +653,18 @@ class Forecast:
                             if (self.people[parent_key].detected==0) & (
                                 self.people[parent_key].detected>self.generations_traced
                             ):
+                                #index case
                                 #if parent is not traced
-                                action_time = notify_time  + PHU_delay+next(self.get_action_time)
-                            else:
+                                action_time = notify_time  #+ PHU_delay+next(self.get_action_time)
+                            #else:
                                 #parent was traced, 
                                 # and now case is routine detected
                                 # Take minimum of routine isolation
                                 # and parents isoaltion time
-                                action_time = min(
-                                    self.people[parent_key].action_time,
-                                    notify_time
-                                    )
+                                #action_time = min(
+                                #    self.people[parent_key].action_time,
+                                #    notify_time
+                                #    )
                             if symp_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(symp_time)-1),1] += 1
 
@@ -686,15 +692,7 @@ class Forecast:
                             x_rn = random()
                             if x_rn <= self.p_c:
                                 #case caught in contact tracing
-                                #inherit action time only if smaller
-                                # than your own from routine detection
-                                action_time = min(
-                                    self.people[parent_key].action_time,
-                                    action_time)
-                                #you are secondary case, prevents snowball
-                                # cases still prevented by isolation, but 
-                                #will not trigger tertiary cases to be 
-                                # contact traced unless routine detected.
+
                                 if isdetected==0:
                                     #if undetected before, add it's test to 
                                     # the counter
@@ -706,7 +704,28 @@ class Forecast:
                                     present_time = self.people[parent_key].action_time
                                     test_time = present_time + test_delay+ next(self.get_test_time)
                                     notify_time = test_time + next(self.get_notify_time)
-                                
+                                    #inherit parents isolation time plus some small delay
+                                    action_time = self.people[parent_key
+                                    ].action_time + PHU_delay+next(self.get_action_time)
+                                else:
+                                    #this case could have been detected via routine 
+                                    # detection, take the minimum
+                                    if present_time > self.people[parent_key].action_time:
+                                        #case was traced first, get 
+                                        # new times based on earlier presentation 
+                                        present_time = self.people[parent_key].action_time
+                                        test_time = present_time + test_delay+ next(self.get_test_time)
+                                        notify_time = test_time + next(self.get_notify_time)
+                                        #mark as traced case
+                                        isdetected = self.people[parent_key].detected +1 
+                                        #time of 
+                                        action_time = self.people[parent_key
+                                        ].action_time + PHU_delay+next(self.get_action_time)
+                                        
+                                        #if case routine detected then keep 
+                                        # previous times
+
+
                                 heappush(self.infected_queue, (present_time,len(self.people)))
                             
 

@@ -382,7 +382,7 @@ if __name__ == '__main__':
         df['detect'] = local_detection['NSW']
         #record and print to csv
         file_name = "allpc_days_"+str(DAYS)+"init_"+str(initial_cases[0])
-        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_detect"+argv[3]+"_gens"+str(generations_traced)+".csv", sep=',',index=False)
+        df.to_csv("./model/contact_tracing/results/"+str(n)+file_name+"_detect"+str(local_detection['NSW'])+"_gens"+str(generations_traced)+".csv", sep=',',index=False)
     pool.close()
     pool.join()
     print("Finished DAYS %i" % DAYS)

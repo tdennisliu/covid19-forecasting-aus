@@ -542,8 +542,10 @@ class Forecast:
                             case_prevented_counter +=1
                             continue
                     elif self.people[parent_key].detected <=self.generations_traced+1:
-                        #parent was a traced case, isolated at action time
-                        if inf_time> self.people[parent_key].action_time:
+                        #parent was a traced case, isolated at 
+                        # grand parent's action time = tracing moment
+                        grandparent = self.people[parent_key].parent
+                        if inf_time> self.people[grandparent].action_time:
                             #infection occurs after isolation
                             #infection never occurs, skip
                             case_prevented_counter +=1
@@ -608,7 +610,7 @@ class Forecast:
                             ):
                                 #index case
                                 #isolate at notification
-                                action_time = notify_time #+ PHU_delay+next(self.get_action_time)
+                                action_time = notify_time + PHU_delay+next(self.get_action_time)
                             #else:
                                 #parent was detected, but don't know if 
                                 # this case is succesfully traced
@@ -650,12 +652,12 @@ class Forecast:
                             present_time = inf_time + 10*next(self.get_present_time)
                             test_time = present_time + test_delay+ next(self.get_test_time)
                             notify_time = test_time + next(self.get_notify_time)
-                            if (self.people[parent_key].detected==0) & (
+                            if (self.people[parent_key].detected==0) | (
                                 self.people[parent_key].detected>self.generations_traced
                             ):
                                 #index case
                                 #if parent is not traced
-                                action_time = notify_time  #+ PHU_delay+next(self.get_action_time)
+                                action_time = notify_time  + PHU_delay+next(self.get_action_time)
                             #else:
                                 #parent was traced, 
                                 # and now case is routine detected
@@ -724,6 +726,9 @@ class Forecast:
                                         
                                         #if case routine detected then keep 
                                         # previous times
+
+                                        #no need to add to the test, as
+                                        # routine detection part added it already
 
 
                                 heappush(self.infected_queue, (present_time,len(self.people)))

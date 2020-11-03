@@ -504,7 +504,7 @@ class Forecast:
         
         #check if exceeded number of tests today yet
         if self.tests_todo>self.test_capacity:
-            test_delay = self.tests_todo//self.test_capacity
+            test_delay = 0#self.tests_todo//self.test_capacity
         else:
             test_delay = 0
 
@@ -517,7 +517,7 @@ class Forecast:
         
         #check if exceeded tracing capacity
         if self.tracing_todo > self.trace_capacity:
-            PHU_delay = self.tracing_todo//self.trace_capacity
+            PHU_delay = 0#self.tracing_todo//self.trace_capacity
         else:
             PHU_delay = 0
         if num_offspring >0:  
@@ -561,7 +561,7 @@ class Forecast:
                 action_time = self.end_time+10
                 #every case needs a present time to be simulated, 
                 # will be overwritten if detected.
-                present_time = inf_time +5 
+                present_time = inf_time +5 #0?
                 test_time = self.end_time+10
                 notify_time = self.end_time+10
 
@@ -632,7 +632,7 @@ class Forecast:
                             # action_time = self.people[parent_key].symp_onset_time + 
                             # 2* draw from distrubtion
                             #### Vary this present_time factor!
-                            present_time = inf_time + 10*next(self.get_present_time)
+                            present_time = inf_time + 2*next(self.get_present_time)
                             test_time = present_time + test_delay+ next(self.get_test_time)
                             notify_time = test_time + next(self.get_notify_time)
                             action_time = notify_time  + PHU_delay+next(self.get_action_time)
@@ -859,14 +859,15 @@ class Forecast:
         reinitialising_window = 0
         self.daycounter= 0
         while len(self.infected_queue)>0:
-            day_end = self.people[self.infected_queue[0][1]].infection_time
+            day_end = self.people[self.infected_queue[0][1]].present_time
 
             #check if new day
             if floor(day_end) > self.daycounter:
                 #new test day
+                num_days_passed = floor(day_end) - self.daycounter
                 self.daycounter = floor(day_end) 
-                self.tests_todo = max(0, self.tests_todo - self.test_capacity)
-                self.tracing_todo = max(0,self.tracing_todo - self.trace_capacity)    
+                self.tests_todo = max(0, self.tests_todo - num_days_passed*self.test_capacity)
+                self.tracing_todo = max(0,self.tracing_todo - num_days_passed* self.trace_capacity)    
             #Check if exceeding cases
             if day_end < self.forecast_date:
                 if self.inf_backcast_counter> self.max_backcast_cases:

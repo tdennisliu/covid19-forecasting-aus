@@ -1,8 +1,11 @@
+#results from other branch
+/model/contact_tracing/results/*
 #sensitive data
 *.xlsx
 /data/md/*
 /data/Dennis*/*
 /data/LSHTM_Reff_estimates/*/*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

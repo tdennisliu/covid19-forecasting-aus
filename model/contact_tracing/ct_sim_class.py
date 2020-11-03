@@ -604,25 +604,8 @@ class Forecast:
                             present_time = symp_time + next(self.get_present_time)
                             test_time = present_time + test_delay+ next(self.get_test_time)
                             notify_time = test_time + next(self.get_notify_time)
-                            # if parent is not detected, assign a new time to action 
-                            if (self.people[parent_key].detected==0) | (
-                                self.people[parent_key].detected>self.generations_traced
-                            ):
-                                #index case
-                                #isolate at notification
-                                action_time = notify_time + PHU_delay+next(self.get_action_time)
-                            #else:
-                                #parent was detected, but don't know if 
-                                # this case is succesfully traced
-                                # and now case is routine detected
 
-                                # Take minimum of notify time by routine
-                                # and tracing notification
-                                # test if this case will be traced later,
-                                #action_time = min(
-                                #    self.people[parent_key].action_time + PHU_delay + next(self.get_action_time)  ,
-                                #    notify_time
-                                #     )
+                            action_time = notify_time + PHU_delay+next(self.get_action_time)
                                 
                             if symp_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(symp_time)-1),2] += 1
@@ -652,21 +635,8 @@ class Forecast:
                             present_time = inf_time + 10*next(self.get_present_time)
                             test_time = present_time + test_delay+ next(self.get_test_time)
                             notify_time = test_time + next(self.get_notify_time)
-                            if (self.people[parent_key].detected==0) | (
-                                self.people[parent_key].detected>self.generations_traced
-                            ):
-                                #index case
-                                #if parent is not traced
-                                action_time = notify_time  + PHU_delay+next(self.get_action_time)
-                            #else:
-                                #parent was traced, 
-                                # and now case is routine detected
-                                # Take minimum of routine isolation
-                                # and parents isoaltion time
-                                #action_time = min(
-                                #    self.people[parent_key].action_time,
-                                #    notify_time
-                                #    )
+                            action_time = notify_time  + PHU_delay+next(self.get_action_time)
+                            
                             if symp_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(symp_time)-1),1] += 1
 

@@ -29,7 +29,7 @@ if __name__ == '__main__':
     #DAYS_list = (-3,-2,-1,0,1,2)
     DAYS = int(argv[1]) #select right day from list
 
- 
+    Reff_factor =0.55
     p_c_list = (0.5,0.75,0.9,1)
     p_c_list = p_c_list[::-1]
 
@@ -58,10 +58,9 @@ if __name__ == '__main__':
     test_capacity = 2000000
     trace_capacity = 200000
 
-    sim_undetected = False
     #number of iterations
-    if len(argv)>4:
-        n = int(argv[4])
+    if len(argv)>5:
+        n = int(argv[5])
     else:
         n = 20000
     print("Number of simulations: %i" % n )
@@ -71,7 +70,12 @@ if __name__ == '__main__':
     #Reff_file_date = '2020-07-20'
     Reff_file_date = '2020-08-06'
     #Number of initial, detected asymptomatic and symptomatic cases respectively
-    initial_cases = [1,5]
+    case_factor = int(argv[4])
+    initial_cases = [1*case_factor,5*case_factor]
+    if case_factor>5:
+        sim_undetected = True
+    else:
+        sim_undetected = False
 
     local_detection = {
                 'NSW':float(argv[3]), #0.8 #0.2 #0.556,#0.65,
@@ -195,7 +199,8 @@ if __name__ == '__main__':
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
         cross_border_state=None,cases_file_date=case_file_date,
-        ps_list = ps_prior,Reff_file_date=Reff_file_date
+        ps_list = ps_prior,Reff_file_date=Reff_file_date, 
+        Reff_factor = Reff_factor
         )
 
     else:

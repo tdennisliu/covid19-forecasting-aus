@@ -41,7 +41,7 @@ class Forecast:
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
         forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
         ps_list=[0.7], test_campaign_date=None, test_campaign_factor=1,
-        Reff_file_date=None,
+        Reff_file_date=None, Reff_factor=1
         ):
         import numpy as np
         import copy
@@ -74,6 +74,7 @@ class Forecast:
             forecast_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
 
         self.Reff_file_date = Reff_file_date
+        self.Reff_factor = Reff_factor
         self.cross_border_state = cross_border_state
         self.cases_file_date = cases_file_date
 
@@ -317,9 +318,9 @@ class Forecast:
             #Laura
             #num undetected is nbinom (num failures given num detected)
             if self.current[2]==0:
-                num_undetected_s = nbinom.rvs(1,self.qs*self.qua_qs_factor)
+                num_undetected_s = nbinom.rvs(1,self.p_c)
             else:
-                num_undetected_s = nbinom.rvs(self.current[2],self.qs*self.qua_qs_factor)
+                num_undetected_s = nbinom.rvs(self.current[2],self.p_c)
             
             ## Laura ,skip this for contact tracing
             #if self.current[0]==0:
@@ -437,7 +438,7 @@ class Forecast:
             else:
                 #R_L0
                 for day in range(num_days):
-                    Reff_lookupstate[day] = 0.55*df.loc[state, [i for i in range(1000)]].values[0]
+                    Reff_lookupstate[day] = self.Reff_factor*df.loc[state, [i for i in range(1000)]].values[0]
                 print("Reff with mean %.2f" %np.mean(Reff_lookupstate[day]))
                 print("90\% CrI {}".format(np.quantile(Reff_lookupstate[day],(0.05,0.95))))
 

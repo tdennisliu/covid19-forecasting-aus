@@ -185,6 +185,17 @@ class Forecast:
         self.inf_times = np.random.gamma(i/j, j, size =size) #shape and scale
         self.symp_times = np.random.gamma(m/n,n, size = size)
         self.present_times = self.t_p_offset + np.random.gamma(self.t_p_shape, self.t_p_scale, size = size)
+        truncate = True
+        n=0
+        right_max = 14
+        while truncate:
+            p = [x for x in self.present_times if x<right_max]
+            if n>20:
+                break
+            p.extend(self.t_p_offset + np.random.gamma(self.t_p_shape,self.t_p_scale,size=10000-len($
+            n+=1
+            if np.all(np.array(p)<right_max):
+                break
         self.test_times = self.t_t_offset + np.random.gamma(self.t_t_shape, self.t_t_scale, size = size)
         self.notify_times = self.t_n_offset + np.random.gamma(self.t_n_shape, self.t_n_scale, size = size)
         self.action_times = self.t_a_offset + np.random.gamma(self.t_a_shape, self.t_a_scale, size = size)

@@ -39,15 +39,15 @@ if __name__ == '__main__':
     
     #time to isolation gamma parameters
     t_a_offset = 0 #number of days minimum to isolation
-    t_a_shape = 1
-    t_a_scale = 1
+    t_a_shape = 0.4533819
+    t_a_scale = 1/1.8199947
 
     t_p_shape = 1.03108
     t_p_scale = 1/0.415
     t_p_offset = 0  
         
-    t_t_shape = 0
-    t_t_scale = 7.905380
+    t_t_shape = 7.905380
+    t_t_scale = 1/4.857156
     t_t_offset =0
 
     t_n_shape = 0.4533819

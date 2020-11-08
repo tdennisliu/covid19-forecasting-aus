@@ -189,10 +189,13 @@ class Forecast:
         n=0
         right_max = 14
         while truncate:
-            p = [x for x in self.present_times if x<right_max]
             if n>20:
                 break
-            p.extend(self.t_p_offset + np.random.gamma(self.t_p_shape,self.t_p_scale,size=10000-len($
+            p = [x for x in self.present_times if x<right_max]
+            p.extend(self.t_p_offset + np.random.gamma(
+                self.t_p_shape,self.t_p_scale,size=10000-len(p)
+                )
+            )
             n+=1
             if np.all(np.array(p)<right_max):
                 break

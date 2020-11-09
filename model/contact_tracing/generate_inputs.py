@@ -2,7 +2,7 @@ from itertools import product
 import pandas as pd
 
 DAYS = (-3,-2,-1,0)
-detect = (0.05,0.1,0.3)
+detect = (0.1,0.3,0.5,0.8)
 gen_traced = (1,2)
 initial_cases = (1,2,10)
 #Reff_factor = (0.55, 0.75)

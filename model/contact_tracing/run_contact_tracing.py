@@ -30,7 +30,7 @@ if __name__ == '__main__':
     DAYS = int(argv[1]) #select right day from list
 
     Reff_factor =0.55
-    p_c_list = (0.5,0.75,0.9,1)
+    p_c_list = (0.75,0.9,1)
     p_c_list = p_c_list[::-1]
 
     ##########

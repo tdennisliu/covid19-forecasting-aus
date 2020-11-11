@@ -187,7 +187,7 @@ class Forecast:
         self.present_times = self.t_p_offset + np.random.gamma(self.t_p_shape, self.t_p_scale, size = size)
         truncate = True
         n=0
-        right_max = 14
+        right_max = 7
         while truncate:
             if n>20:
                 break

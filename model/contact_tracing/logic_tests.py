@@ -186,6 +186,11 @@ class TestGenerateCases(unittest.TestCase):
         Model.observed_cases = np.zeros_like(Model.cases)
 
         Model.observed_cases[0,:] = Model.initial_state.copy()
+            #Model.read_in_cases()
+        Model.max_backcast_cases = 1000000
+        Model.max_cases = Model.max_backcast_cases
+        Model.t_plus_n = np.zeros(Model.end_time)
+        Model.n_COP = np.zeros(Model.end_time)
 
         #Initalise undetected cases and add them to current
         Model.initialise_sim(sim_undetected=sim_undetected)
@@ -207,7 +212,7 @@ class TestGenerateCases(unittest.TestCase):
 
     def test_numcases(self):
         self.Model.generate_new_cases(1,10, 100,travel=False)
-        self.assertEqual(len(self.Model.infected_queue), 11, 
+        self.assertEqual(len(self.Model.infected_queue), 7, 
         msg="Number of offspring generated has changed")
 
 
@@ -223,7 +228,7 @@ class TestGenerateCases(unittest.TestCase):
         #msg="Offspring not isolated and continued to infect others")
 
     def test_isolation(self):
-        parent = 2
+        parent = 5
         self.Model.generate_new_cases(parent,51,100,travel=False )
 
         #See if there are any cases after index cases isolation

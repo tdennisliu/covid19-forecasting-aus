@@ -55,8 +55,8 @@ if __name__ == '__main__':
     t_n_offset = 0
 
     generations_traced = int(argv[2])
-    test_capacity = 2000000
-    trace_capacity = 200000
+    test_capacity = 500
+    trace_capacity = 500
 
     #number of iterations
     if len(argv)>5:

@@ -519,7 +519,7 @@ class Forecast:
         
         #check if exceeded number of tests today yet
         if self.tests_todo>self.test_capacity:
-            test_delay = 0#self.tests_todo//self.test_capacity
+            test_delay = self.tests_todo//self.test_capacity
         else:
             test_delay = 0
 
@@ -532,7 +532,7 @@ class Forecast:
         
         #check if exceeded tracing capacity
         if self.tracing_todo > self.trace_capacity:
-            PHU_delay = 0#self.tracing_todo//self.trace_capacity
+            PHU_delay = self.tracing_todo//self.trace_capacity
         else:
             PHU_delay = 0
         if num_offspring >0:  
@@ -826,7 +826,7 @@ class Forecast:
 
         self.generations_traced = generations_traced
 
-        self.tests_todo=0
+        self.tests_todo=test_capacity
         self.tracing_todo=0
         self.test_capacity = test_capacity
         if self.generations_traced>0:

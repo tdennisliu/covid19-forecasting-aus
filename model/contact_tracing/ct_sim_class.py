@@ -623,12 +623,12 @@ class Forecast:
 
                             action_time = notify_time + PHU_delay+next(self.get_action_time)
                                 
-                            if symp_time < self.cases.shape[0]:
-                                self.observed_cases[max(0,ceil(symp_time)-1),2] += 1
+                            if notify_time < self.cases.shape[0]:
+                                self.observed_cases[max(0,floor(notify_time)),2] += 1
                             #if case undetected, case gets default action time
                     else:
                         category = 'A'
-                        self.cases[max(0,ceil(inf_time)-1),1] += 1
+                        self.cases[max(0,floor(inf_time)),1] += 1
                         #symp_time = 0
                         if self.test_campaign_date is not None:
                         #see if case is during a testing campaign
@@ -653,8 +653,8 @@ class Forecast:
                             notify_time = test_time + next(self.get_notify_time)
                             action_time = notify_time  + PHU_delay+next(self.get_action_time)
                             
-                            if symp_time < self.cases.shape[0]:
-                                self.observed_cases[max(0,ceil(symp_time)-1),1] += 1
+                            if notify_time < self.cases.shape[0]:
+                                self.observed_cases[max(0,floor(notify_time)),2] += 1
 
                     # Laura 
                     if isdetected==1:
@@ -695,12 +695,17 @@ class Forecast:
                                     #inherit parents isolation time plus some small delay
                                     action_time = self.people[parent_key
                                     ].action_time + PHU_delay+next(self.get_action_time)
+                                    if notify_time < self.cases.shape[0]:
+                                        self.observed_cases[max(0,floor(notify_time)),1] += 1
                                 else:
                                     #this case could have been detected via routine 
                                     # detection, take the minimum
                                     if present_time > self.people[parent_key].action_time:
                                         #case was traced first, get 
                                         # new times based on earlier presentation 
+                                        if notify_time < self.cases.shape[0]:
+                                            #remove previous observation
+                                            self.observed_cases[max(0,floor(notify_time)),2] -= 1
                                         present_time = self.people[parent_key].action_time
                                         test_time = present_time + test_delay+ next(self.get_test_time)
                                         notify_time = test_time + next(self.get_notify_time)
@@ -709,6 +714,9 @@ class Forecast:
                                         #time of 
                                         action_time = self.people[parent_key
                                         ].action_time + PHU_delay+next(self.get_action_time)
+                                        if notify_time < self.cases.shape[0]:
+                                            #add new observation time
+                                            self.observed_cases[max(0,floor(notify_time)),1] += 1
                                         
                                         #if case routine detected then keep 
                                         # previous times
@@ -735,6 +743,16 @@ class Forecast:
                     self.people[len(self.people)] = Person(parent_key, inf_time, symp_time,isdetected, 
                     category,present_time = present_time,test_time = test_time,
                     notify_PHU_time = notify_time, action_time=action_time)
+
+                    #flag if case resulted in Amber or Red scenario
+                    if isdetected>=1:
+                        if notify_time< self.end_time:
+                            #observed within forecast period
+                            if notify_time - present_time>2: 
+                                #default times don't trigger this
+                                self.t_plus_n[max(floor(notify_time),0)] += 1
+                            if notify_time - test_time >1:
+                                self.n_COP[max(floor(notify_time),0)] +=1
                     #Laura
             #if num_offspring>0:
                 #Laura
@@ -819,6 +837,8 @@ class Forecast:
             self.trace_capacity = 9000000
         #generate storage for cases
         self.cases = np.zeros(shape=(end_time, 3),dtype=float)
+        # Laura
+        # Here column 1 is traced cases, 2 is routine detected
         self.observed_cases = np.zeros_like(self.cases)
         
         self.observed_cases[0,:] = self.initial_state.copy()
@@ -827,6 +847,9 @@ class Forecast:
         self.initialise_sim(sim_undetected=sim_undetected)
         #number of cases after end time
         self.cases_after = 0 #gets incremented in generate new cases
+
+        self.n_COP = np.zeros(self.end_time,dtype=int)
+        self.t_plus_n = np.zeros(self.end_time,dtype=int)
 
         #Record day 0 cases
         self.cases[0,:] = self.current.copy() 
@@ -970,15 +993,18 @@ class Forecast:
             )
         else:
             #good sim
-
-            ## Perform metric for ABC
-            self.get_metric(end_time)
-
+            #COP indicators are relative to observed cases
+            self.t_plus_n = self.t_plus_n/np.maximum(1,
+                self.observed_cases[:,1] + self.observed_cases[:,2]
+            )
+            self.n_COP = self.n_COP /np.maximum(1,
+                self.observed_cases[:,1] + self.observed_cases[:,2]
+            )
             return (
                 self.cases.copy(), 
                 self.observed_cases.copy(), {
                 'qs':self.qs,
-                'metric':self.metric,
+                #'metric':self.metric,
                 'qa':self.qa,
                 'qi':self.qi,
                 'alpha_a':self.alpha_a,
@@ -994,6 +1020,8 @@ class Forecast:
                 'travel_seeds': self.cross_border_seeds[:,self.num_of_sim],
                 'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases[:,self.num_of_sim],
                 'num_of_sim':self.num_of_sim,
+                't_plus_n':self.t_plus_n,
+                'n_COP':self.n_COP,
             }
             ) 
 
@@ -1012,7 +1040,7 @@ class Forecast:
         """
         self.end_time = end_time
         # Read in actual cases from NNDSS
-        self.read_in_cases()
+        #self.read_in_cases()
         import_sims = np.zeros(shape=(end_time, n_sims), dtype=float)
         import_sims_obs = np.zeros_like(import_sims)
         

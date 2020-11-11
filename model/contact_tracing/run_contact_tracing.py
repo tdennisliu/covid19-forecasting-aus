@@ -226,7 +226,9 @@ if __name__ == '__main__':
             
     #Read in files
     Model.read_in_Reff()
-    Model.read_in_cases()
+    #Model.read_in_cases()
+    Model.max_backcast_cases = 1000000
+    Model.max_cases = Model.max_backcast_cases
 
     #simulate takes arguments days, sim number, and seed
     ## It will return:
@@ -234,7 +236,8 @@ if __name__ == '__main__':
     ##         Imported, Asymptomatic and Symptomatic cases, in that order.
     ##        Cases are indexed in time by rows by their date of infection.
     ## observed_cases: a n_days by 3 array, same as cases, but only observed cases, 
-    ##        and are indexed in time by their date of symptom onset.
+    ##        and are indexed in time by their date of notification.
+    ##          Columns are unused, traced, routine detected. 
 
 
 
@@ -290,6 +293,8 @@ if __name__ == '__main__':
         secondary_cases = []
         actual_gen_times = []
         die_out = {}
+        t_plus_n =pd.DataFrame(columns=range(time_end))
+        n_COP =pd.DataFrame(columns=range(time_end))
         #lose the ordering with parallel processing unless we record to dict?
         for cases_array, observed_cases_array, params in pool.imap_unordered(worker,
             [(Model,'simulate_then_reset',time_end, N, N, kwargs) 
@@ -301,6 +306,11 @@ if __name__ == '__main__':
 
             secondary_cases.extend(params['secondary_cases'])
             actual_gen_times.extend(params['generation_times'])
+
+            #grab COP indicators
+            t_plus_n.loc[num_sim] = params["t_plus_n"]
+
+            n_COP.loc[num_sim] = params["n_COP"]
 
             CasesTotal = Cases #+ CasesAfter
             
@@ -335,6 +345,8 @@ if __name__ == '__main__':
         temp['sim'] = temp.index
         temp['pc'] = p_c
         temp['DAYS'] = DAYS
+        temp = temp.join(t_plus_n, rsuffix="COP_tplusn") #joins on index
+        temp = temp.join(n_COP, rsuffix="COP_n")
         df = df.append(temp, ignore_index=True)
         
         print("Finished p_c = %.2f, DAYS = %i" % (p_c, DAYS))

@@ -1,8 +1,8 @@
 from itertools import product
 import pandas as pd
 
-DAYS = (-3,-2,-1,0)
-detect = (0.1,0.3,0.5,0.8)
+DAYS = (-3,-2)
+detect = (0.3,0.5,0.8)
 gen_traced = (1,2)
 initial_cases = (1,2,10)
 #Reff_factor = (0.55, 0.75)
@@ -11,9 +11,9 @@ initial_cases = (1,2,10)
 inputs = product(DAYS, gen_traced, detect, initial_cases)
 
 csv = list(inputs)
-extra_0 = list(product([0], [0],detect,initial_cases ))
+#extra_0 = list(product([0], [0],detect,initial_cases ))
 
-csv.extend(extra_0)
+#csv.extend(extra_0)
 
 csv = pd.DataFrame(list(csv))
 

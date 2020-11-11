@@ -9,7 +9,8 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=dennis.liu01@adelaide.edu.au
-#SBATCH --array=1-100
+#SBATCH --array=1-50
+
 
 
 paramFile="./model/contact_tracing/inputs.csv"

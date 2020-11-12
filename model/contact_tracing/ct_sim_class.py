@@ -826,11 +826,11 @@ class Forecast:
 
         self.generations_traced = generations_traced
 
-        self.tests_todo=test_capacity
-        self.tracing_todo=0
+        self.tests_todo=0#test_capacity
+        self.tracing_todo=trace_capacity
         self.test_capacity = test_capacity
         if self.generations_traced>0:
-            self.trace_capacity = trace_capacity // self.generations_traced
+            self.trace_capacity = trace_capacity 
         else:
             #no tracing done, so set capacity at infinite
             self.trace_capacity = 9000000

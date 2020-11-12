@@ -66,7 +66,7 @@ def plot_results(df, int_vars:list, ax_arg=None, total=False,log=False, Reff=Non
         for var in int_vars:
             df.columns = df.columns.astype('datetime64[ns]')
             #ax.fill_between(df.columns, df.transpose()[var].quantile(0.05,axis=1), df.transpose()[var].quantile(0.95,axis=1), alpha=0.2,color='C0')
-            ax.fill_between(df.columns, df.transpose()[var].quantile(0.25,axis=1), df.transpose()[var].quantile(0.75,axis=1), alpha=0.4,color='C0')
+            ax.fill_between(df.columns, df.transpose()[var].quantile(0.05,axis=1), df.transpose()[var].quantile(0.95,axis=1), alpha=0.1,color='C0')
 
             if plotpath:
                 n = 0
@@ -223,11 +223,28 @@ def read_in_cases(cases_file_date=None):
 
     return df_cases_state_time
 
+# Dates to provide results for:
+# 1. July 1st 151 days (incursion of VIC)
+# 2. Early Aug 5th 186 days (peak of VIC)
+# 3. Early Sept 2nd? 214 days (end of VIC)
+
 data_date = pd.to_datetime(argv[3])
+all=False
 forecast_type = 'R_L' #default None
-df_cases_state_time = read_in_cases(cases_file_date=None) #None grabs latest file
+df_cases_state_time = read_in_cases(cases_file_date=data_date.strftime("%d%b")) 
+df_14days = read_in_cases(cases_file_date=(data_date+pd.Timedelta(days=14)).strftime("%d%b"))
+df_future = read_in_cases(cases_file_date="02Nov") #None grabs latest file
 Reff = read_in_Reff( forecast_R=forecast_type, file_date= argv[3])
-states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
+if all:
+    states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
+    ## Local cases
+    fig = plt.figure(figsize=(12,18))
+    gs = fig.add_gridspec(4,2)
+else:
+    states = ['NSW','VIC']
+    ## Local cases
+    fig = plt.figure(figsize=(12,6))
+    gs = fig.add_gridspec(1,2)
 n_sims = int(argv[1])
 start_date = '2020-03-01'
 days = int(argv[2])
@@ -266,9 +283,10 @@ with open("results/good_sims"+str(n_sims)+"days_"+str(days)+".json",'r') as file
     good_sims = json.load(file)
     
 os.makedirs("figs/retro/",exist_ok=True)
-## Local cases
-fig = plt.figure(figsize=(12,18))
-gs = fig.add_gridspec(4,2)
+
+
+plot_start = pd.to_datetime(data_date) - pd.to_timedelta(60,unit="D")
+dates_plot = [d.strftime("%Y-%m-%d") for d in pd.date_range(start = plot_start, periods=88)]
 for i,state in enumerate(states):
     
     print("Number of sims not rejected for state " +state +" is %i"
@@ -282,21 +300,23 @@ for i,state in enumerate(states):
     ax = fig.add_subplot(gs0[:2,0])
     ax2 = fig.add_subplot(gs0[2,0], sharex=ax)
     
-    dfplot = df_cases_state_time.loc[
-        (df_cases_state_time.STATE==state) 
-        & (df_cases_state_time.date_inferred >=start_date) 
-        & (df_cases_state_time.date_inferred <=end_date)]
-    
-    ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=0.6)
+    for j,df in enumerate((df_cases_state_time, df_14days, df_future)):
+        dfplot = df.loc[
+            (df.STATE==state) 
+            & (df.date_inferred >=plot_start) 
+            & (df.date_inferred <=end_date)]
+        
+        ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=1/(j+1)**2)
+    ylim = ax.get_ylim()
     R_plot = [r%2000 for r in good_sims[state]]
-    ax,ax2= plot_results(df_results.loc[state], ['total_inci_obs'],
+    ax,ax2= plot_results(df_results.loc[state, dates_plot], ['total_inci_obs'],
     ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state,R_plot],
     forecast_days=28)
     
     if state=='NSW':
-        ax.set_ylim((0,100))
+        ax.set_ylim(ylim)
     elif state=='VIC':
-        ax.set_ylim((0,600))
+        ax.set_ylim(ylim)
     #ax.set_ylim(top=70)
     if i%2==0:
         ax.set_ylabel("Observed \n local cases")
@@ -306,12 +326,21 @@ for i,state in enumerate(states):
         ax.set_xticklabels([])
         ax.set_xlabel('')
     #ax.set_ylim((0,60))
-plt.savefig("figs/retro/"+start_date+"local_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.tight_layout()
+if all:
+    plt.savefig("figs/retro/"+plot_start.strftime("%Y-%m-%d")+"local_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+else:
+    plt.savefig("figs/retro/bigstates"+plot_start.strftime("%Y-%m-%d")+"local_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
 
 
 ## Local cases, spaghetti plot
-fig = plt.figure(figsize=(12,18))
-gs = fig.add_gridspec(4,2)
+if all:
+    fig = plt.figure(figsize=(12,18))
+    gs = fig.add_gridspec(4,2)
+else:
+    ## Local cases
+    fig = plt.figure(figsize=(12,6))
+    gs = fig.add_gridspec(1,2)
 
 plot_start = pd.to_datetime(data_date) - pd.to_timedelta(60,unit="D")
 dates_plot = pd.date_range(start = plot_start, periods=90)
@@ -329,21 +358,22 @@ for i,state in enumerate(states):
     ax = fig.add_subplot(gs0[:,0])
     #ax2 = fig.add_subplot(gs0[2,0], sharex=ax)
     
-    dfplot = df_cases_state_time.loc[
-        (df_cases_state_time.STATE==state) 
-        & (df_cases_state_time.date_inferred >=dates_plot[0]) 
-        & (df_cases_state_time.date_inferred <=dates_plot[-1])]
-    
-    
+    for j,df in enumerate((df_cases_state_time, df_14days, df_future)):
+        dfplot = df.loc[
+            (df.STATE==state) 
+            & (df.date_inferred >=plot_start) 
+            & (df.date_inferred <=end_date)]
+        
+        ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=1/(j+1)**2)
+    ylim = ax.get_ylim()
     R_plot = [r%2000 for r in good_sims[state]]
-    ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=0.6)
     ax= plot_results(df_raw, ['total_inci_obs'],ax_arg =ax,summary=False,plotpath=True)
     
 
-    
     if state=='NSW':
-        ax.set_ylim((0,100))
-    #ax.set_ylim(top=70)
+        ax.set_ylim(ylim)
+    elif state=='VIC':
+        ax.set_ylim(ylim)
     if i%2==0:
         ax.set_ylabel("Observed \n local cases")
     ax.set_title(state)
@@ -351,6 +381,12 @@ for i,state in enumerate(states):
         ax.set_xticklabels([])
         ax.set_xlabel('')
 
-    ax.set_xticks([df_raw.columns.values[-1*31]],minor=True)
+    ax.set_xticks([df_raw.columns.values[-1*28]],minor=True)
     ax.xaxis.grid(which='minor', linestyle='--',alpha=0.6, color='black')
-plt.savefig("figs/retro/"+"spagh"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.tight_layout()
+if all:
+    plt.savefig("figs/retro/"+plot_start.strftime("%Y-%m-%d")+"spagh"+str(
+        n_sims)+"days_"+str(days)+'.png',dpi=300)
+else:
+    plt.savefig("figs/retro/bigstates"+plot_start.strftime("%Y-%m-%d")+"spagh"+str(
+        n_sims)+"days_"+str(days)+'.png',dpi=300)

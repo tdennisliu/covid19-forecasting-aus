@@ -169,7 +169,7 @@ if __name__ == '__main__':
         action_time = t_a_offset + gamma(t_a_shape,t_a_scale)
         notify_PHU_time = 0
         test_time  = -1*( t_n_offset + gamma(t_n_shape, t_n_scale))
-        present_time = test_time - (t_t_offset + gamma(t_t_shape, t_t_scale))
+        present_time = test_time - (7+t_t_offset + gamma(t_t_shape, t_t_scale))
         symp_time = present_time - (t_p_offset + gamma(t_p_shape, t_p_scale))
 
         people[i] = Person(-1,0,symp_time,1,cat, 

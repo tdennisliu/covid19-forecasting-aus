@@ -827,7 +827,7 @@ class Forecast:
         self.generations_traced = generations_traced
 
         self.tests_todo=0#test_capacity
-        self.tracing_todo=trace_capacity
+        self.tracing_todo=0#trace_capacity
         self.test_capacity = test_capacity
         if self.generations_traced>0:
             self.trace_capacity = trace_capacity 

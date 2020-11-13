@@ -1001,6 +1001,9 @@ class Forecast:
             self.n_COP = self.n_COP /np.maximum(1,
                 self.observed_cases[:,1] + self.observed_cases[:,2]
             )
+            self.a_COP = self.a_COP /np.maximum(1,
+                self.observed_cases[:,1] + self.observed_cases[:,2]
+            )
             return (
                 self.cases.copy(), 
                 self.observed_cases.copy(), {

@@ -752,6 +752,8 @@ class Forecast:
                                 self.t_plus_n[max(floor(notify_time),0)] += 1
                             if notify_time - test_time >1:
                                 self.n_COP[max(floor(notify_time),0)] +=1
+                            if action_time - notify_time >2:
+                                self.a_COP[max(floor(notify_time),0)] +=1
                     #Laura
             #if num_offspring>0:
                 #Laura
@@ -849,7 +851,7 @@ class Forecast:
 
         self.n_COP = np.zeros(self.end_time,dtype=int)
         self.t_plus_n = np.zeros(self.end_time,dtype=int)
-
+        self.a_COP = np.zeros(self.end_time,dtype=int)
         #Record day 0 cases
         self.cases[0,:] = self.current.copy() 
         #Create queue for infected people
@@ -1021,6 +1023,7 @@ class Forecast:
                 'num_of_sim':self.num_of_sim,
                 't_plus_n':self.t_plus_n,
                 'n_COP':self.n_COP,
+                'a_COP':self.a_COP,
             }
             ) 
 

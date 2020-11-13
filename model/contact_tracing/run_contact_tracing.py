@@ -295,6 +295,7 @@ if __name__ == '__main__':
         die_out = {}
         t_plus_n =pd.DataFrame(columns=range(time_end))
         n_COP =pd.DataFrame(columns=range(time_end))
+        a_COP = pd.DataFrame(columns=range(time_end))
         #lose the ordering with parallel processing unless we record to dict?
         for cases_array, observed_cases_array, params in pool.imap_unordered(worker,
             [(Model,'simulate_then_reset',time_end, N, N, kwargs) 
@@ -311,6 +312,7 @@ if __name__ == '__main__':
             t_plus_n.loc[num_sim] = params["t_plus_n"]
 
             n_COP.loc[num_sim] = params["n_COP"]
+            a_COP.loc[num_sim] = params["a_COP"]
 
             CasesTotal = Cases #+ CasesAfter
             
@@ -347,6 +349,7 @@ if __name__ == '__main__':
         temp['DAYS'] = DAYS
         temp = temp.join(t_plus_n, rsuffix="COP_tplusn") #joins on index
         temp = temp.join(n_COP, rsuffix="COP_n")
+        temp = temp.join(a_COP, rsuffix="COP_a")
         df = df.append(temp, ignore_index=True)
         
         print("Finished p_c = %.2f, DAYS = %i" % (p_c, DAYS))

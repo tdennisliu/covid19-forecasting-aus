@@ -626,7 +626,7 @@ class Forecast:
         reinitialising_window = 3
         self.daycount= 0
         while len(self.infected_queue)>0:
-            day_end = self.people[self.infected_queue[0]].infection_time
+            day_end = self.people[self.infected_queue[0]].detection_time
             if day_end < self.forecast_date:
                 if self.inf_backcast_counter - self.cases_to_subtract - self.imported_total > self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim
@@ -634,7 +634,7 @@ class Forecast:
                     self.num_too_many+=1
                     self.bad_sim = True
                     break
-                elif False:#self.inf_backcast_counter - self.cases_to_subtract_now -self.imported_total> self.max_nowcast_cases:
+                elif self.inf_backcast_counter - self.cases_to_subtract_now -self.imported_total> self.max_nowcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(
                         self.max_nowcast_cases

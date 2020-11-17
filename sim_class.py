@@ -757,6 +757,14 @@ class Forecast:
                             self.num_too_many+=1
                             self.bad_sim = True
                             break
+                        elif self.inf_backcast_counter - self.cases_to_subtract_now -self.imported_total> self.max_nowcast_cases:
+                            print("Sim "+str(self.num_of_sim
+                            )+" in "+self.state+" has > "+str(
+                                self.max_nowcast_cases
+                                )+" cases in nowcast. Ending")
+                            self.num_too_many+=1
+                            self.bad_sim = True
+                            break 
                     else:
                         if self.inf_forecast_counter> self.max_cases:
                             

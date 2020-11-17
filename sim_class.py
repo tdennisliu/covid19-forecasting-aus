@@ -767,10 +767,10 @@ class Forecast:
                             break 
                     else:
                         if self.inf_forecast_counter> self.max_cases:
-                            
-                            self.cases[ceil(day_end):,2] = self.cases[ceil(day_end)-2,2]
+                            day_inf = self.people[self.infected_queue[0]].infection_time
+                            self.cases[ceil(day_inf):,2] = self.cases[ceil(day_inf)-2,2]
 
-                            self.observed_cases[ceil(day_end):,2] = self.observed_cases[ceil(day_end)-2,2]
+                            self.observed_cases[ceil(day_inf):,2] = self.observed_cases[ceil(day_inf)-2,2]
                             print("Sim "+str(self.num_of_sim
                                 )+" in "+self.state+" has >"+str(self.max_cases)+" cases in forecast period.")
                             self.num_too_many+=1

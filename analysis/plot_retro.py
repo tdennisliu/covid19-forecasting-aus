@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib.gridspec as gridspec
 from datetime import timedelta
-import json, os
+import json, os,csv
 from sys import argv
 
 plt.style.use("seaborn-poster")
@@ -223,6 +223,23 @@ def read_in_cases(cases_file_date=None):
 
     return df_cases_state_time
 
+def calculate_scores(observations,forecasts):
+    """
+    Given a df of forecasts, generate the crps metric
+    """
+    import properscoring as ps
+
+    crps_score = ps.crps_ensemble(
+        observations,
+        forecasts,
+        axis=0
+    ) 
+    #brier_score = ps.brier_score(
+    #    observations,
+    #    forecasts
+    #)
+    return crps_score#, brier_score
+
 # Dates to provide results for:
 # 1. July 1st 151 days (incursion of VIC)
 # 2. Early Aug 5th 186 days (peak of VIC)
@@ -306,7 +323,7 @@ for i,state in enumerate(states):
             & (df.date_inferred >=plot_start) 
             & (df.date_inferred <=end_date)]
         
-        ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=1/(j+1)**2)
+        ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=1/(j+1)**1.5)
     ylim = ax.get_ylim()
     R_plot = [r%2000 for r in good_sims[state]]
     ax,ax2= plot_results(df_results.loc[state, dates_plot], ['total_inci_obs'],
@@ -343,7 +360,7 @@ else:
     gs = fig.add_gridspec(1,2)
 
 plot_start = pd.to_datetime(data_date) - pd.to_timedelta(60,unit="D")
-dates_plot = pd.date_range(start = plot_start, periods=90)
+dates_plot = pd.date_range(start = plot_start, periods=88)
 for i,state in enumerate(states):
     
     df_raw = pd.read_parquet("results/"+state+start_date+"sim_"+forecast_type+str(
@@ -364,12 +381,34 @@ for i,state in enumerate(states):
             & (df.date_inferred >=plot_start) 
             & (df.date_inferred <=end_date)]
         
-        ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=1/(j+1)**2)
+        ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=1/(j+1)**1.5)
     ylim = ax.get_ylim()
     R_plot = [r%2000 for r in good_sims[state]]
-    ax= plot_results(df_raw, ['total_inci_obs'],ax_arg =ax,summary=False,plotpath=True)
+    ax= plot_results(df_raw, ['total_inci_obs'],ax_arg =ax,summary=False,
+    plotpath=True,forecast_days=28)
     
-
+    #get forecast dates
+    for_start = pd.to_datetime(data_date)
+    for_end = end_date
+    for_dates = pd.date_range(start=for_start,periods=28,freq='D')
+    #select the right data
+    df_obs = df_future.loc[
+        (df_future.STATE==state) 
+        & (df_future.date_inferred >=for_start) 
+            & (df_future.date_inferred <for_end)
+    ]
+    #forecast scores
+    crps_scores = calculate_scores(
+        df_obs.local.values,
+        df_raw.loc[
+            'total_inci_obs',
+            [d.strftime("%Y-%m-%d") for d in for_dates]]
+        )
+    str_output = [str(state), data_date]
+    str_output.extend(crps_scores)
+    with open("./analysis/retro_scores.csv", 'a') as file:
+        writer = csv.writer(file)
+        writer.writerow(str_output)
     if state=='NSW':
         ax.set_ylim(ylim)
     elif state=='VIC':

@@ -44,6 +44,9 @@ df_interim = read_cases_lambda(date)
 ##generate dataframe with id_vars date and state, variable SOURCE and number of cases
 df_linel = tidy_cases_lambda(df_interim)
 
+##infer extra cases in last 10 days by the reporting delay distribution
+
+ 
 ##generate possible infection dates from the notification data
 df_inf = draw_inf_dates(df_linel, nreplicates=1000,
                     shape_rd=shape_rd, scale_rd=scale_rd, offset_rd=offset_rd,

@@ -747,7 +747,7 @@ class Forecast:
                 #Each check of day needs to simulate the cases before moving
                 # to next check, otherwise will be doubling up on undetecteds
                 while len(self.infected_queue)>0:
-                    day_end = self.people[self.infected_queue[0]].infection_time
+                    day_end = self.people[self.infected_queue[0]].detection_time
                     
                     #check for exceeding max_cases
                     if day_end <self.forecast_date:

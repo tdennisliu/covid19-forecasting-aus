@@ -244,6 +244,7 @@ def calculate_scores(observations,forecasts):
 # 1. July 1st 151 days (incursion of VIC)
 # 2. Early Aug 5th 186 days (peak of VIC)
 # 3. Early Sept 2nd? 214 days (end of VIC)
+# Sims are 8000
 
 data_date = pd.to_datetime(argv[3])
 all=False
@@ -274,15 +275,23 @@ except AssertionError:
     print("Bad dates include:")
     print(df_cases_state_time.loc[
                         (df_cases_state_time.date_inferred<='2020-01-01')])
+    df_cases_state_time.loc[df_cases_state_time.date_inferred=='2002-07-17','date_inferred'] = pd.to_datetime('2020-07-17')
 
 
-end_date = pd.to_datetime(start_date,format='%Y-%m-%d') + timedelta(days=days-1)
+end_date = pd.to_datetime(start_date,format='%Y-%m-%d') + timedelta(days=days)
 
 print("forecast up to: {}".format(end_date))
 
-
-df_results = pd.read_parquet("results/quantiles"+forecast_type+start_date+"sim_"+str(
-    n_sims)+"days_"+str(days)+".parquet")
+try:
+    df_results = pd.read_parquet("results/quantiles"+forecast_type+start_date+"sim_"+str(
+        n_sims)+"days_"+str(days)+".parquet")
+except FileNotFoundError:
+    import sys
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(
+        dir_path+"/../")
+    import collate_states
+    print("Collation and quantiles not made, running collate_states.py")
 
 df_results = pd.melt(df_results, id_vars=['state','date','type'],
                      value_vars=['bottom','lower','median','upper','top',
@@ -398,6 +407,13 @@ for i,state in enumerate(states):
             & (df_future.date_inferred <for_end)
     ]
     #forecast scores
+    print(df_obs.date_inferred.values[0])
+    print(df_raw.loc[
+            'total_inci_obs',
+            [d.strftime("%Y-%m-%d") for d in for_dates]].shape
+            )
+
+    df_obs = df_obs.reindex(for_dates, fill_value=0)
     crps_scores = calculate_scores(
         df_obs.local.values,
         df_raw.loc[

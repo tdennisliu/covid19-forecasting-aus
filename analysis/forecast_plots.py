@@ -407,7 +407,7 @@ fig = plt.figure(figsize=(12,18))
 gs = fig.add_gridspec(4,2)
 
 plot_start = pd.to_datetime(data_date) - pd.to_timedelta(60,unit="D")
-dates_plot = pd.date_range(start = plot_start, periods=90)
+dates_plot = pd.date_range(start = plot_start, periods=89)
 for i,state in enumerate(states):
     
     df_raw = pd.read_parquet("results/"+state+start_date+"sim_"+forecast_type+str(

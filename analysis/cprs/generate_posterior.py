@@ -289,7 +289,7 @@ for data_date in cprs_dates:
         if data_date < pd.to_datetime("2020-10-01"):
             possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
         else:
-            possible_end_date = pd.to_datetime("2020-10-14")
+            possible_end_date = pd.to_datetime("2020-10-31")
     else:
         possible_end_date = pd.to_datetime("2020-06-01")
     sec_end_date = possible_end_date.strftime('%Y-%m-%d')

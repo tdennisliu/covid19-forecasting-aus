@@ -34,6 +34,7 @@ good_sims_by_state ={}
 for state in states:
     df_file = pd.read_parquet(
             "./results/"+state+start_date+"sim_"+forecast_type+str(n_sims)+"days_"+str(days)+".parquet")
+    df = df_file.loc[df_file.bad_sim==0] #take only the good sims for plotting
     df = df_file[[col.strftime('%Y-%m-%d') for 
                     col in dates]]
     for var in vars_l:

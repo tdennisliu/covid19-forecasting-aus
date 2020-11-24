@@ -430,13 +430,16 @@ for i,state in enumerate(states):
     
     R_plot = [r%2000 for r in good_sims[state]]
     ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=0.6)
+    ylims = ax.get_ylim()
     ax= plot_results(df_raw, ['total_inci_obs'],ax_arg =ax,summary=False,plotpath=True)
-    
+    spag_ylim = ax.get_ylim()
 
     
     if state=='NSW':
         ax.set_ylim((0,100))
-    #ax.set_ylim(top=70)
+    if spag_ylim[1] > ylims[1]:
+        ax.set_ylim((ylims[0],10*ylims[1]))
+
     if i%2==0:
         ax.set_ylabel("Observed \n local cases")
     ax.set_title(state)

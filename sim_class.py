@@ -449,6 +449,7 @@ class Forecast:
                         if detection_rv < detect_prob:
                             #case detected
                             #detect_time = inf_time + next(self.get_detect_time)
+                            self.inf_backcast_counter +=1
                             if detect_time < self.cases.shape[0]:
                                 self.observed_cases[max(0,ceil(detect_time)-1),1] += 1
 
@@ -628,13 +629,13 @@ class Forecast:
         while len(self.infected_queue)>0:
             day_end = self.people[self.infected_queue[0]].detection_time
             if day_end < self.forecast_date:
-                if self.inf_backcast_counter - self.cases_to_subtract - self.imported_total > self.max_backcast_cases:
+                if self.inf_backcast_counter - self.cases_to_subtract  > self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                     self.num_too_many+=1
                     self.bad_sim = True
                     break
-                elif self.inf_backcast_counter - self.cases_to_subtract_now -self.imported_total> self.max_nowcast_cases:
+                elif self.inf_backcast_counter - self.cases_to_subtract_now > self.max_nowcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(
                         self.max_nowcast_cases
@@ -686,7 +687,7 @@ class Forecast:
                 #generate new cases with times
                 parent_key = self.infected_queue.popleft()
                 #recorded within generate new cases
-                self.generate_new_cases(parent_key,Reff=Reff,k = self.k) 
+                self.generate_new_cases(parent_key,Reff=Reff,k = self.k,travel=False) 
         #self.people.clear()
         if self.bad_sim ==False:
             #Check simulation for discrepancies
@@ -757,7 +758,7 @@ class Forecast:
                             self.num_too_many+=1
                             self.bad_sim = True
                             break
-                        elif self.inf_backcast_counter - self.cases_to_subtract_now -self.imported_total> self.max_nowcast_cases:
+                        elif self.inf_backcast_counter - self.cases_to_subtract_now > self.max_nowcast_cases:
                             print("Sim "+str(self.num_of_sim
                             )+" in "+self.state+" has > "+str(
                                 self.max_nowcast_cases
@@ -799,7 +800,7 @@ class Forecast:
                                 break
                         #generate new cases with times
                         parent_key = self.infected_queue.popleft()
-                        self.generate_new_cases(parent_key,Reff=Reff,k=self.k)
+                        self.generate_new_cases(parent_key,Reff=Reff,k=self.k,travel=False)
                         #missed_outbreak = max(1,missed_outbreak*0.9)
                 else:
                     #pass in here if while queue loop completes 

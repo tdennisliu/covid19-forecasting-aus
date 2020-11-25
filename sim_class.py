@@ -142,6 +142,7 @@ class Forecast:
 
             #counters for terminating early
             self.inf_backcast_counter = 0
+            self.inf_nowcast_counter = 0
             self.inf_forecast_counter = 0
 
             #assign infection time to those discovered
@@ -430,8 +431,12 @@ class Forecast:
                         if detection_rv < detect_prob:
                             #case detected
                             #only care about detected cases
-                            self.inf_backcast_counter +=1
                             if detect_time < self.cases.shape[0]:
+                                if detect_time <self.forecast_date:
+                                    if detect_time >self.forecast_date -14:
+                                        self.inf_nowcast_counter +=1
+                                    elif detect_time >self.forecast_date - 60:
+                                        self.inf_backcast_counter +=1
                                 self.observed_cases[max(0,ceil(detect_time)-1),2] += 1
 
                     else:
@@ -449,8 +454,13 @@ class Forecast:
                         if detection_rv < detect_prob:
                             #case detected
                             #detect_time = inf_time + next(self.get_detect_time)
-                            self.inf_backcast_counter +=1
                             if detect_time < self.cases.shape[0]:
+                                #counters increment before data date
+                                if detect_time <self.forecast_date:
+                                    if detect_time >self.forecast_date - 14:
+                                        self.inf_nowcast_counter +=1
+                                    elif detect_time> self.forecast_date - 60:
+                                        self.inf_backcast_counter +=1
                                 self.observed_cases[max(0,ceil(detect_time)-1),1] += 1
 
                     #add new infected to queue
@@ -629,13 +639,13 @@ class Forecast:
         while len(self.infected_queue)>0:
             day_end = self.people[self.infected_queue[0]].detection_time
             if day_end < self.forecast_date:
-                if self.inf_backcast_counter - self.cases_to_subtract  > self.max_backcast_cases:
+                if self.inf_backcast_counter  > self.max_backcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                     self.num_too_many+=1
                     self.bad_sim = True
                     break
-                elif self.inf_backcast_counter - self.cases_to_subtract_now > self.max_nowcast_cases:
+                elif self.inf_nowcast_counter  > self.max_nowcast_cases:
                     print("Sim "+str(self.num_of_sim
                     )+" in "+self.state+" has > "+str(
                         self.max_nowcast_cases
@@ -752,13 +762,13 @@ class Forecast:
                     
                     #check for exceeding max_cases
                     if day_end <self.forecast_date:
-                        if self.inf_backcast_counter - self.cases_to_subtract > self.max_backcast_cases:
+                        if self.inf_backcast_counter > self.max_backcast_cases:
                             print("Sim "+str(self.num_of_sim
                             )+" in "+self.state+" has > "+str(self.max_backcast_cases)+" cases in backcast. Ending")
                             self.num_too_many+=1
                             self.bad_sim = True
                             break
-                        elif self.inf_backcast_counter - self.cases_to_subtract_now > self.max_nowcast_cases:
+                        elif self.inf_nowcast_counter  > self.max_nowcast_cases:
                             print("Sim "+str(self.num_of_sim
                             )+" in "+self.state+" has > "+str(
                                 self.max_nowcast_cases
@@ -1145,7 +1155,7 @@ class Forecast:
         else:
             self.cases_to_subtract = 0
             self.cases_to_subtract_now = 0
-        self.imported_total = sum(df.imported.values)
+        #self.imported_total = sum(df.imported.values)
         self.max_cases = max(1000,10*sum(df.local.values) + sum(df.imported.values))
         self.max_backcast_cases = max(100,2*(sum(df.local.values) - self.cases_to_subtract))
 

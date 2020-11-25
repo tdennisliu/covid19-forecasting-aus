@@ -160,7 +160,7 @@ class Forecast:
                 
                 #inf_time = next(self.get_inf_time) #remove?
                 detection_time = next(self.get_detect_time)
-                if person <- num_symp:
+                if person <= num_symp:
                     new_person = Person(-1, 
                     curr_time-1*detection_time ,
                     curr_time, 0, 'S')

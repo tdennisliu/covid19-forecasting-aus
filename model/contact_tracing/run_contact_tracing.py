@@ -293,9 +293,15 @@ if __name__ == '__main__':
         secondary_cases = []
         actual_gen_times = []
         die_out = {}
-        t_plus_n =pd.DataFrame(columns=range(time_end))
-        n_COP =pd.DataFrame(columns=range(time_end))
-        a_COP = pd.DataFrame(columns=range(time_end))
+        t_plus_n =pd.DataFrame(columns=[str(x)+"COP_tplusn" for x in range(time_end)])
+        n_COP =pd.DataFrame(columns=[str(x)+"COP_n" for x in range(time_end)])
+        a_COP = pd.DataFrame(columns=[str(x)+"COP_a" for x in range(time_end)])
+        cases_over_time = pd.DataFrame(
+            columns=[str(x)+"cases" for x in range(time_end)]
+            )
+        obs_cases_over_time = pd.DataFrame(
+            columns=[str(x)+"obs_cases" for x in range(time_end)]
+            )
         #lose the ordering with parallel processing unless we record to dict?
         for cases_array, observed_cases_array, params in pool.imap_unordered(worker,
             [(Model,'simulate_then_reset',time_end, N, N, kwargs) 
@@ -313,6 +319,12 @@ if __name__ == '__main__':
 
             n_COP.loc[num_sim] = params["n_COP"]
             a_COP.loc[num_sim] = params["a_COP"]
+
+            #cases_array column 0 imported, 1 asymptomatic, 2 symptomatic
+            cases_over_time.loc[num_sim] = cases_array[:,1] + cases_array[:,2]
+
+            #column 1 is traced cases, column 2 is routine detected
+            obs_cases_over_time.loc[num_sim] = observed_cases_array[:,1] + observed_cases_array[:,2]
 
             CasesTotal = Cases #+ CasesAfter
             
@@ -347,9 +359,12 @@ if __name__ == '__main__':
         temp['sim'] = temp.index
         temp['pc'] = p_c
         temp['DAYS'] = DAYS
-        temp = temp.join(t_plus_n, rsuffix="COP_tplusn") #joins on index
-        temp = temp.join(n_COP, rsuffix="COP_n")
-        temp = temp.join(a_COP, rsuffix="COP_a")
+        temp = temp.join(t_plus_n) #joins on index
+        temp = temp.join(n_COP)
+        temp = temp.join(a_COP)
+        temp = temp.join(cases_over_time)
+
+        temp = temp.join(obs_cases_over_time)
         df = df.append(temp, ignore_index=True)
         
         print("Finished p_c = %.2f, DAYS = %i" % (p_c, DAYS))

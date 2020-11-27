@@ -75,7 +75,7 @@ def calculate_scores(observations,forecasts, axis=1):
 #inputs
 data_date = pd.to_datetime(argv[1])
 forecast_length = 28
-train_periods =28
+train_periods =60
 n_samples=1000
 states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 
@@ -100,7 +100,7 @@ for i, state in enumerate(states):
         fill_value=0
         )
     #filter to relevant time period
-    df_train = df_state.loc[pd.date_range(end=data_date, 
+    df_train = df_state.loc[pd.date_range(end=data_date+pd.Timedelta(days=-10), 
     periods=train_periods)]
     
     #training

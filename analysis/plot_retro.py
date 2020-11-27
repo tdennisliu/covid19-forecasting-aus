@@ -248,7 +248,7 @@ def calculate_scores(observations,forecasts):
 # Sims are 8000
 
 data_date = pd.to_datetime(argv[3])
-all=False
+all=True
 forecast_type = 'R_L' #default None
 df_cases_state_time = read_in_cases(cases_file_date=data_date.strftime("%d%b")) 
 df_14days = read_in_cases(cases_file_date=(data_date+pd.Timedelta(days=14)).strftime("%d%b"))
@@ -419,7 +419,11 @@ for i,state in enumerate(states):
         )
     str_output = [str(state), data_date]
     str_output.extend(crps_scores)
-    with open("./analysis/retro_scores.csv", 'a') as file:
+    if all:
+        path = "./analysis/retro_all_scores.csv"
+    else:
+        path = "./analysis/retro_big_scores.csv" 
+    with open(path, 'a') as file:
         writer = csv.writer(file)
         writer.writerow(str_output)
     if state=='NSW':

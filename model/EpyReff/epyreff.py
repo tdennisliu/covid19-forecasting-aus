@@ -315,7 +315,7 @@ def plot_Reff(Reff:dict, dates=None, ax_arg=None, truncate=None, **kwargs):
         ax.fill_between(dates[truncate[0]:truncate[1]], Reff['bottom'][truncate[0]:truncate[1]],
             Reff['top'][truncate[0]:truncate[1]],
             alpha=0.4, color= curr_color)
-        plt.legend()
+        #plt.legend()
 
         
        #grid line at R_eff =1
@@ -406,7 +406,7 @@ def plot_all_states(R_summ_states,df_interim, dates,
         #ax[row,col].fill_between(df.date, df['bottom'], df['top'],color='C1', alpha=0.3)
         #ax[row,col].fill_between(df.date, df['lower'], df['upper'],color='C1', alpha=0.3)
         
-    plt.legend()
+    
     if save:
         import os
         dir_path = os.path.dirname(os.path.realpath(__file__))

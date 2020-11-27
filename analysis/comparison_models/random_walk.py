@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use("seaborn-poster")
 from sys import argv
+
+import os,csv
 def read_in_cases(cases_file_date=None):
     """
     Read in NNDSS case file data
@@ -51,6 +53,25 @@ def read_in_cases(cases_file_date=None):
     df_cases_state_time['cum_local'] = df_cases_state_time.groupby('STATE').local.transform(pd.Series.cumsum)
 
     return df_cases_state_time
+
+def calculate_scores(observations,forecasts, axis=1):
+    """
+    Given an array of forecasts (rows = samples, columns = dates), 
+    generate the crps metric
+    """
+    import properscoring as ps
+
+    crps_score = ps.crps_ensemble(
+        observations,
+        forecasts,
+        axis=axis
+    ) 
+    #brier_score = ps.brier_score(
+    #    observations,
+    #    forecasts
+    #)
+    return crps_score#, brier_score
+
 #inputs
 data_date = pd.to_datetime(argv[1])
 forecast_length = 28
@@ -132,6 +153,31 @@ for i, state in enumerate(states):
     ax.tick_params('x',rotation=45)
     if col==0:
         ax.set_ylabel("Local cases")
+
+    ## calculate score
+    df_obs = df_future.loc[
+        (df_future.STATE==state) 
+        & (df_future.date_inferred >=forecast_dates[0]) 
+            & (df_future.date_inferred <=forecast_dates[-1])
+        ]
+    df_obs =df_obs.set_index(['date_inferred'])
+    df_obs = df_obs.sort_index()
+    df_obs = df_obs.reindex(forecast_dates, fill_value=0)
+
+    crps_scores = calculate_scores(
+         df_obs.local.values,
+         predictions.T, 
+         axis=0)
+    
+    str_output = ['random_walk']
+    str_output.extend([str(state), data_date])
+    str_output.extend(crps_scores)
+
+    os.makedirs("./analysis/comparison_models/results/", exist_ok=True)
+    with open("./analysis/comparison_models/results/scores.csv", 'a') as file:
+        writer = csv.writer(file)
+        writer.writerow(str_output)
+
 plt.tight_layout()
 plt.savefig("figs/retro/random_walk"+data_date.strftime("%Y-%m-%d")+".png",dpi=300)
 

@@ -225,7 +225,8 @@ def read_in_cases(cases_file_date=None):
 
 def calculate_scores(observations,forecasts):
     """
-    Given a df of forecasts, generate the crps metric
+    Given an array of forecasts (rows = samples, columns = dates), 
+    generate the crps metric
     """
     import properscoring as ps
 
@@ -407,12 +408,8 @@ for i,state in enumerate(states):
             & (df_future.date_inferred <for_end)
     ]
     #forecast scores
-    print(df_obs.date_inferred.values[0])
-    print(df_raw.loc[
-            'total_inci_obs',
-            [d.strftime("%Y-%m-%d") for d in for_dates]].shape
-            )
-
+    df_obs = df_obs.set_index(['date_inferred'])
+    df_obs = df_obs.sort_index()
     df_obs = df_obs.reindex(for_dates, fill_value=0)
     crps_scores = calculate_scores(
         df_obs.local.values,

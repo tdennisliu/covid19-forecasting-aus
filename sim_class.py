@@ -56,8 +56,8 @@ class Forecast:
         np.random.seed(1)
         #self.max_cases = 100000
 
-        self.forecast_date = pd.to_datetime(
-            forecast_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
+        self.forecast_date = (pd.to_datetime(
+            forecast_date,format='%Y-%m-%d') - self.start_date).days
 
         self.Reff_file_date = Reff_file_date
         self.cross_border_state = cross_border_state
@@ -71,8 +71,8 @@ class Forecast:
             self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
 
         if test_campaign_date is not None:
-            self.test_campaign_date = pd.to_datetime(
-                test_campaign_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
+            self.test_campaign_date = (pd.to_datetime(
+                test_campaign_date,format='%Y-%m-%d') - self.start_date).days
             self.test_campaign_factor = test_campaign_factor
         else:
             self.test_campaign_date = None     
@@ -286,7 +286,7 @@ class Forecast:
                 for key, stats in dfReff_dict.items():
                     #instead of mean and std, take all columns as samples of Reff
                     #convert key to days since start date for easier indexing
-                    newkey = key.dayofyear - self.start_date.dayofyear
+                    newkey = (key - self.start_date).days
 
                     Reff_lookupstate[newkey] = df.loc[(state,key),
                     self.num_of_sim%2000] #[i for i in range(1000)]
@@ -1140,7 +1140,9 @@ class Forecast:
         df = df.groupby(['date_inferred'])[['imported','local']].sum()
         df.reset_index(inplace=True)
         #make date integer from start of year
-        df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
+        timedelta_from_start = df.date_inferred - self.start_date
+        df['date'] = timedelta_from_start.apply(lambda x: x.days)
+        #df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
         df = df.sort_values(by='date')
         
         df = df.set_index('date')

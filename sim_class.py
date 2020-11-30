@@ -579,7 +579,12 @@ class Forecast:
         }
         new_imports = []
         unobs_imports =[]
-        for period in range(1,7): 
+        if self.start_date>pd.to_datetime("2020-04-15"):
+            import_start_period = 6
+            num_days[6] = end_time
+        else:
+            import_start_period = 1
+        for period in range(import_start_period,7): 
             obs_cases = self.import_arrival(
                 period=period, size=num_days[period])
             #generate undetected people

@@ -80,6 +80,8 @@ for data_date in cprs_dates:
     one_month = data_date + timedelta(days= 42)
 
     days_from_March = one_month.dayofyear -pd.to_datetime('2020-03-01').dayofyear
+    if days_from_March<0:
+        days_from_March =days_from_March + 366
 
     ##filter out future info
     prop = prop_all.loc[:data_date]

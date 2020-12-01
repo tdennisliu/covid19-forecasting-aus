@@ -277,8 +277,8 @@ for i,state in enumerate(states):
         continue
     ax,ax2= plot_results(df_results.loc[state], ['total_inci_obs'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state,R_plot])
     
-    if state=='NSW':
-        ax.set_ylim((0,100))
+    #if state=='NSW':
+    #    ax.set_ylim((0,100))
     #elif state=='VIC':
     #    ax.set_ylim((0,600))
     #ax.set_ylim(top=70)

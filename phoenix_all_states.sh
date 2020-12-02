@@ -9,7 +9,8 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=dennis.liu01@adelaide.edu.au
-#SBATCH --array=0-7
+#SBATCH --array=1
+
 
 module load arch/haswell
 module load Python/3.6.1-foss-2016b

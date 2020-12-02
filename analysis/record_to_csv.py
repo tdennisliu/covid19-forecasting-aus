@@ -6,7 +6,7 @@ from sys import argv
 
 states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 n_sims = int(argv[1])
-start_date = '2020-03-01'
+start_date = '2020-09-01'
 days = int(argv[2])
 forecast_type = argv[3] #default None
 

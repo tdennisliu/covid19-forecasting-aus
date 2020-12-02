@@ -211,7 +211,7 @@ df_cases_state_time = read_in_cases(cases_file_date=data_date.strftime("%d%b"))
 Reff = read_in_Reff( forecast_R=forecast_type, file_date= argv[3])
 states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 n_sims = int(argv[1])
-start_date = '2020-03-01'
+start_date = '2020-09-01'
 days = int(argv[2])
 #check if any dates are incorrect
 try:
@@ -258,7 +258,7 @@ for i,state in enumerate(states):
     Reff_used = [r%2000 for r in good_sims[state]]
     print("Number of unique Reff paths not rejected is %i " 
           % len(set(Reff_used) ))
-    
+
     ##plots
     gs0 = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=gs[i])
     ax = fig.add_subplot(gs0[:2,0])
@@ -271,12 +271,16 @@ for i,state in enumerate(states):
     
     ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=0.6)
     R_plot = [r%2000 for r in good_sims[state]]
+    
+    if len(set(good_sims[state]))==0:
+        #no accepted sim, skip
+        continue
     ax,ax2= plot_results(df_results.loc[state], ['total_inci_obs'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state,R_plot])
     
-    if state=='NSW':
-        ax.set_ylim((0,100))
-    elif state=='VIC':
-        ax.set_ylim((0,600))
+    #if state=='NSW':
+    #    ax.set_ylim((0,100))
+    #elif state=='VIC':
+    #    ax.set_ylim((0,600))
     #ax.set_ylim(top=70)
     if i%2==0:
         ax.set_ylabel("Observed \n local cases")
@@ -302,7 +306,9 @@ for i,state in enumerate(states):
         & (df_cases_state_time.date_inferred <=end_date)]
     
     ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=0.6)
-    
+    if len(set(good_sims[state]))==0:
+        #no accepted sim, skip
+        continue
     ax,ax2= plot_results(df_results.loc[state], ['total_inci'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state,R_plot])
     if state=='NSW':
         ax.set_ylim((0,100))
@@ -332,7 +338,9 @@ for i,state in enumerate(states):
         & (df_cases_state_time.date_inferred <=end_date)]
     
     ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=0.6)
-    
+    if len(set(good_sims[state]))==0:
+        #no accepted sim, skip
+        continue
     ax,ax2= plot_results(df_results.loc[state], ['asymp_inci'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state])
     
     #ax.set_ylim(top=70)
@@ -358,7 +366,9 @@ for i,state in enumerate(states):
         & (df_cases_state_time.date_inferred <=end_date)]
     
     ax.bar(dfplot.date_inferred,dfplot.imported, label='Actual',color='grey', alpha=0.6)
-    
+    if len(set(good_sims[state]))==0:
+        #no accepted sim, skip
+        continue
     ax,ax2= plot_results(df_results.loc[state], ['imports_inci_obs'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state])
     
     #ax.set_ylim(top=70)
@@ -387,7 +397,9 @@ for i,state in enumerate(states):
         & (df_cases_state_time.date_inferred <=end_date)]
     
     ax.bar(dfplot.date_inferred,dfplot.imported, label='Actual',color='grey', alpha=0.6)
-    
+    if len(set(good_sims[state]))==0:
+        #no accepted sim, skip
+        continue
     ax,ax2= plot_results(df_results.loc[state], ['imports_inci'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state])
     
     #ax.set_ylim(top=70)
@@ -431,6 +443,9 @@ for i,state in enumerate(states):
     R_plot = [r%2000 for r in good_sims[state]]
     ax.bar(dfplot.date_inferred,dfplot.local, label='Actual',color='grey', alpha=0.6)
     ylims = ax.get_ylim()
+    if len(set(good_sims[state]))==0:
+        #no accepted sim, skip
+        continue
     ax= plot_results(df_raw, ['total_inci_obs'],ax_arg =ax,summary=False,plotpath=True)
     spag_ylim = ax.get_ylim()
 

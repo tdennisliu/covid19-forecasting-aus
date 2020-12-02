@@ -3,7 +3,7 @@ from sys import argv
 import json
 
 states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
-start_date = '2020-03-01'
+start_date = '2020-09-01'
 
 n_sims=int(argv[1]) #number of sims
 days = int(argv[2])

@@ -56,8 +56,6 @@ class Forecast:
         np.random.seed(1)
         #self.max_cases = 100000
 
-    #    self.forecast_date = pd.to_datetime(
-        #    forecast_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
         self.forecast_date = (pd.to_datetime(
             forecast_date,format='%Y-%m-%d') - self.start_date).days
 
@@ -73,8 +71,6 @@ class Forecast:
             self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
 
         if test_campaign_date is not None:
-            #self.test_campaign_date = pd.to_datetime(
-                #test_campaign_date,format='%Y-%m-%d').dayofyear - self.start_date.dayofyear
             self.test_campaign_date = (pd.to_datetime(
                 test_campaign_date,format='%Y-%m-%d') - self.start_date).days
             self.test_campaign_factor = test_campaign_factor
@@ -290,7 +286,6 @@ class Forecast:
                 for key, stats in dfReff_dict.items():
                     #instead of mean and std, take all columns as samples of Reff
                     #convert key to days since start date for easier indexing
-                    #newkey = key.dayofyear - self.start_date.dayofyear
                     newkey = (key - self.start_date).days
 
                     Reff_lookupstate[newkey] = df.loc[(state,key),
@@ -584,7 +579,12 @@ class Forecast:
         }
         new_imports = []
         unobs_imports =[]
-        for period in range(1,7):
+        if self.start_date>pd.to_datetime("2020-04-15"):
+            import_start_period = 6
+            num_days[6] = end_time
+        else:
+            import_start_period = 1
+        for period in range(import_start_period,7): 
             obs_cases = self.import_arrival(
                 period=period, size=num_days[period])
             #generate undetected people
@@ -1148,7 +1148,10 @@ class Forecast:
         timedelta_from_start = df.date_inferred - self.start_date
         df['date'] = timedelta_from_start.apply(lambda x: x.days)
         #df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
+<<<<<<< HEAD
 
+=======
+>>>>>>> new_start
         df = df.sort_values(by='date')
 
         df = df.set_index('date')
@@ -1165,9 +1168,9 @@ class Forecast:
             self.cases_to_subtract_now = 0
         #self.imported_total = sum(df.imported.values)
         self.max_cases = max(1000,sum(df.local.values) + sum(df.imported.values))
-        self.max_backcast_cases = max(100,2*(sum(df.local.values) - self.cases_to_subtract))
+        self.max_backcast_cases = max(100,4*(sum(df.local.values) - self.cases_to_subtract))
 
-        self.max_nowcast_cases = max(10, 1.25*(sum(df.local.values) - self.cases_to_subtract_now))
+        self.max_nowcast_cases = max(10, 1.5*(sum(df.local.values) - self.cases_to_subtract_now))
         print("Local cases in last 14 days is %i" % (sum(df.local.values) - self.cases_to_subtract_now) )
 
         self.actual = df.local.to_dict()
@@ -1435,3 +1438,7 @@ class Forecast:
 
 
         return None
+<<<<<<< HEAD
+=======
+        
+>>>>>>> new_start

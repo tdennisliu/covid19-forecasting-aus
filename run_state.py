@@ -28,12 +28,12 @@ else:
     forecast_type = None
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 XBstate = None
-start_date = '2020-03-01'
+start_date = '2020-09-01'
 case_file_date = pd.to_datetime(argv[3]).strftime("%d%b")#None #'24Jul'
 Reff_file_date = argv[3]#'2020-08-25'
 forecast_date = argv[3]#'2020-08-25'
 test_campaign_date = '2020-06-01'
-test_campaign_factor = 10
+test_campaign_factor = 1.5
 
 if pd.to_datetime(argv[3]) < pd.to_datetime('2020-06-02'):
     if pd.to_datetime(argv[3]).day <10:
@@ -78,17 +78,30 @@ qi_d = {
     }
 
 ##Initialise the number of cases as 1st of March data incidence
-
-current = {
-    'ACT':[0,0,0],
-    'NSW':[10,0,2], #1
-    'NT':[0,0,0],
-    'QLD':[2,0,0],
-    'SA':[2,0,0],
-    'TAS':[0,0,0],
-    'VIC':[2,0,0], #1
-    'WA':[0,0,0],
- } 
+if start_date=="2020-03-01":
+    current = {
+        'ACT':[0,0,0],
+        'NSW':[10,0,2], #1
+        'NT':[0,0,0],
+        'QLD':[2,0,0],
+        'SA':[2,0,0],
+        'TAS':[0,0,0],
+        'VIC':[2,0,0], #1
+        'WA':[0,0,0],
+    } 
+elif start_date=="2020-09-01":
+    current = {
+        'ACT':[0,0,0],
+        'NSW':[3,0,7], #1
+        'NT':[0,0,0],
+        'QLD':[0,0,3],
+        'SA':[0,0,0],
+        'TAS':[0,0,0],
+        'VIC':[0,0,60], #1
+        'WA':[1,0,0],
+    }
+else:
+    print("Start date not implemented") 
 
 forecast_dict = {}
 for state in states:

@@ -1148,10 +1148,6 @@ class Forecast:
         timedelta_from_start = df.date_inferred - self.start_date
         df['date'] = timedelta_from_start.apply(lambda x: x.days)
         #df['date'] = df.date_inferred.apply(lambda x: x.dayofyear) -self.start_date.dayofyear
-<<<<<<< HEAD
-
-=======
->>>>>>> new_start
         df = df.sort_values(by='date')
 
         df = df.set_index('date')
@@ -1438,7 +1434,3 @@ class Forecast:
 
 
         return None
-<<<<<<< HEAD
-=======
-        
->>>>>>> new_start

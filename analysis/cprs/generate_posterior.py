@@ -19,7 +19,7 @@ from Reff_functions import *
 from Reff_constants import *
 
 
-iterations=1000
+iterations=5000
 chains=2
 
 ### Read in md surveys
@@ -342,8 +342,8 @@ for data_date in cprs_dates:
 
     #choose dates for each state for sec wave
     sec_date_range = {
-        'NSW':pd.date_range(start=sec_start_date,end='2020-10-31').values,
-        'VIC':pd.date_range(start=sec_start_date,end='2020-10-31').values
+        'NSW':pd.date_range(start=sec_start_date,end=sec_end_date).values,
+        'VIC':pd.date_range(start=sec_start_date,end='2020-10-28').values
     }
     df2X['is_sec_wave'] =0
     for state in sec_states:

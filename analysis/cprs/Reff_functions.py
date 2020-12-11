@@ -326,15 +326,13 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                             #transpose as columns are days, need rows to be days
                             if second_phase:
                                 #use brho_v
-                                print(state)
-                                print(pos,pos+df.loc[df.state==states_initials[state]].is_sec_wave.sum() )
+
                                 rho_data = samples_sim[
                                     ['brho_v['+str(j)+']' 
                                         for j in range(pos, pos+df.loc[df.state==states_initials[state]].is_sec_wave.sum() ) ]
                                 ].values.T
 
                                 pos = pos + df.loc[df.state==states_initials[state]].is_sec_wave.sum()
-                                print(rho_data.shape)
                             else:
                                 # first phase
                                 rho_data = samples_sim[

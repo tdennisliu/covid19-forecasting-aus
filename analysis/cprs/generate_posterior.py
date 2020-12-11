@@ -19,7 +19,7 @@ from Reff_functions import *
 from Reff_constants import *
 
 
-iterations=5000
+iterations=1000
 chains=2
 
 ### Read in md surveys
@@ -86,7 +86,6 @@ data {
     matrix[N,j] local; //local number of cases
     matrix[N,j] imported; //imported number of cases
 
-
     int N_v; //length of VIC days
     int j_v; //second wave states
     matrix[N_v,j_v] Reff_v; //Reff for VIC in June
@@ -104,7 +103,9 @@ data {
     vector[N_v] respond_md_v[j_v]; // num respondants
 
     int map_to_state_index[j_v];// indices of second wave to map to first
-
+    int total_N_pv; //total number of data in sec wave, entire state first
+    vector[N_v] include_in_sec_wave[j_v]; // dates include in sec_wave 
+    int pos_starts[j_v];//starting positions for each state
 }
 parameters {
     vector[K] bet; //coefficients
@@ -114,28 +115,22 @@ parameters {
     real<lower=0> sig; //state level variance
     real<lower=0> theta_md; // md weighting
     matrix<lower=0,upper=1>[N,j] prop_md; // proportion who are md'ing
-    matrix<lower=0,upper=1>[N_v,j_v] prop_md_v;
+    vector<lower=0,upper=1>[total_N_pv] prop_md_v;
     matrix<lower=0,upper=1>[N,j] brho; //estimate of proportion of imported cases
     matrix<lower=0,upper=1>[N,K] noise[j];
     //real<lower=0> R_temp;
 
-    matrix<lower=0,upper=1>[N_v,j_v] brho_v; //estimate of proportion of imported cases
-    matrix<lower=0,upper=1>[N_v,K] noise_v[j_v];
+    vector<lower=0,upper=1>[total_N_pv] brho_v; //estimate of proportion of imported cases
+    //matrix<lower=0,upper=1>[N_v,K] noise_v[j_v];
 }
 transformed parameters {
     matrix<lower=0>[N,j] mu_hat;
-    matrix<lower=0>[N_v,j_v] mu_hat_v;
+    vector<lower=0>[total_N_pv] mu_hat_v;
     matrix<lower=0>[N,j] md; //micro distancing
-    matrix<lower=0>[N_v,j_v] md_v;
-
-
+    vector<lower=0>[total_N_pv] md_v;
 
     for (i in 1:j) {
-
-
         for (n in 1:N){
-
-
             md[n,i] = pow(1+theta_md , -1*prop_md[n,i]);
 
             mu_hat[n,i] = brho[n,i]*R_I + (1-brho[n,i])*2*R_Li[i]*(
@@ -144,32 +139,44 @@ transformed parameters {
         }
     }
     for (i in 1:j_v){
-        for (n in 1:N_v){
-
-            md_v[n,i] = pow(1+theta_md ,-1*prop_md_v[n,i]);
-            if (map_to_state_index[i] == 5) {
-                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*(2*R_Li[
-                map_to_state_index[i]
-                ])*(
-                (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
-                Mob_v[i][n,:]*(bet)
-                ); //mean estimate
+        int pos;
+        if (i==1){
+            pos=1;
+        }
+        else {
+            //Add 1 to get to start of new group, not end of old group
+            pos =pos_starts[i-1]+1;
             }
-            else {
-                mu_hat_v[n,i] = brho_v[n,i]*R_I + (1-brho_v[n,i])*2*R_Li[
-                map_to_state_index[i]
-                ]*(
-                (1-policy_v[n]) + md_v[n,i]*policy_v[n] )*inv_logit(
-                Mob_v[i][n,:]*(bet)); //mean estimate
+        for (n in 1:N_v){
+            if (include_in_sec_wave[i][n]==1){
+                md_v[pos] = pow(1+theta_md ,-1*prop_md_v[pos]);
+                if (map_to_state_index[i] == 5) {
+                    mu_hat_v[pos] = brho_v[pos]*R_I + (1-brho_v[pos])*(2*R_Li[
+                    map_to_state_index[i]
+                    ])*(
+                    (1-policy_v[n]) + md_v[pos]*policy_v[n] )*inv_logit(
+                    Mob_v[i][n,:]*(bet)
+                    ); //mean estimate
+                }
+                else {
+                    mu_hat_v[pos] = brho_v[pos]*R_I + (1-brho_v[pos])*2*R_Li[
+                    map_to_state_index[i]
+                    ]*(
+                    (1-policy_v[n]) + md_v[pos]*policy_v[n] )*inv_logit(
+                    Mob_v[i][n,:]*(bet)); //mean estimate
+                }
+                pos += 1;
             }
         }
     }
 
 }
 model {
+    int pos2;
     bet ~ normal(0,1);
     theta_md ~ lognormal(0,0.5);
     //md ~ beta(7,3);
+
 
 
     R_L ~ gamma(1.8*1.8/0.01,1.8/0.01); //hyper-prior
@@ -185,12 +192,23 @@ model {
             mu_hat[n,i] ~ gamma( Reff[n,i]*Reff[n,i]/(sigma2[n,i]), Reff[n,i]/sigma2[n,i]); //Stan uses shape/inverse scale
         }
     }
+    
     for (i in 1:j_v){
+        if (i==1){
+            pos2=1;
+        }
+        else {
+            //Add 1 to get to start of new group, not end of old group
+            pos2 =pos_starts[i-1]+1; 
+            }
         for (n in 1:N_v){
-            prop_md_v[n,i] ~ beta(1 + count_md_v[i][n], 1+ respond_md_v[i][n] - count_md_v[i][n]);
-            brho_v[n,i] ~ beta( 1+ imported_v[n,i], 1+ local_v[n,i]); //ratio imported/ (imported + local)
-            //noise_v[i][n,:] ~ normal( Mob_v[i][n,:] , Mob_v_std[i][n,:]);
-            mu_hat_v[n,i] ~ gamma( Reff_v[n,i]*Reff_v[n,i]/(sigma2_v[n,i]), Reff_v[n,i]/sigma2_v[n,i]);
+            if (include_in_sec_wave[i][n]==1){
+                prop_md_v[pos2] ~ beta(1 + count_md_v[i][n], 1+ respond_md_v[i][n] - count_md_v[i][n]);
+                brho_v[pos2] ~ beta( 1+ imported_v[n,i], 1+ local_v[n,i]); //ratio imported/ (imported + local)
+                //noise_v[i][n,:] ~ normal( Mob_v[i][n,:] , Mob_v_std[i][n,:]);
+                mu_hat_v[pos2] ~ gamma( Reff_v[n,i]*Reff_v[n,i]/(sigma2_v[n,i]), Reff_v[n,i]/sigma2_v[n,i]);
+                pos2+=1;
+            }
         }
     }
 }
@@ -286,10 +304,7 @@ for data_date in cprs_dates:
     sec_states=sorted(['NSW','VIC'])
     sec_start_date = '2020-06-01'
     if data_date > pd.to_datetime("2020-06-12"):
-        if data_date < pd.to_datetime("2020-10-01"):
-            possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
-        else:
-            possible_end_date = pd.to_datetime("2020-10-31")
+        possible_end_date = data_date - timedelta(10)#subtract 10 days to aovid right truncation
     else:
         possible_end_date = pd.to_datetime("2020-06-01")
     sec_end_date = possible_end_date.strftime('%Y-%m-%d')
@@ -325,8 +340,17 @@ for data_date in cprs_dates:
         survey_respond = survey_respond_base.loc[:dfX.date.values[-1]]
         survey_counts = survey_counts_base.loc[:dfX.date.values[-1]]
 
-
-
+    #choose dates for each state for sec wave
+    sec_date_range = {
+        'NSW':pd.date_range(start=sec_start_date,end='2020-10-31').values,
+        'VIC':pd.date_range(start=sec_start_date,end='2020-10-31').values
+    }
+    df2X['is_sec_wave'] =0
+    for state in sec_states:
+        df2X.loc[df2X.state==state,'is_sec_wave'] = df2X.loc[df2X.state==state].date.isin(
+            sec_date_range[state]
+            ).astype(int).values
+            
     data_by_state= {}
     sec_data_by_state={}
     for value in ['mean','std','local','imported']:
@@ -360,7 +384,7 @@ for data_date in cprs_dates:
     sec_mobility_std_by_state=[]
     sec_count_by_state=[]
     sec_respond_by_state=[]
-
+    include_in_sec_wave=[]
     #SECOND PHASE
     for state in sec_states:
 
@@ -370,10 +394,13 @@ for data_date in cprs_dates:
         )
         sec_count_by_state.append(survey_counts.loc[sec_start_date:sec_end_date,state].values)
         sec_respond_by_state.append(survey_respond.loc[sec_start_date:sec_end_date,state].values)
-
+        include_in_sec_wave.append(df2X.loc[df2X.state==state,'is_sec_wave'].values)
     policy_v = [1]*df2X.loc[df2X.state==sec_states[0]].shape[0]
     policy = dfX.loc[dfX.state==states_to_fit[0],'post_policy']
 
+    print(sum([sum(x) for x in include_in_sec_wave])) #306
+    print(np.cumsum([sum(x) for x in include_in_sec_wave])) #[153,306]
+    print([sum(x) for x in include_in_sec_wave]) #[153,153]
 
     state_index = { state : i+1  for i, state in enumerate(states_to_fit)}
     ##Make state by state arrays
@@ -403,8 +430,10 @@ for data_date in cprs_dates:
         'respond_md':respond_by_state,
         'count_md_v':sec_count_by_state,
         'respond_md_v':sec_respond_by_state,
-        'map_to_state_index': [state_index[state] for state in sec_states]
-
+        'map_to_state_index': [state_index[state] for state in sec_states],
+        'total_N_pv':sum( [sum(x) for x in include_in_sec_wave]),
+        'include_in_sec_wave': include_in_sec_wave,
+        'pos_starts': np.cumsum([sum(x) for x in include_in_sec_wave])
     }
 
     fit = sm_pol_gamma.sampling(
@@ -464,17 +493,20 @@ for data_date in cprs_dates:
     if df2X.shape[0]>0:
         fig,ax = plt.subplots(figsize=(24,9), ncols=len(sec_states),sharey=True, squeeze=False)
         states_to_fitd = {state: i+1 for i,state in enumerate(sec_states)      }
-
+        pos = 1
         for i, state in enumerate(sec_states):
             #Google mobility only up to a certain date, so take only up to that value
-            dates = pd.date_range(start=sec_start_date,
-            end=df2X.loc[df2X.state==sec_states[0]].date.values[-1])
+            dates = df2X.loc[(df2X.state==state)&(
+                df2X.is_sec_wave==1
+            )].date.values
             #df_Reff.loc[(df_Reff.date>=sec_start_date) &
             #                    (df_Reff.state==state)&(df_Reff.date<=sec_end_date)].date
             rho_samples = samples_mov_gamma[
-                ['brho_v['+str(j+1)+','+str(states_to_fitd[state])+']'
-                for j in range(df2X.loc[df2X.state==sec_states[0]].shape[0])]
+                ['brho_v['+str(j)+']'
+                for j in range(pos, pos+df2X.loc[df2X.state==state].is_sec_wave.sum() ) ]
                 ]
+            pos = pos + df2X.loc[df2X.state==state].is_sec_wave.sum()
+
             ax[0,i].plot(dates, rho_samples.median(),label='fit',color='C0')
             ax[0,i].fill_between(dates, rho_samples.quantile(0.25),rho_samples.quantile(0.75),color='C0',alpha=0.4)
 
@@ -573,6 +605,11 @@ for data_date in cprs_dates:
         results_dir+data_date.strftime("%Y-%m-%d")+"total_Reff_allstates.png", dpi=144)
 
     if df2X.shape[0]>0:
+        df['is_sec_wave'] =0
+        for state in sec_states:
+            df.loc[df.state==state,'is_sec_wave'] = df.loc[df.state==state].date.isin(
+                sec_date_range[state]
+                ).astype(int).values
         #plot only if there is second phase data
         ax4 =predict_plot(samples_mov_gamma,df.loc[(df.date>=sec_start_date)&(df.date<=sec_end_date)],gamma=True, moving=True,split=split,grocery=True,ban = ban,
                         R=RL_by_state, var= True, md_arg=md,

@@ -243,9 +243,13 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
         states.remove('Northern Territory')
         states.remove('Australian Capital Territory')
          #no R_eff modelled for these states, skip
+        #counter for brho_v
+        pos=1
         for i,state in enumerate(states):
-            
+
             df_state = df.loc[df.sub_region_1==state]
+            if second_phase:
+                df_state = df_state.loc[df_state.is_sec_wave==1]
             samples_sim = samples.sample(1000)
             post_values = samples_sim[['bet['+str(i)+']' for i in range(1,1+len(value_vars))]].values.T    
             prop_sim = prop[states_initials[state]].values[:df_state.shape[0]]
@@ -322,10 +326,15 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                             #transpose as columns are days, need rows to be days
                             if second_phase:
                                 #use brho_v
+                                print(state)
+                                print(pos,pos+df.loc[df.state==states_initials[state]].is_sec_wave.sum() )
                                 rho_data = samples_sim[
-                                    ['brho_v['+str(j+1)+','+
-                                    str(states_to_fitd[states_initials[state]])+']' 
-                                        for j in range(df_state.shape[0])]].values.T 
+                                    ['brho_v['+str(j)+']' 
+                                        for j in range(pos, pos+df.loc[df.state==states_initials[state]].is_sec_wave.sum() ) ]
+                                ].values.T
+
+                                pos = pos + df.loc[df.state==states_initials[state]].is_sec_wave.sum()
+                                print(rho_data.shape)
                             else:
                                 # first phase
                                 rho_data = samples_sim[

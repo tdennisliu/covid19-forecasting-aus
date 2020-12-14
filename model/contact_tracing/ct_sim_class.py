@@ -496,7 +496,7 @@ class Forecast:
         """
         from heapq import heappush
         from math import ceil
-        from numpy.random import random, gamma
+        from numpy.random import random, gamma, triangular
 
         #check parent category   
         if self.people[parent_key].category=='S':
@@ -603,16 +603,29 @@ class Forecast:
                         #first num_sympcases are symnptomatic, rest are asymptomatic
                         category = 'S'
                         self.cases[max(0,ceil(inf_time)-1),2] += 1
-                        
+                        detect_prob = self.qa #asymptomatic detection
                         if self.test_campaign_date is not None:
                             #see if case is during a testing campaign
                             if inf_time <self.test_campaign_date:
-                                detect_prob = self.qs
+                                post_symp_detect_prob = self.qs
                             else:
-                                detect_prob = min(0.95,self.qs*self.test_campaign_factor)
+                                post_symp_detect_prob = min(0.95,self.qs*self.test_campaign_factor)
                         else:
-                            detect_prob = self.qs
-                        if detection_rv < detect_prob:
+                            post_symp_detect_prob = self.qs
+                        if detection_rv < detect_prob: #presymp detection
+                            #case detected
+                            isdetected=1
+                            # Laura
+                            present_time = triangular(inf_time,symp_time,symp_time )
+                            test_time = present_time + test_delay+ next(self.get_test_time)
+                            notify_time = test_time + next(self.get_notify_time)
+
+                            action_time = notify_time + PHU_delay+next(self.get_action_time)
+                                
+                            if notify_time < self.cases.shape[0]:
+                                self.observed_cases[max(0,floor(notify_time)),2] += 1
+                            #if case undetected, case gets default action time
+                        elif random() < post_symp_detect_prob:
                             #case detected
                             isdetected=1
                             # Laura
@@ -638,7 +651,7 @@ class Forecast:
                         else:
                             detect_prob=self.qa
                         if detection_rv < detect_prob:
-                            #case detected
+                            #case detected as asymptomatic
                             isdetected=1
                             #symp_time = inf_time + next(self.get_symp_time)
                             # Laura 

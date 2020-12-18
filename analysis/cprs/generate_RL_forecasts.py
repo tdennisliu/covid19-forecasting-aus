@@ -13,7 +13,8 @@ from sys import argv
 from Reff_constants import *
 from Reff_functions import *
 
-
+import matplotlib.dates as mdates
+locator =mdates.MonthLocator()
 df_google_all = read_in_google(Aus_only=True,moving=True,local=True)
 states = ['NSW','QLD','SA','VIC','TAS','WA','ACT','NT']#,'AUS']
 plot_states = states.copy()
@@ -125,13 +126,13 @@ for data_date in cprs_dates:
 
         fig, ax_states = plt.subplots(figsize=(7,8),nrows=4, ncols=2, sharex=True)
         axes.append(ax_states)
-        fig.suptitle(var)
+        #fig.suptitle(var)
         figs.append(fig)
     ##extra fig for microdistancing
     var='Proportion people always microdistancing'
     fig, ax_states = plt.subplots(figsize=(7,8),nrows=4, ncols=2, sharex=True)
     axes.append(ax_states)
-    fig.suptitle(var)
+    #fig.suptitle(var)
     figs.append(fig)
 
     state_Rmed = {}
@@ -242,21 +243,39 @@ for data_date in cprs_dates:
                 axs[rownum,colnum].set_title(state)
                 axs[rownum,colnum].axhline(1,ls = '--', c = 'k')
                 axs[rownum,colnum].set_title(state)
-                axs[rownum,colnum].tick_params('x',rotation=90)
-                axs[rownum,colnum].xaxis.set_major_locator(plt.MaxNLocator(4))
-                fig.autofmt_xdate()
+                axs[rownum,colnum].tick_params('x',rotation=45)
+                axs[rownum,colnum].xaxis.set_major_locator(locator)
+                #fig.autofmt_xdate()
 
         state_Rmed[state] = Rmed_array
         state_sims[state] = sims
     os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d"), exist_ok=True)
     for i,fig in enumerate(figs):
+        fig.text(0.5, 0.02, 
+        'Date', 
+        ha='center', va='center',
+        fontsize=15)
+
+        
         if i<len(predictors):
 
+            fig.text(0.03, 0.5, 
+            predictors[i].replace('_',' ')[:-5], 
+            ha='center', va='center',
+            rotation='vertical',
+            fontsize=15)
+            fig.tight_layout(rect=[0.02,0.04,1,1])
             fig.savefig(
                 "figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/"+str(predictors[i])+".png",dpi=144)
 
 
         else:
+            fig.text(0.03, 0.5, 
+            'Proportion of respondents\n micro-distancing', 
+            ha='center', va='center',
+            rotation='vertical',
+            fontsize=15)
+            fig.tight_layout(rect=[0.02,0.04,1,1])
             fig.savefig(
                 "figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/micro_dist.png",dpi=144)
 
@@ -335,12 +354,22 @@ for data_date in cprs_dates:
                                 alpha=0.4,
                                 color='C0')
         ax[row,col].set_title(state)
-        ax[row,col].tick_params('x',rotation=20)
-        ax[row,col].xaxis.set_major_locator(plt.MaxNLocator(4))
-
+        ax[row,col].tick_params('x',rotation=45)
+        ax[row,col].xaxis.set_major_locator(locator)
 
         ax[row,col].set_xticks([df_md[state].index.values[-n_forecast-extra_days_md]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
+    
+    fig.text(0.03, 0.5, 
+        'Multiplicative effect \n of micro-distancing $M_d$', 
+        ha='center', va='center', rotation='vertical',
+        fontsize=20)
+
+    fig.text(0.5, 0.04, 
+        'Date', 
+        ha='center', va='center',
+        fontsize=20)
+    plt.tight_layout(rect=[0.05,0.04,1,1])
     fig.savefig("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/md_factor.png",dpi=144)
 
 
@@ -621,8 +650,8 @@ for data_date in cprs_dates:
         ax[row,col].fill_between( plot_df.date, plot_df['lower'],plot_df['upper'],alpha=0.4,color='C0')
         ax[row,col].fill_between( plot_df.date, plot_df['bottom'],plot_df['top'],alpha=0.4,color='C0')
 
-        ax[row,col].tick_params('x',rotation=20)
-        ax[row,col].xaxis.set_major_locator(plt.MaxNLocator(4))
+        ax[row,col].tick_params('x',rotation=45)
+        ax[row,col].xaxis.set_major_locator(locator)
         ax[row,col].set_title(state)
         ax[row,col].set_yticks([1],minor=True,)
         ax[row,col].set_yticks([0,2,3],minor=False)
@@ -633,6 +662,20 @@ for data_date in cprs_dates:
         ax[row,col].set_xticks([plot_df.date.values[-n_forecast]],minor=True,)
         ax[row,col].xaxis.grid(which='minor', linestyle='-.',color='grey', linewidth=1)
     #fig.autofmt_xdate()
+    fig.text(
+        0.03,0.5,
+        'Effective \nreproduction number',
+        va='center',ha='center',
+        rotation='vertical',
+        fontsize=20
+    )
+    fig.text(
+        0.525,0.02,
+        'Date',
+        va='center',ha='center',
+        fontsize=20
+    )
+    plt.tight_layout(rect=[0.04,0.04,1,1])
     os.makedirs("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d"), exist_ok=True)
     plt.savefig("figs/mobility_forecasts/"+data_date.strftime("%Y-%m-%d")+"/soc_mob_R_L_hats"+data_date.strftime('%Y-%m-%d')+".png",dpi=102)
 

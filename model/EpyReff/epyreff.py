@@ -397,7 +397,17 @@ def plot_all_states(R_summ_states,df_interim, dates,
             color='grey',
                 alpha=0.8
             )
-        
+
+        # Set common labels
+        fig.text(0.5, 0.01, 'Date', ha='center', va='center',
+         fontsize=20)
+        fig.text(0.08, 0.5, 
+        'Effective \nReproduction Number', 
+        ha='center', va='center', rotation='vertical',
+        fontsize=20)
+        fig.text(0.95, 0.5, 'Local Cases', ha='center', va='center', 
+        rotation=270,
+        fontsize=20)
         #plot old LSHTM estimates
         #df_june = df_L_R.loc[(df_L_R.date_of_analysis=='2020-07-27')&(df_L_R.state==state)]
         #df = df_june.loc[(df_june.date.isin(date_filter))]

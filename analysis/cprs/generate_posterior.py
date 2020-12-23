@@ -398,9 +398,6 @@ for data_date in cprs_dates:
     policy_v = [1]*df2X.loc[df2X.state==sec_states[0]].shape[0]
     policy = dfX.loc[dfX.state==states_to_fit[0],'post_policy']
 
-    print(sum([sum(x) for x in include_in_sec_wave])) #306
-    print(np.cumsum([sum(x) for x in include_in_sec_wave])) #[153,306]
-    print([sum(x) for x in include_in_sec_wave]) #[153,153]
 
     state_index = { state : i+1  for i, state in enumerate(states_to_fit)}
     ##Make state by state arrays

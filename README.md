@@ -46,5 +46,5 @@ Below is a summary of the pipeline from case line list data to producing forecas
     * simulation files of all states from 4.
 
     ```
-    analysis/record_to_csv.py /longdate/
+    analysis/record_to_csv.py /num-of-sims/ /num-days/ R_L /longdate/
     ```

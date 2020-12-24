@@ -374,11 +374,11 @@ def predict_plot(samples, df, split=True,gamma=False,moving=True,grocery=True,
                     ax[i//3,i%3].tick_params(axis='x',rotation=90)
                 continue
             #plot actual R_eff
-            ax[i//3,i%3].plot(df_state.date, df_state['mean'], label='R_eff from Price et al',color='C1')
+            ax[i//3,i%3].plot(df_state.date, df_state['mean'], label='$R_{eff}$',color='C1')
             ax[i//3,i%3].fill_between(df_state.date, df_state['bottom'], df_state['top'],color='C1', alpha=0.3)
             ax[i//3,i%3].fill_between(df_state.date, df_state['lower'], df_state['upper'],color='C1', alpha=0.3)
 
-            ax[i//3,i%3].plot(df_state.date,df_hat.quantile(0.5,axis=0), label='Model (mu hat)',color='C0')
+            ax[i//3,i%3].plot(df_state.date,df_hat.quantile(0.5,axis=0), label='$\hat{\mu}$',color='C0')
             ax[i//3,i%3].fill_between(df_state.date, df_hat.quantile(0.25,axis=0), df_hat.quantile(0.75,axis=0),color='C0',alpha=0.3)
             ax[i//3,i%3].fill_between(df_state.date, df_hat.quantile(0.05,axis=0), df_hat.quantile(0.95,axis=0),color='C0',alpha=0.3)
             ax[i//3,i%3].set_title(state)

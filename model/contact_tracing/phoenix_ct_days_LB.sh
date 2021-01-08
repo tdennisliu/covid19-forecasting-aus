@@ -9,11 +9,35 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=laura.boyle@adelaide.edu.au
-#SBATCH --array=0-5
+#SBATCH --array=1-50
 
+paramFile="covid19-forecasting-aus/model/contact_tracing/inputs.csv"
+
+module load arch/haswell
 module load Python/3.7.0-foss-2016b
-source $FASTDIR/virtualenvs/badassenv/bin/activate
+source virtualenvs/a1226521/bin/activate
 
-python model/contact_tracing/run_contact_tracing.py $SLURM_ARRAY_TASK_ID
+echo "array_job_index: $SLURM_ARRAY_TASK_ID"
+
+i=1
+found=0 
+
+while IFS=, read a b c d
+do 
+    if [ $i = $SLURM_ARRAY_TASK_ID ]; then
+        echo "Running $simName with [$a, $b, $c, $d]"
+        found=1 
+
+        break 
+    fi 
+    i=$((i + 1)) 
+done < $paramFile
+
+if [ $found = 1 ]; then
+    python covid19-forecasting-aus/model/contact_tracing/run_contact_tracing.py $a $b $c $d $1
+else 
+  echo "SLURM_ARRAY_TASK_ID $SLURM_ARRAY_TASK_ID is outside range of input file $paramFile" 
+fi
+
 
 deactivate

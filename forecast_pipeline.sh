@@ -1,10 +1,9 @@
 #!/bin/bash
 
 DATE=$1
-SHORTDATE=$2
-NDAYS=$3
+NDAYS=$2
 
-jid1=$(sbatch --parsable --mail-user=$USER@adelaide.edu.au phoenix_run_estimator.sh ${SHORTDATE})
+jid1=$(sbatch --parsable --mail-user=$USER@adelaide.edu.au phoenix_run_estimator.sh ${DATE})
 echo $jid1
 
 jid2=$(sbatch --parsable --mail-user=$USER@adelaide.edu.au --dependency=afterok:$jid1 analysis/cprs/run_posteriors.sh ${DATE})

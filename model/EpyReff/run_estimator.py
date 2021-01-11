@@ -32,6 +32,8 @@ offset=0
 shift=0
 
 date = argv[1]
+dt_date = pd.to_datetime(date, format="%Y-%m-%d")
+file_date = dt_date.strftime("%Y-%m-%d")
 try:
     plot_time = argv[2]
 except:
@@ -39,7 +41,8 @@ except:
 # Read in the data
 
 ##read in case file data
-df_interim = read_cases_lambda(date)
+print(dt_date.strftime("%d%b%Y"))
+df_interim = read_cases_lambda(dt_date.strftime("%d%b%Y"))
 
 ##generate dataframe with id_vars date and state, variable SOURCE and number of cases
 df_linel = tidy_cases_lambda(df_interim)
@@ -90,7 +93,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 results_path =dir_path+"../../../results/EpyReff/"
 os.makedirs( results_path, exist_ok=True)
 
-file_date = pd.to_datetime("2020"+date, format="%Y%d%b").strftime("%Y-%m-%d")
+
 
 if plot_time:
     #plot assumed distributions

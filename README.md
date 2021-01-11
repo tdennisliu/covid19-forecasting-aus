@@ -1,6 +1,21 @@
 # covid19-forecasting-aus
 code used to forecast covid19 cases
 
+## Using HPC and slurm
+If you have access to HPC (Hugh performance cluster) that uses slurm, then you can use the following bash script to run the full pipeline, provided your data is stored correctly.
+
+In the `data` folder:
+* case data (NNDSS)
+* Google mobility indices named `Global_Mobility_Report.csv`
+
+and in the `data/md/` folder:
+* Up to date microdistancing survey files titled `Barometer wave XX compliance.csv`
+
+Once all the data is in their corresponding folders, you can run this command to run the full pipeline on HPC
+```
+bash forecast_pipeline.sh /longdate/ /shortdate/ /num-of-days/
+```
+
 ## Workflow and relevant scripts
 Below is a summary of the pipeline from case line list data to producing forecasts using this repository.
 

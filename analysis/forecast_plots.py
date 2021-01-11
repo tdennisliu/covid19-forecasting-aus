@@ -450,8 +450,8 @@ for i,state in enumerate(states):
     spag_ylim = ax.get_ylim()
 
     
-    if state=='NSW':
-        ax.set_ylim((0,100))
+    #if state=='NSW':
+    #    ax.set_ylim((0,100))
     if spag_ylim[1] > ylims[1]:
         ax.set_ylim((ylims[0],10*ylims[1]))
 

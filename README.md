@@ -24,8 +24,8 @@ You can optionally specify exactly how many days (as an integer) you want to for
 python num_days.py 
 ```
 
-## Workflow and relevant scripts
-Below is a summary of the pipeline from case line list data to producing forecasts using this repository.
+## Step-by-step workflow and relevant scripts
+Below is a breakdown of the pipeline from case line list data to producing forecasts using this repository.
 
 1. Cori et al. (2013) and Thompson et al. (2019) method to infer an effective reproduction number $R_{eff}$ from case data. Requires:
     * case data in data folder
@@ -64,9 +64,17 @@ Below is a summary of the pipeline from case line list data to producing forecas
     python run_state.py /num-of-simulations/ /num-of-days/ /longdate/ /state-initials/
     ```
 
-5.  Examine simulation of cases. Requires:
+5.  Examine simulation of cases and generate figures. 
+    * If `all_states.sh` used, plots already generated, skip this step.
+Requires:
     * case data
-    * simulation files of all states from 4.
+    * simulation files of all states from 4, saved in `results/`.
+    
+```
+python collate_states.py /num-of-simulations/ /num-of-days/ /longdate/
+```
+
+6.  Record results into csv file for UoM.
 
     ```
     analysis/record_to_csv.py /num-of-sims/ /num-days/ R_L /longdate/

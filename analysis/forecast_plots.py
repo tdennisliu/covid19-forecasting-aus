@@ -310,10 +310,10 @@ for i,state in enumerate(states):
         #no accepted sim, skip
         continue
     ax,ax2= plot_results(df_results.loc[state], ['total_inci'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state,R_plot])
-    if state=='NSW':
-        ax.set_ylim((0,100))
-    elif state=='VIC':
-        ax.set_ylim((0,600))
+    #if state=='NSW':
+    #    ax.set_ylim((0,100))
+    #elif state=='VIC':
+    #    ax.set_ylim((0,600))
     if i%2==0:
         ax.set_ylabel("Total \nlocal cases")
         ax2.set_ylabel("Local Reff")
@@ -453,7 +453,7 @@ for i,state in enumerate(states):
     #if state=='NSW':
     #    ax.set_ylim((0,100))
     if spag_ylim[1] > ylims[1]:
-        ax.set_ylim((ylims[0],10*ylims[1]))
+        ax.set_ylim((ylims[0],5*ylims[1]))
 
     if i%2==0:
         ax.set_ylabel("Observed \n local cases")

@@ -8,7 +8,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --mail-user=dennis.liu01@adelaide.edu.au
+#SBATCH --mail-user=$USER@adelaide.edu.au
 #SBATCH --array=0-7
 
 

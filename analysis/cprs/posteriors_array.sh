@@ -9,7 +9,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --mail-user=sophie.schiller@adelaide.edu.au
+#SBATCH --mail-user=$USER@adelaide.edu.au
 
 module load Python/3.6.1-foss-2016b
 source $FASTDIR/virtualenvs/bin/activate

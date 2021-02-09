@@ -14,5 +14,5 @@ module load arch/haswell
 module load Python/3.6.1-foss-2016b
 source ../virtualenvs/bin/activate
 
-python collate_states.py $1 $2 $3
+python collate_states.py $1 $2 $3 $4
 deactivate

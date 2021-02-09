@@ -43,7 +43,13 @@ if pd.to_datetime(argv[3]) < pd.to_datetime('2020-06-02'):
 R_I='R_I'
 abc =False
 
-
+# If no VoC specified, code will run without alterations.
+variant_of_concern_start_date = None
+if len(argv)>7:
+    if argv[7] == 'UK':
+        # The date from which to increase Reff due to VoC. This date is expressed as the number of days from the start of simulation.
+        variant_of_concern_start_date = (pd.to_datetime(forecast_date,format='%Y-%m-%d') - pd.to_datetime(start_date,format='%Y-%m-%d')).days
+            
 local_detection = {
             'NSW':0.9,#0.556,#0.65,
             'QLD':0.9,#0.353,#0.493,#0.74,
@@ -140,7 +146,8 @@ for state in states:
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
         cross_border_state=XBstate,cases_file_date=case_file_date,
         ps_list = ps_prior, test_campaign_date=test_campaign_date, 
-        test_campaign_factor=test_campaign_factor,Reff_file_date=Reff_file_date
+        test_campaign_factor=test_campaign_factor,Reff_file_date=Reff_file_date,
+        variant_of_concern_start_date = variant_of_concern_start_date
         )
     elif state in ['NSW']:
         forecast_dict[state] = Forecast(current[state],
@@ -150,7 +157,8 @@ for state in states:
         qua_ai=2,qua_qi_factor=1,qua_qs_factor=1, #qua_ai is impact of importations before April 15th
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
         cross_border_state=None,cases_file_date=case_file_date,
-        ps_list = ps_prior,Reff_file_date=Reff_file_date
+        ps_list = ps_prior,Reff_file_date=Reff_file_date,
+        variant_of_concern_start_date = variant_of_concern_start_date
         )
     elif state in ['ACT','NT','SA','WA','QLD']:
         forecast_dict[state] = Forecast(current[state],
@@ -160,7 +168,8 @@ for state in states:
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1,
         forecast_R =forecast_type, R_I = R_I,forecast_date=forecast_date,
         cross_border_state=None,cases_file_date=case_file_date,
-        ps_list = ps_prior,Reff_file_date=Reff_file_date
+        ps_list = ps_prior,Reff_file_date=Reff_file_date,
+        variant_of_concern_start_date = variant_of_concern_start_date
         )
     else:
         forecast_dict[state] = Forecast(current[state],state,
@@ -170,7 +179,8 @@ for state in states:
         qua_ai=1,qua_qi_factor=1,qua_qs_factor=1, 
         forecast_R = forecast_type , R_I = R_I,forecast_date=forecast_date,
         cases_file_date=case_file_date,
-        ps_list = ps_prior,Reff_file_date=Reff_file_date
+        ps_list = ps_prior,Reff_file_date=Reff_file_date,
+        variant_of_concern_start_date = variant_of_concern_start_date
         )
 
 

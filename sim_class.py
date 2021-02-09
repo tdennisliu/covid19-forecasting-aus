@@ -28,7 +28,7 @@ class Forecast:
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
         forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
         ps_list=[0.7], test_campaign_date=None, test_campaign_factor=1,
-        Reff_file_date=None,
+        Reff_file_date=None, variant_of_concern_start_date = None
         ):
         import numpy as np
         self.initial_state = current.copy() #Observed cases on start day
@@ -50,6 +50,9 @@ class Forecast:
         self.qua_ai = qua_ai
         self.qua_qi_factor = qua_qi_factor
         self.qua_qs_factor=qua_qs_factor
+
+        # The number of days into simulation at which to begin increasing Reff due to VoC
+        self.variant_of_concern_start_date = variant_of_concern_start_date 
 
         self.forecast_R = forecast_R
         self.R_I = R_I
@@ -295,6 +298,13 @@ class Forecast:
                 #R_L0
                 for day in range(num_days):
                     Reff_lookupstate[day] = df.loc[state, [i for i in range(1000)]].values[0]
+
+                    # Apply increased Reff from variant of concern if start date is passed
+                    if self.variant_of_concern_start_date:
+                        if day > self.variant_of_concern_start_date:
+                            VoC_multiplier  = beta.rvs(6,14) + 1
+                            Reff_lookupstate[day] = Reff_lookupstate[day]*VoC_multiplier 
+
 
 
             #Nested dict with key to state, then key to date
@@ -1007,16 +1017,21 @@ class Forecast:
         for var in sim_vars:
             df_results[var] = [results[var][sim] for cat,sim in df_results.index]
 
+        #Adding a flag to filename for the VoC runs
+        VoC_name_flag = "VoC" if self.variant_of_concern_start_date else ''
+
+        print('VoC_name_flag is', VoC_name_flag, self.variant_of_concern_start_date)
+
         print("Saving results for state "+self.state)
         if self.forecast_R is None:
             df_results.to_parquet(
                 "./results/"+self.state+self.start_date.strftime(
-                    format='%Y-%m-%d')+"sim_results"+str(n_sims)+"days_"+str(days)+".parquet",
+                    format='%Y-%m-%d')+"sim_results"+str(n_sims)+"days_"+str(days)+VoC_name_flag+".parquet",
                     )
         else:
             df_results.to_parquet(
                 "./results/"+self.state+self.start_date.strftime(
-                    format='%Y-%m-%d')+"sim_"+self.forecast_R+str(n_sims)+"days_"+str(days)+".parquet",
+                    format='%Y-%m-%d')+"sim_"+self.forecast_R+str(n_sims)+"days_"+str(days)+VoC_name_flag+".parquet",
                     )
 
         return df_results

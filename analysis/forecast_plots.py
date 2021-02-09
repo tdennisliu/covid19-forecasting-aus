@@ -213,6 +213,13 @@ states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 n_sims = int(argv[1])
 start_date = '2020-09-01'
 days = int(argv[2])
+
+# Add flag to create plots for VoCs
+VoC_name_flag = '' # Default value
+if len(argv)>4:
+    if argv[4] == 'UK':
+        VoC_name_flag = 'VoC'
+
 #check if any dates are incorrect
 try:
     num_bad_dates = df_cases_state_time.loc[
@@ -230,7 +237,7 @@ print("forecast up to: {}".format(end_date))
 
 
 df_results = pd.read_parquet("results/quantiles"+forecast_type+start_date+"sim_"+str(
-    n_sims)+"days_"+str(days)+".parquet")
+    n_sims)+"days_"+str(days)+VoC_name_flag+".parquet")
 
 df_results = pd.melt(df_results, id_vars=['state','date','type'],
                      value_vars=['bottom','lower','median','upper','top',
@@ -244,7 +251,7 @@ df_results = pd.pivot_table(df_results,
                             columns='date',
                             values='value')
 
-with open("results/good_sims"+str(n_sims)+"days_"+str(days)+".json",'r') as file:
+with open("results/good_sims"+str(n_sims)+"days_"+str(days)+VoC_name_flag+".json",'r') as file:
     good_sims = json.load(file)
     
 
@@ -290,7 +297,7 @@ for i,state in enumerate(states):
         ax.set_xticklabels([])
         ax.set_xlabel('')
     #ax.set_ylim((0,60))
-plt.savefig("figs/"+forecast_type+start_date+"local_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+start_date+"local_inci_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)
 
 ##TOtal cases
 fig = plt.figure(figsize=(12,18))
@@ -321,7 +328,7 @@ for i,state in enumerate(states):
     if i< len(states)-2:
         ax.set_xticklabels([])
         ax.set_xlabel('')
-plt.savefig("figs/"+forecast_type+start_date+"local_total_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+start_date+"local_total_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)
 
 
 ##asymp cases
@@ -351,7 +358,7 @@ for i,state in enumerate(states):
     if i< len(states)-2:
         ax.set_xticklabels([])
         ax.set_xlabel('')
-plt.savefig("figs/"+forecast_type+"asymp_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=144)
+plt.savefig("figs/"+forecast_type+"asymp_inci_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=144)
 ## Imported cases
 fig = plt.figure(figsize=(12,18))
 gs = fig.add_gridspec(4,2)
@@ -381,7 +388,7 @@ for i,state in enumerate(states):
         ax.set_xlabel('')
                 
 plt.tight_layout()
-plt.savefig("figs/"+forecast_type+start_date+"imported_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+start_date+"imported_inci_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)
 
 ## unobserved Imported cases
 fig = plt.figure(figsize=(12,18))
@@ -412,7 +419,7 @@ for i,state in enumerate(states):
         ax.set_xlabel('')
                 
 plt.tight_layout()
-plt.savefig("figs/"+forecast_type+"imported_unobs_"+str(n_sims)+"days_"+str(days)+'.png',dpi=144)
+plt.savefig("figs/"+forecast_type+"imported_unobs_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=144)
 
 ## Local cases, spaghetti plot
 fig = plt.figure(figsize=(12,18))
@@ -423,7 +430,7 @@ dates_plot = pd.date_range(start = plot_start, periods=89)
 for i,state in enumerate(states):
     
     df_raw = pd.read_parquet("results/"+state+start_date+"sim_"+forecast_type+str(
-    n_sims)+"days_"+str(days)+".parquet", 
+    n_sims)+"days_"+str(days)+VoC_name_flag+".parquet", 
                              columns= [d.strftime("%Y-%m-%d") for d in dates_plot] )
     
 
@@ -464,4 +471,4 @@ for i,state in enumerate(states):
 
     ax.set_xticks([df_raw.columns.values[-1*31]],minor=True)
     ax.xaxis.grid(which='minor', linestyle='--',alpha=0.6, color='black')
-plt.savefig("figs/"+forecast_type+"spagh"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+"spagh"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)

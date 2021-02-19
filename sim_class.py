@@ -293,7 +293,6 @@ class Forecast:
 
                     Reff_lookupstate[newkey] = df.loc[(state,key),
                     self.num_of_sim%2000] #[i for i in range(1000)]
-
             else:
                 #R_L0
                 for day in range(num_days):
@@ -1178,11 +1177,13 @@ class Forecast:
             self.cases_to_subtract = 0
             self.cases_to_subtract_now = 0
         #self.imported_total = sum(df.imported.values)
-        self.max_cases = max(1000,sum(df.local.values) + sum(df.imported.values))
+        self.max_cases = max(10000,sum(df.local.values) + sum(df.imported.values))
         self.max_backcast_cases = max(100,4*(sum(df.local.values) - self.cases_to_subtract))
 
         self.max_nowcast_cases = max(10, 1.5*(sum(df.local.values) - self.cases_to_subtract_now))
         print("Local cases in last 14 days is %i" % (sum(df.local.values) - self.cases_to_subtract_now) )
+
+        print('Max limits: ', self.max_cases, self.max_backcast_cases, self.max_nowcast_cases)
 
         self.actual = df.local.to_dict()
 

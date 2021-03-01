@@ -6,6 +6,7 @@
 /data/md/*
 /data/Dennis*/*
 /data/LSHTM_Reff_estimates/*/*
+/analysis/UoA_*local_obs*.csv
 
 
 # Byte-compiled / optimized / DLL files

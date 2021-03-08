@@ -303,7 +303,7 @@ for data_date in cprs_dates:
     ##Second wave inputs
     sec_states=sorted(['NSW','VIC'])
     sec_start_date = '2020-06-01'
-    sec_end_date = '2021-01-18'
+    sec_end_date = '2021-01-19'
 
     # Setting a fixed end date to the second wave
     # if data_date > pd.to_datetime("2020-06-12"):

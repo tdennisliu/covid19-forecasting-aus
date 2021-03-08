@@ -1,15 +1,15 @@
 # covid19-forecasting-aus
-code used to forecast covid19 cases
+Code used to forecast COVID-19 cases in Australia.
 
-## Using HPC and slurm
-If you have access to HPC (Hugh performance cluster) that uses slurm, then you can use the following bash script to run the full pipeline, provided your data is stored correctly.
+## Quickstart: Using HPC and slurm
+If you have access to HPC (High performance cluster) that uses slurm, then you can use the following bash script to run the full pipeline, provided your data is stored correctly.
 
 In the `data` folder, ensure you have the latest:
-* case data (NNDSS)
-* Google mobility indices named `Global_Mobility_Report.csv`
+* Case data (NNDSS)
+* [Google mobility indices](https://www.google.com/covid19/mobility/); use the Global CSV with the file named `Global_Mobility_Report.csv`
 
 and in the `data/md/` folder:
-* Up to date microdistancing survey files titled `Barometer wave XX compliance.csv`
+* Up to date microdistancing survey files titled `Barometer wave XX compliance.csv`. All files up to current wave need to be included.
 
 Once all the data is in their corresponding folders, you can run this command to run the full pipeline on HPC
 ```
@@ -79,3 +79,6 @@ python collate_states.py /num-of-simulations/ /num-of-days/ /longdate/
     ```
     analysis/record_to_csv.py /num-of-sims/ /num-days/ R_L /longdate/
     ```
+
+## Variant of Concern Changes
+The model can run with a optional Variant of Concern (VoC) flag, which increases the $R_{eff}$ starting from the forecast date. Currently only the B117 (UK) variant is implemented. This increased model is enabled by passing `UK` as the final parameter to `phoenix_all_states.sh` or `phoenix_final_plots_csv.sh`. This is done automatically by `forecast_pipeline.sh` after first running the normal model.

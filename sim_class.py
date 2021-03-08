@@ -301,7 +301,7 @@ class Forecast:
                     # Apply increased Reff from variant of concern if start date is passed
                     if self.variant_of_concern_start_date:
                         if day > self.variant_of_concern_start_date:
-                            VoC_multiplier  = beta.rvs(6,14) + 1
+                            VoC_multiplier  = beta.rvs(14,20) + 1
                             Reff_lookupstate[day] = Reff_lookupstate[day]*VoC_multiplier 
 
 
@@ -576,7 +576,8 @@ class Forecast:
             3: 4,
             4: 5,
             5: 22,#min(end_time - self.quarantine_change_date -7, 24 ),
-            6: max(0,end_time- 6-8-4-5-22),
+            6: 276,
+            7: max(0, end_time-6-8-4-5-22-276),
         }
         qi = {
             1:self.qi *self.qua_qi_factor,
@@ -585,15 +586,21 @@ class Forecast:
             4:0.95,
             5:0.98,
             6:0.98,
+            7:0.98,
         }
         new_imports = []
         unobs_imports =[]
-        if self.start_date>pd.to_datetime("2020-04-15"):
+        if self.start_date > pd.to_datetime("2021-01-16"): 
+            # If the pandemic is lasting long enough for this to be called then it's been really bad
+            import_start_period = 7
+            num_days[7] = end_time
+        elif self.start_date>pd.to_datetime("2020-04-15"): # In case the start date is changed in future
             import_start_period = 6
-            num_days[6] = end_time
+            num_days[6] = (pd.to_datetime("2021-01-16") - self.start_date).days
+            num_days[7] = end_time - num_days[6]
         else:
             import_start_period = 1
-        for period in range(import_start_period,7): 
+        for period in range(import_start_period,8): 
             obs_cases = self.import_arrival(
                 period=period, size=num_days[period])
             #generate undetected people
@@ -1210,17 +1217,20 @@ class Forecast:
                 return 4
             elif date <= pd.to_datetime('2020-04-14',format='%Y-%m-%d'):
                 return 5
-            else:
+            elif date <= pd.to_datetime('2021-01-15', format='%Y-%m-%d'):
                 return 6
+            else:
+                return 7
 
         df ['period'] = df.date_inferred.apply(period_dates)
         prior = [1,1/5]
-        num_days = [6,7,5,5,22,days - 6-7-5-5-22]
+        days_since_last = self.end_time-((pd.to_datetime("2021-01-16") - self.start_date).days)
+        num_days = [6,7,5,5,22,276, days_since_last]
         alphas = df.groupby(['STATE','period']).imported.sum() + prior[0]
 
         new_index= ((x,y)
         for x in ('NSW','VIC','SA','TAS','QLD','NT','ACT','WA')
-            for y in (0,1,2,3,4,5,6))
+            for y in (0,1,2,3,4,5,6,7))
         alphas = alphas.reindex(
             new_index, fill_value=1 #fill with 1 to include prior
         )

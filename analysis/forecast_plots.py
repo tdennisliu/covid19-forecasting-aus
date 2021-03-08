@@ -147,9 +147,10 @@ def read_in_Reff(forecast_R=None,R_I=None,file_date = "2020-04-01", VoC_flag = '
 
             if VoC_flag != '':
                 # Here we apply the same beta(6,14)+1 scaling from VoC to the Reff data for plotting
-                # We do so but editing a slice of the data frame. Forgive me for my sins.
+                # We do so by editing a slice of the data frame. Forgive me for my sins.
                 VoC_dates_to_apply_idx = df_forecast.index[pd.to_datetime(df_forecast.date, format='%Y-%m-%d') > pd.to_datetime(file_date)]
-                df_slice_after_VoC = df_forecast.iloc[VoC_dates_to_apply_idx, 8:]
+                # The 8: columns have the random samples of Reff which we increase
+                df_slice_after_VoC = df_forecast.iloc[VoC_dates_to_apply_idx, 8:] 
                 df_forecast.iloc[VoC_dates_to_apply_idx , 8:] = df_slice_after_VoC*(beta.rvs(6,14, size = df_slice_after_VoC.shape) + 1)
 
             df_forecast.set_index(['state','date'],inplace=True)
@@ -305,8 +306,8 @@ for i,state in enumerate(states):
     #elif state=='VIC':
     #    ax.set_ylim((0,600))
     #ax.set_ylim(top=70)
-    if (state=='VIC') or (state=='NSW'):
-       ax.set_ylim((0,100))
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Observed \n local cases")
         ax2.set_ylabel("Local Reff")
@@ -339,8 +340,8 @@ for i,state in enumerate(states):
     #    ax.set_ylim((0,100))
     #elif state=='VIC':
     #    ax.set_ylim((0,600))
-    if (state=='VIC') or (state=='NSW'):
-       ax.set_ylim((0,100))
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Total \nlocal cases")
         ax2.set_ylabel("Local Reff")
@@ -371,8 +372,8 @@ for i,state in enumerate(states):
     ax,ax2= plot_results(df_results.loc[state], ['asymp_inci'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state])
     
     #ax.set_ylim(top=70)
-    if (state=='VIC') or (state=='NSW'):
-       ax.set_ylim((0,100))
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Asymp \ntotal cases")
         ax2.set_ylabel("Local Reff")
@@ -401,8 +402,8 @@ for i,state in enumerate(states):
     ax,ax2= plot_results(df_results.loc[state], ['imports_inci_obs'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state])
     
     #ax.set_ylim(top=70)
-    if (state=='VIC') or (state=='NSW'):
-       ax.set_ylim((0,100))
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Observed \nimported cases")
         ax2.set_ylabel("Local Reff")

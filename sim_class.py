@@ -570,15 +570,6 @@ class Forecast:
         #Record day 0 cases
         self.cases[0,:] = self.current.copy()
         # Generate imported cases
-        num_days={
-            1: 6,
-            2: 8,
-            3: 4,
-            4: 5,
-            5: 22,#min(end_time - self.quarantine_change_date -7, 24 ),
-            6: 276,
-            7: max(0, end_time-6-8-4-5-22-276),
-        }
         qi = {
             1:self.qi *self.qua_qi_factor,
             2:self.qi,
@@ -590,19 +581,17 @@ class Forecast:
         }
         new_imports = []
         unobs_imports =[]
-        if self.start_date > pd.to_datetime("2021-01-16"): 
-            # If the pandemic is lasting long enough for this to be called then it's been really bad
-            import_start_period = 7
-            num_days[7] = end_time
-        elif self.start_date>pd.to_datetime("2020-04-15"): # In case the start date is changed in future
-            import_start_period = 6
-            num_days[6] = (pd.to_datetime("2021-01-16") - self.start_date).days
-            num_days[7] = end_time - num_days[6]
-        else:
-            import_start_period = 1
-        for period in range(import_start_period,8): 
+
+
+        # Move to a 30 day case import windows; with last window being longer
+        historic_period_sizes = 30
+        number_of_historic_periods = (self.forecast_date) // historic_period_sizes - 1
+        final_size = end_time - number_of_historic_periods*historic_period_sizes
+        
+        for period in range(number_of_historic_periods+1): 
+            num_days = final_size if period == number_of_historic_periods else historic_period_sizes
             obs_cases = self.import_arrival(
-                period=period, size=num_days[period])
+                period=period, size=num_days)
             #generate undetected people
             #if obs_cases includes 0.... then add one for nbinom
             nbinom_var = [o+1 if o ==0 else o for o in obs_cases ]
@@ -1200,37 +1189,32 @@ class Forecast:
         """
         Generate model for imports
         """
-        days = self.end_time
+        # Move to a 30 day case import windows; with last window being longer
+        historic_period_sizes = 30
+        number_of_historic_periods = (self.forecast_date) // historic_period_sizes 
+        final_size = self.end_time - number_of_historic_periods*historic_period_sizes
+
         def period_dates(date):
             from datetime import timedelta
             #subtract 4 from date to infer period of entry when infected
             date = date-timedelta(days=4)
-            if date <= pd.to_datetime('2020-03-01',format='%Y-%m-%d'):
-                return 0
-            elif date <= pd.to_datetime('2020-03-06',format='%Y-%m-%d'):
-                return 1
-            elif date <= pd.to_datetime('2020-03-13',format='%Y-%m-%d'):
-                return 2
-            elif date <= pd.to_datetime('2020-03-18',format='%Y-%m-%d'):
-                return 3
-            elif date <= pd.to_datetime('2020-03-23',format='%Y-%m-%d'):
-                return 4
-            elif date <= pd.to_datetime('2020-04-14',format='%Y-%m-%d'):
-                return 5
-            elif date <= pd.to_datetime('2021-01-15', format='%Y-%m-%d'):
-                return 6
+            n_days_into_sim = (date - self.start_date).days
+            if n_days_into_sim < 0:
+                return -1 # Dead period before simulation start
+            elif n_days_into_sim > self.forecast_date:
+                return number_of_historic_periods # Final period catch (note 0 indexing)
             else:
-                return 7
+                return n_days_into_sim // historic_period_sizes
 
         df ['period'] = df.date_inferred.apply(period_dates)
         prior = [1,1/5]
         days_since_last = self.end_time-((pd.to_datetime("2021-01-16") - self.start_date).days)
-        num_days = [6,7,5,5,22,276, days_since_last]
+        num_days = [100] +  [historic_period_sizes] * number_of_historic_periods +[final_size] # First value is arbitrary as -1 period shouldn't be called.
         alphas = df.groupby(['STATE','period']).imported.sum() + prior[0]
 
         new_index= ((x,y)
         for x in ('NSW','VIC','SA','TAS','QLD','NT','ACT','WA')
-            for y in (0,1,2,3,4,5,6,7))
+            for y in range(-1,number_of_historic_periods+1))
         alphas = alphas.reindex(
             new_index, fill_value=1 #fill with 1 to include prior
         )

@@ -293,6 +293,12 @@ class Forecast:
 
                     Reff_lookupstate[newkey] = df.loc[(state,key),
                     self.num_of_sim%2000] #[i for i in range(1000)]
+
+                    # Apply increased Reff from variant of concern if start date is passed
+                    if self.variant_of_concern_start_date:
+                        if newkey > self.variant_of_concern_start_date:
+                            VoC_multiplier = beta.rvs(14, 20) + 1
+                            Reff_lookupstate[newkey] = Reff_lookupstate[newkey]*VoC_multiplier
             else:
                 #R_L0
                 for day in range(num_days):

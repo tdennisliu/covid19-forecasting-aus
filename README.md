@@ -17,7 +17,7 @@ bash forecast_pipeline.sh /longdate/ /num-of-days/
 ```
 
 ### Number of days to simulate
-To help calculate the number of days to simulate, you can first run `num_days.py` and that will calculate the number of days to simulate and print it to the `terminal`, assuming a 2020-09-01 start date and a 35 day forecast from TODAY's date.
+To help calculate the number of days to simulate, you can first run `num_days.py` and that will calculate the number of days to simulate and print it to the `terminal`, assuming a 2020-12-01 start date and a 35 day forecast from TODAY's date.
 
 You can optionally specify exactly how many days (as an integer) you want to forecast into the future and give you the number of days to simulate.
 ```

@@ -1,6 +1,6 @@
 import pandas as pd
 from sys import argv
-start_s ="2020-09-01"
+start_s = "2020-12-01"
 start_dt = pd.to_datetime(start_s,format="%Y-%m-%d")
 
 if len(argv)>1:

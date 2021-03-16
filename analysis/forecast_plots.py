@@ -229,7 +229,7 @@ df_cases_state_time = read_in_cases(cases_file_date=data_date.strftime("%d%b"))
 Reff = read_in_Reff( forecast_R=forecast_type, file_date= argv[3], VoC_flag = VoC_name_flag)
 states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 n_sims = int(argv[1])
-start_date = '2020-09-01'
+start_date = '2020-12-01'
 days = int(argv[2])
 
 

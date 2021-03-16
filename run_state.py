@@ -28,7 +28,7 @@ else:
     forecast_type = None
     states =['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 XBstate = None
-start_date = '2020-09-01'
+start_date = '2020-12-01'
 case_file_date = pd.to_datetime(argv[3]).strftime("%d%b")#None #'24Jul'
 Reff_file_date = argv[3]#'2020-08-25'
 forecast_date = argv[3]#'2020-08-25'
@@ -105,6 +105,17 @@ elif start_date=="2020-09-01":
         'TAS':[0,0,0],
         'VIC':[0,0,60], #1
         'WA':[1,0,0],
+    }
+elif start_date == "2020-12-01":
+    current = { # based on locally acquired cases in the days preceding the start date
+        'ACT': [0, 0, 0],
+        'NSW': [0, 0, 1], 
+        'NT': [0, 0, 0],
+        'QLD': [0, 0, 1],
+        'SA': [0, 0, 0],
+        'TAS': [0, 0, 0],
+        'VIC': [0, 0, 0], 
+        'WA': [0, 0, 0],
     }
 else:
     print("Start date not implemented") 

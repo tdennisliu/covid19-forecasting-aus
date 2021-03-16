@@ -9,6 +9,7 @@ import matplotlib.gridspec as gridspec
 from datetime import timedelta
 import json
 from sys import argv
+from scipy.stats import beta
 
 plt.style.use("seaborn-poster")
 
@@ -88,7 +89,7 @@ def plot_results(df, int_vars:list, ax_arg=None, total=False,log=False, Reff=Non
         ax2.plot(df.columns, Reff.loc[df.columns].mean(axis=1))
         ax2.fill_between(df.columns, Reff.loc[df.columns].quantile(0.25,axis=1),Reff.loc[df.columns].quantile(0.75,axis=1),alpha=0.4 ,color='C0')
         ax2.fill_between(df.columns, Reff.loc[df.columns].quantile(0.05,axis=1),Reff.loc[df.columns].quantile(0.95,axis=1),alpha=0.4,color='C0' )
-        ax2.set_yticks([1],minor=True,)
+        ax2.set_yticks([1,3],minor=True,)
         ax2.set_yticks([0,2],minor=False)
         ax2.set_yticklabels([0,2],minor=False)
         ax2.yaxis.grid(which='minor',linestyle='--',color='black',linewidth=2)
@@ -100,6 +101,7 @@ def plot_results(df, int_vars:list, ax_arg=None, total=False,log=False, Reff=Non
         ax2.set_xticks([df.columns.values[-1*forecast_days]],minor=True)
         ax2.xaxis.grid(which='minor', linestyle='--',alpha=0.6, color='black')
 
+        ax2.set_ylim((0,3))
     else:
         #ax.set_xlabel("Date")
         ax.tick_params('x',rotation=45)
@@ -113,7 +115,7 @@ def plot_results(df, int_vars:list, ax_arg=None, total=False,log=False, Reff=Non
     else:
         return ax
 
-def read_in_Reff(forecast_R=None,R_I=None,file_date = "2020-04-01"):
+def read_in_Reff(forecast_R=None,R_I=None,file_date = "2020-04-01", VoC_flag = ''):
         """
         Read in Reff csv from Price et al 2020. Originals are in RDS, are converted to csv in R script
         """
@@ -142,6 +144,16 @@ def read_in_Reff(forecast_R=None,R_I=None,file_date = "2020-04-01"):
    
 
             df_forecast = df_forecast.loc[df_forecast.type==forecast_R]
+
+            if VoC_flag != '':
+                print('Applying VoC increase to Reff in forecast_plots.py')
+                # Here we apply the same beta(6,14)+1 scaling from VoC to the Reff data for plotting
+                # We do so by editing a slice of the data frame. Forgive me for my sins.
+                VoC_dates_to_apply_idx = df_forecast.index[pd.to_datetime(df_forecast.date, format='%Y-%m-%d') > pd.to_datetime(file_date)]
+                # The 8: columns have the random samples of Reff which we increase
+                df_slice_after_VoC = df_forecast.iloc[VoC_dates_to_apply_idx, 8:] 
+                df_forecast.iloc[VoC_dates_to_apply_idx , 8:] = df_slice_after_VoC*(beta.rvs(6,14, size = df_slice_after_VoC.shape) + 1)
+
             df_forecast.set_index(['state','date'],inplace=True)
             df = df_forecast
             #df = pd.concat([
@@ -204,15 +216,24 @@ def read_in_cases(cases_file_date=None):
 
     return df_cases_state_time
 
+# Add flag to create plots for VoCs
+VoC_name_flag = '' # Default value
+if len(argv)>4:
+    if argv[4] == 'UK':
+        VoC_name_flag = 'VoC'
+        print(VoC_name_flag, 'running.')
 
 data_date = pd.to_datetime(argv[3])
 forecast_type = 'R_L' #default None
 df_cases_state_time = read_in_cases(cases_file_date=data_date.strftime("%d%b"))
-Reff = read_in_Reff( forecast_R=forecast_type, file_date= argv[3])
+Reff = read_in_Reff( forecast_R=forecast_type, file_date= argv[3], VoC_flag = VoC_name_flag)
 states = ['NSW','QLD','SA','TAS','VIC','WA','ACT','NT']
 n_sims = int(argv[1])
-start_date = '2020-09-01'
+start_date = '2020-12-01'
 days = int(argv[2])
+
+
+
 #check if any dates are incorrect
 try:
     num_bad_dates = df_cases_state_time.loc[
@@ -230,7 +251,11 @@ print("forecast up to: {}".format(end_date))
 
 
 df_results = pd.read_parquet("results/quantiles"+forecast_type+start_date+"sim_"+str(
-    n_sims)+"days_"+str(days)+".parquet")
+    n_sims)+"days_"+str(days)+VoC_name_flag+".parquet")
+
+
+df_cases_state_time = df_cases_state_time[df_cases_state_time.date_inferred != 'None']
+df_cases_state_time.date_inferred = pd.to_datetime(df_cases_state_time.date_inferred)
 
 df_results = pd.melt(df_results, id_vars=['state','date','type'],
                      value_vars=['bottom','lower','median','upper','top',
@@ -244,7 +269,7 @@ df_results = pd.pivot_table(df_results,
                             columns='date',
                             values='value')
 
-with open("results/good_sims"+str(n_sims)+"days_"+str(days)+".json",'r') as file:
+with open("results/good_sims"+str(n_sims)+"days_"+str(days)+VoC_name_flag+".json",'r') as file:
     good_sims = json.load(file)
     
 
@@ -282,6 +307,8 @@ for i,state in enumerate(states):
     #elif state=='VIC':
     #    ax.set_ylim((0,600))
     #ax.set_ylim(top=70)
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Observed \n local cases")
         ax2.set_ylabel("Local Reff")
@@ -290,7 +317,7 @@ for i,state in enumerate(states):
         ax.set_xticklabels([])
         ax.set_xlabel('')
     #ax.set_ylim((0,60))
-plt.savefig("figs/"+forecast_type+start_date+"local_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+start_date+"local_inci_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)
 
 ##TOtal cases
 fig = plt.figure(figsize=(12,18))
@@ -314,6 +341,8 @@ for i,state in enumerate(states):
     #    ax.set_ylim((0,100))
     #elif state=='VIC':
     #    ax.set_ylim((0,600))
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Total \nlocal cases")
         ax2.set_ylabel("Local Reff")
@@ -321,7 +350,7 @@ for i,state in enumerate(states):
     if i< len(states)-2:
         ax.set_xticklabels([])
         ax.set_xlabel('')
-plt.savefig("figs/"+forecast_type+start_date+"local_total_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+start_date+"local_total_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)
 
 
 ##asymp cases
@@ -344,6 +373,8 @@ for i,state in enumerate(states):
     ax,ax2= plot_results(df_results.loc[state], ['asymp_inci'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state])
     
     #ax.set_ylim(top=70)
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Asymp \ntotal cases")
         ax2.set_ylabel("Local Reff")
@@ -351,7 +382,7 @@ for i,state in enumerate(states):
     if i< len(states)-2:
         ax.set_xticklabels([])
         ax.set_xlabel('')
-plt.savefig("figs/"+forecast_type+"asymp_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=144)
+plt.savefig("figs/"+forecast_type+"asymp_inci_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=144)
 ## Imported cases
 fig = plt.figure(figsize=(12,18))
 gs = fig.add_gridspec(4,2)
@@ -372,6 +403,8 @@ for i,state in enumerate(states):
     ax,ax2= plot_results(df_results.loc[state], ['imports_inci_obs'],ax_arg = (ax,ax2),summary=True, Reff=Reff.loc[state])
     
     #ax.set_ylim(top=70)
+    # if (state=='VIC') or (state=='NSW'):
+    #    ax.set_ylim((0,100))
     if i%2==0:
         ax.set_ylabel("Observed \nimported cases")
         ax2.set_ylabel("Local Reff")
@@ -381,7 +414,7 @@ for i,state in enumerate(states):
         ax.set_xlabel('')
                 
 plt.tight_layout()
-plt.savefig("figs/"+forecast_type+start_date+"imported_inci_"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+start_date+"imported_inci_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)
 
 ## unobserved Imported cases
 fig = plt.figure(figsize=(12,18))
@@ -412,7 +445,7 @@ for i,state in enumerate(states):
         ax.set_xlabel('')
                 
 plt.tight_layout()
-plt.savefig("figs/"+forecast_type+"imported_unobs_"+str(n_sims)+"days_"+str(days)+'.png',dpi=144)
+plt.savefig("figs/"+forecast_type+"imported_unobs_"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=144)
 
 ## Local cases, spaghetti plot
 fig = plt.figure(figsize=(12,18))
@@ -423,7 +456,7 @@ dates_plot = pd.date_range(start = plot_start, periods=89)
 for i,state in enumerate(states):
     
     df_raw = pd.read_parquet("results/"+state+start_date+"sim_"+forecast_type+str(
-    n_sims)+"days_"+str(days)+".parquet", 
+    n_sims)+"days_"+str(days)+VoC_name_flag+".parquet", 
                              columns= [d.strftime("%Y-%m-%d") for d in dates_plot] )
     
 
@@ -450,9 +483,9 @@ for i,state in enumerate(states):
     spag_ylim = ax.get_ylim()
 
     
-    #if state=='NSW':
-    #    ax.set_ylim((0,100))
-    if spag_ylim[1] > ylims[1]:
+    if (state=='VIC') or (state=='NSW'):
+       ax.set_ylim((0,100))
+    elif spag_ylim[1] > ylims[1]:
         ax.set_ylim((ylims[0],5*ylims[1]))
 
     if i%2==0:
@@ -464,4 +497,4 @@ for i,state in enumerate(states):
 
     ax.set_xticks([df_raw.columns.values[-1*31]],minor=True)
     ax.xaxis.grid(which='minor', linestyle='--',alpha=0.6, color='black')
-plt.savefig("figs/"+forecast_type+"spagh"+str(n_sims)+"days_"+str(days)+'.png',dpi=300)
+plt.savefig("figs/"+forecast_type+"spagh"+str(n_sims)+"days_"+str(days)+VoC_name_flag+'.png',dpi=300)

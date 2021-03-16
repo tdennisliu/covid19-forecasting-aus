@@ -5,8 +5,6 @@
 #SBATCH -n 4
 #SBATCH --time=1-00:00:00
 #SBATCH --mem=20GB
-#SBATCH --mail-type=BEGIN
-#SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=$USER@adelaide.edu.au
 

@@ -28,7 +28,7 @@ class Forecast:
         qua_ai= 1, qua_qi_factor=1, qua_qs_factor=1,forecast_R=None,R_I=None,
         forecast_date='2020-07-01', cross_border_state=None,cases_file_date=('25Jun','0835'),
         ps_list=[0.7], test_campaign_date=None, test_campaign_factor=1,
-        Reff_file_date=None,
+        Reff_file_date=None, variant_of_concern_start_date = None
         ):
         import numpy as np
         self.initial_state = current.copy() #Observed cases on start day
@@ -50,6 +50,9 @@ class Forecast:
         self.qua_ai = qua_ai
         self.qua_qi_factor = qua_qi_factor
         self.qua_qs_factor=qua_qs_factor
+
+        # The number of days into simulation at which to begin increasing Reff due to VoC
+        self.variant_of_concern_start_date = variant_of_concern_start_date 
 
         self.forecast_R = forecast_R
         self.R_I = R_I
@@ -291,10 +294,22 @@ class Forecast:
                     Reff_lookupstate[newkey] = df.loc[(state,key),
                     self.num_of_sim%2000] #[i for i in range(1000)]
 
+                    # Apply increased Reff from variant of concern if start date is passed
+                    if self.variant_of_concern_start_date:
+                        if newkey > self.variant_of_concern_start_date:
+                            VoC_multiplier = beta.rvs(14, 20) + 1
+                            Reff_lookupstate[newkey] = Reff_lookupstate[newkey]*VoC_multiplier
             else:
                 #R_L0
                 for day in range(num_days):
                     Reff_lookupstate[day] = df.loc[state, [i for i in range(1000)]].values[0]
+
+                    # Apply increased Reff from variant of concern if start date is passed
+                    if self.variant_of_concern_start_date:
+                        if day > self.variant_of_concern_start_date:
+                            VoC_multiplier  = beta.rvs(14,20) + 1
+                            Reff_lookupstate[day] = Reff_lookupstate[day]*VoC_multiplier 
+
 
 
             #Nested dict with key to state, then key to date
@@ -567,7 +582,8 @@ class Forecast:
             3: 4,
             4: 5,
             5: 22,#min(end_time - self.quarantine_change_date -7, 24 ),
-            6: max(0,end_time- 6-8-4-5-22),
+            6: 276,
+            7: max(0, end_time-6-8-4-5-22-276),
         }
         qi = {
             1:self.qi *self.qua_qi_factor,
@@ -576,15 +592,21 @@ class Forecast:
             4:0.95,
             5:0.98,
             6:0.98,
+            7:0.98,
         }
         new_imports = []
         unobs_imports =[]
-        if self.start_date>pd.to_datetime("2020-04-15"):
+        if self.start_date > pd.to_datetime("2021-01-16"): 
+            # If the pandemic is lasting long enough for this to be called then it's been really bad
+            import_start_period = 7
+            num_days[7] = end_time
+        elif self.start_date>pd.to_datetime("2020-04-15"): # In case the start date is changed in future
             import_start_period = 6
-            num_days[6] = end_time
+            num_days[6] = (pd.to_datetime("2021-01-16") - self.start_date).days
+            num_days[7] = end_time - num_days[6]
         else:
             import_start_period = 1
-        for period in range(import_start_period,7): 
+        for period in range(import_start_period,8): 
             obs_cases = self.import_arrival(
                 period=period, size=num_days[period])
             #generate undetected people
@@ -1007,16 +1029,21 @@ class Forecast:
         for var in sim_vars:
             df_results[var] = [results[var][sim] for cat,sim in df_results.index]
 
+        #Adding a flag to filename for the VoC runs
+        VoC_name_flag = "VoC" if self.variant_of_concern_start_date else ''
+
+        print('VoC_name_flag is', VoC_name_flag, self.variant_of_concern_start_date)
+
         print("Saving results for state "+self.state)
         if self.forecast_R is None:
             df_results.to_parquet(
                 "./results/"+self.state+self.start_date.strftime(
-                    format='%Y-%m-%d')+"sim_results"+str(n_sims)+"days_"+str(days)+".parquet",
+                    format='%Y-%m-%d')+"sim_results"+str(n_sims)+"days_"+str(days)+VoC_name_flag+".parquet",
                     )
         else:
             df_results.to_parquet(
                 "./results/"+self.state+self.start_date.strftime(
-                    format='%Y-%m-%d')+"sim_"+self.forecast_R+str(n_sims)+"days_"+str(days)+".parquet",
+                    format='%Y-%m-%d')+"sim_"+self.forecast_R+str(n_sims)+"days_"+str(days)+VoC_name_flag+".parquet",
                     )
 
         return df_results
@@ -1163,11 +1190,13 @@ class Forecast:
             self.cases_to_subtract = 0
             self.cases_to_subtract_now = 0
         #self.imported_total = sum(df.imported.values)
-        self.max_cases = max(1000,sum(df.local.values) + sum(df.imported.values))
+        self.max_cases = max(10000,sum(df.local.values) + sum(df.imported.values))
         self.max_backcast_cases = max(100,4*(sum(df.local.values) - self.cases_to_subtract))
 
         self.max_nowcast_cases = max(10, 1.5*(sum(df.local.values) - self.cases_to_subtract_now))
         print("Local cases in last 14 days is %i" % (sum(df.local.values) - self.cases_to_subtract_now) )
+
+        print('Max limits: ', self.max_cases, self.max_backcast_cases, self.max_nowcast_cases)
 
         self.actual = df.local.to_dict()
 
@@ -1194,17 +1223,20 @@ class Forecast:
                 return 4
             elif date <= pd.to_datetime('2020-04-14',format='%Y-%m-%d'):
                 return 5
-            else:
+            elif date <= pd.to_datetime('2021-01-15', format='%Y-%m-%d'):
                 return 6
+            else:
+                return 7
 
         df ['period'] = df.date_inferred.apply(period_dates)
         prior = [1,1/5]
-        num_days = [6,7,5,5,22,days - 6-7-5-5-22]
+        days_since_last = self.end_time-((pd.to_datetime("2021-01-16") - self.start_date).days)
+        num_days = [6,7,5,5,22,276, days_since_last]
         alphas = df.groupby(['STATE','period']).imported.sum() + prior[0]
 
         new_index= ((x,y)
         for x in ('NSW','VIC','SA','TAS','QLD','NT','ACT','WA')
-            for y in (0,1,2,3,4,5,6))
+            for y in (0,1,2,3,4,5,6,7))
         alphas = alphas.reindex(
             new_index, fill_value=1 #fill with 1 to include prior
         )

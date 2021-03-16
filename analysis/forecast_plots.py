@@ -146,6 +146,7 @@ def read_in_Reff(forecast_R=None,R_I=None,file_date = "2020-04-01", VoC_flag = '
             df_forecast = df_forecast.loc[df_forecast.type==forecast_R]
 
             if VoC_flag != '':
+                print('Applying VoC increase to Reff in forecast_plots.py')
                 # Here we apply the same beta(6,14)+1 scaling from VoC to the Reff data for plotting
                 # We do so by editing a slice of the data frame. Forgive me for my sins.
                 VoC_dates_to_apply_idx = df_forecast.index[pd.to_datetime(df_forecast.date, format='%Y-%m-%d') > pd.to_datetime(file_date)]

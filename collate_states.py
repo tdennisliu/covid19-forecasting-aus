@@ -13,6 +13,7 @@ VoC_name_flag = '' # Default value
 if len(argv)>4:
     if argv[4] == 'UK':
         VoC_name_flag = 'VoC'
+        print('VoC being used in collate_states.py')
 
 forecast_type= 'R_L' #formerly argv[3]
 

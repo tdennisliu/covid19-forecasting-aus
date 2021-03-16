@@ -25,6 +25,7 @@ VoC_name_flag = ''
 if len(argv)>5:
     if argv[5] == 'UK':
         VoC_name_flag = 'VoC'
+        print('VoC being used in record_to_csv.py')
 
 for n in range(n_sims):
     if n <2000:

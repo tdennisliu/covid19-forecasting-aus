@@ -531,17 +531,18 @@ class Forecast:
                                             #remove case from original state?
         return None
 
-    def cases_detected(self,new_cases):
-        """
-        Given a tuple of new_cases generated, return the number of cases detected
-        """
-        #Number of detected cases in each class is Binomial with p = q_j
-
-        i_detected = binom.rvs(n=new_cases[0],p=self.qi)
-        a_detected = binom.rvs(n=new_cases[1],p=self.qa)
-        s_detected = binom.rvs(n=new_cases[2],p=self.qs)
-
-        return i_detected, a_detected, s_detected
+    # Deprecated: this function is never called when the model run.
+    # def cases_detected(self,new_cases):
+    #     """
+    #     Given a tuple of new_cases generated, return the number of cases detected
+    #     """
+    #     #Number of detected cases in each class is Binomial with p = q_j
+    #
+    #     i_detected = binom.rvs(n=new_cases[0],p=self.qi)
+    #     a_detected = binom.rvs(n=new_cases[1],p=self.qa)
+    #     s_detected = binom.rvs(n=new_cases[2],p=self.qs)
+    #
+    #     return i_detected, a_detected, s_detected
 
     # This has been deprecated as imports are now a moving average
     # def import_arrival(self,period,size=1):
@@ -874,109 +875,110 @@ class Forecast:
             }
             )
 
-    def simulate_many(self, end_time, n_sims):
-        """
-        Simulate multiple times
-        """
-        self.end_time = end_time
-        # Read in actual cases from NNDSS
-        self.read_in_cases()
-        import_sims = np.zeros(shape=(end_time, n_sims), dtype=float)
-        import_sims_obs = np.zeros_like(import_sims)
+    # Simulate_many is no longer being maintained in favour of parallel calling of simulate
+    # def simulate_many(self, end_time, n_sims):
+    #     """
+    #     Simulate multiple times
+    #     """
+    #     self.end_time = end_time
+    #     # Read in actual cases from NNDSS
+    #     self.read_in_cases()
+    #     import_sims = np.zeros(shape=(end_time, n_sims), dtype=float)
+    #     import_sims_obs = np.zeros_like(import_sims)
 
 
-        import_inci = np.zeros_like(import_sims)
-        import_inci_obs = np.zeros_like(import_sims)
+    #     import_inci = np.zeros_like(import_sims)
+    #     import_inci_obs = np.zeros_like(import_sims)
 
-        asymp_inci = np.zeros_like(import_sims)
-        asymp_inci_obs = np.zeros_like(import_sims)
+    #     asymp_inci = np.zeros_like(import_sims)
+    #     asymp_inci_obs = np.zeros_like(import_sims)
 
-        symp_inci = np.zeros_like(import_sims)
-        symp_inci_obs = np.zeros_like(import_sims)
+    #     symp_inci = np.zeros_like(import_sims)
+    #     symp_inci_obs = np.zeros_like(import_sims)
 
-        bad_sim = np.zeros(shape=(n_sims),dtype=int)
+    #     bad_sim = np.zeros(shape=(n_sims),dtype=int)
 
-        #ABC parameters
-        metrics = np.zeros(shape=(n_sims),dtype=float)
-        qs = np.zeros(shape=(n_sims),dtype=float)
-        qa = np.zeros_like(qs)
-        qi = np.zeros_like(qs)
-        alpha_a = np.zeros_like(qs)
-        alpha_s = np.zeros_like(qs)
-        accept = np.zeros_like(qs)
-        ps = np.zeros_like(qs)
-
-
-        #extinction prop
-        cases_after = np.empty_like(metrics) #dtype int
-        self.cross_border_seeds = np.zeros(shape=(end_time,n_sims),dtype=int)
-        self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
-        self.num_bad_sims = 0
-        self.num_too_many = 0
-        for n in range(n_sims):
-            if n%(n_sims//10)==0:
-                print("{} simulation number %i of %i".format(self.state) % (n,n_sims))
-
-            inci, inci_obs, param_dict = self.simulate(end_time, n,n)
-            if self.bad_sim:
-                bad_sim[n] = 1
-                print("Sim "+str(n)+" of "+self.state+" is a bad sim")
-                self.num_bad_sims +=1
-            else:
-                #good sims
-                ## record all parameters and metric
-                metrics[n] = self.metric
-                qs[n] = self.qs
-                qa[n] = self.qa
-                qi[n] = self.qi
-                alpha_a[n] = self.alpha_a
-                alpha_s[n] = self.alpha_s
-                accept[n] = int(self.metric>=0.8)
-                cases_after[n] = self.cases_after
-                ps[n] =self.ps
+    #     #ABC parameters
+    #     metrics = np.zeros(shape=(n_sims),dtype=float)
+    #     qs = np.zeros(shape=(n_sims),dtype=float)
+    #     qa = np.zeros_like(qs)
+    #     qi = np.zeros_like(qs)
+    #     alpha_a = np.zeros_like(qs)
+    #     alpha_s = np.zeros_like(qs)
+    #     accept = np.zeros_like(qs)
+    #     ps = np.zeros_like(qs)
 
 
+    #     #extinction prop
+    #     cases_after = np.empty_like(metrics) #dtype int
+    #     self.cross_border_seeds = np.zeros(shape=(end_time,n_sims),dtype=int)
+    #     self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
+    #     self.num_bad_sims = 0
+    #     self.num_too_many = 0
+    #     for n in range(n_sims):
+    #         if n%(n_sims//10)==0:
+    #             print("{} simulation number %i of %i".format(self.state) % (n,n_sims))
 
-            import_inci[:,n] = inci[:,0]
-            asymp_inci[:,n] = inci[:,1]
-            symp_inci[:,n] = inci[:,2]
+    #         inci, inci_obs, param_dict = self.simulate(end_time, n,n)
+    #         if self.bad_sim:
+    #             bad_sim[n] = 1
+    #             print("Sim "+str(n)+" of "+self.state+" is a bad sim")
+    #             self.num_bad_sims +=1
+    #         else:
+    #             #good sims
+    #             ## record all parameters and metric
+    #             metrics[n] = self.metric
+    #             qs[n] = self.qs
+    #             qa[n] = self.qa
+    #             qi[n] = self.qi
+    #             alpha_a[n] = self.alpha_a
+    #             alpha_s[n] = self.alpha_s
+    #             accept[n] = int(self.metric>=0.8)
+    #             cases_after[n] = self.cases_after
+    #             ps[n] =self.ps
 
-            import_inci_obs[:,n] = inci_obs[:,0]
-            asymp_inci_obs[:,n] = inci_obs[:,1]
-            symp_inci_obs[:,n] = inci_obs[:,2]
 
-        #Apply sim metric here and record
-        #dict of arrays n_days by sim columns
-        results = {
-            'imports_inci': import_inci,
-            'imports_inci_obs': import_inci_obs,
-            'asymp_inci': asymp_inci,
-            'asymp_inci_obs': asymp_inci_obs,
-            'symp_inci': symp_inci,
-            'symp_inci_obs': symp_inci_obs,
-            'total_inci_obs': symp_inci_obs + asymp_inci_obs,
-            'total_inci': symp_inci + asymp_inci,
-            'all_inci': symp_inci + asymp_inci + import_inci,
-            'bad_sim': bad_sim,
-            'metrics': metrics,
-            'accept': accept,
-            'qs':qs,
-            'qa':qa,
-            'qi':qi,
-            'alpha_a':alpha_a,
-            'alpha_s':alpha_s,
-            'cases_after':cases_after,
-            'travel_seeds': self.cross_border_seeds,
-            'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,
-            'ps':ps,
-        }
 
-        self.results = self.to_df(results)
-        print("Number of bad sims is %i" % self.num_bad_sims)
-        print("Number of sims in "+self.state\
-            +" exceeding "+\
-                str(self.max_cases//1000)+"k cases is "+str(self.num_too_many))
-        return self.state,self.results
+    #         import_inci[:,n] = inci[:,0]
+    #         asymp_inci[:,n] = inci[:,1]
+    #         symp_inci[:,n] = inci[:,2]
+
+    #         import_inci_obs[:,n] = inci_obs[:,0]
+    #         asymp_inci_obs[:,n] = inci_obs[:,1]
+    #         symp_inci_obs[:,n] = inci_obs[:,2]
+
+    #     #Apply sim metric here and record
+    #     #dict of arrays n_days by sim columns
+    #     results = {
+    #         'imports_inci': import_inci,
+    #         'imports_inci_obs': import_inci_obs,
+    #         'asymp_inci': asymp_inci,
+    #         'asymp_inci_obs': asymp_inci_obs,
+    #         'symp_inci': symp_inci,
+    #         'symp_inci_obs': symp_inci_obs,
+    #         'total_inci_obs': symp_inci_obs + asymp_inci_obs,
+    #         'total_inci': symp_inci + asymp_inci,
+    #         'all_inci': symp_inci + asymp_inci + import_inci,
+    #         'bad_sim': bad_sim,
+    #         'metrics': metrics,
+    #         'accept': accept,
+    #         'qs':qs,
+    #         'qa':qa,
+    #         'qi':qi,
+    #         'alpha_a':alpha_a,
+    #         'alpha_s':alpha_s,
+    #         'cases_after':cases_after,
+    #         'travel_seeds': self.cross_border_seeds,
+    #         'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,
+    #         'ps':ps,
+    #     }
+
+    #     self.results = self.to_df(results)
+    #     print("Number of bad sims is %i" % self.num_bad_sims)
+    #     print("Number of sims in "+self.state\
+    #         +" exceeding "+\
+    #             str(self.max_cases//1000)+"k cases is "+str(self.num_too_many))
+    #     return self.state,self.results
 
 
     def to_df(self,results):

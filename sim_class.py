@@ -1133,6 +1133,9 @@ class Forecast:
             if len(glob.glob(path)) >1:
                 print("Using an arbritary file")
 
+        # Fixes errors in updated python versions
+        df.TRUE_ONSET_DATE = pd.to_datetime(df.TRUE_ONSET_DATE, errors='coerce') 
+        df.NOTIFICATION_DATE = pd.to_datetime(df.NOTIFICATION_DATE, errors='coerce') 
         df['date_inferred'] = df.TRUE_ONSET_DATE
         df.loc[df.TRUE_ONSET_DATE.isna(),'date_inferred'] = df.loc[df.TRUE_ONSET_DATE.isna()].NOTIFICATION_DATE - timedelta(days=5)
         df.loc[df.date_inferred.isna(),'date_inferred'] = df.loc[df.date_inferred.isna()].NOTIFICATION_RECEIVE_DATE - timedelta(days=6)

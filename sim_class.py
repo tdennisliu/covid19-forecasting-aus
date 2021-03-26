@@ -184,10 +184,11 @@ class Forecast:
         else:
             num_undetected_s = nbinom.rvs(self.current[2],self.qs*self.qua_qs_factor)
 
-        if self.current[0]==0:
-            num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
-        else:
-            num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
+        # Init sim no longer produces more unobserved imports
+        # if self.current[0]==0:
+        #     num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
+        # else:
+        #     num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
 
         total_s = num_undetected_s + self.current[2]
 
@@ -203,9 +204,11 @@ class Forecast:
             #self.people[len(self.people)] = Person(0, -1*next(self.get_inf_time) , n, 0, 'S')
         if curr_time==0:
             #Add each undetected case into people
-            for n in range(num_undetected_i):
-                self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
-                self.current[0] +=1
+
+            # Init sim no longer produces more unobserved imports
+            # for n in range(num_undetected_i):
+            #     self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
+            #     self.current[0] +=1
             for n in range(num_undetected_a):
                 self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
                 self.current[1] +=1
@@ -215,11 +218,13 @@ class Forecast:
         else:
             #reinitialised, so add these cases back onto cases
              #Add each undetected case into people
-            for n in range(num_undetected_i):
-                new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
-                self.infected_queue.append(len(self.people))
-                self.people[len(self.people)] = new_person
-                self.cases[max(0,ceil(new_person.infection_time)),0] +=1
+
+            # Init sim no longer produces more unobserved imports
+            # for n in range(num_undetected_i):
+            #     new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
+            #     self.infected_queue.append(len(self.people))
+            #     self.people[len(self.people)] = new_person
+            #     self.cases[max(0,ceil(new_person.infection_time)),0] +=1
             for n in range(num_undetected_a):
                 new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
                 self.infected_queue.append(len(self.people))

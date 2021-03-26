@@ -184,10 +184,11 @@ class Forecast:
         else:
             num_undetected_s = nbinom.rvs(self.current[2],self.qs*self.qua_qs_factor)
 
-        if self.current[0]==0:
-            num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
-        else:
-            num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
+        # Init sim no longer produces more unobserved imports
+        # if self.current[0]==0:
+        #     num_undetected_i = nbinom.rvs(1,self.qs*self.qua_qs_factor)
+        # else:
+        #     num_undetected_i = nbinom.rvs(self.current[0], self.qi*self.qua_qi_factor)
 
         total_s = num_undetected_s + self.current[2]
 
@@ -203,9 +204,11 @@ class Forecast:
             #self.people[len(self.people)] = Person(0, -1*next(self.get_inf_time) , n, 0, 'S')
         if curr_time==0:
             #Add each undetected case into people
-            for n in range(num_undetected_i):
-                self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
-                self.current[0] +=1
+
+            # Init sim no longer produces more unobserved imports
+            # for n in range(num_undetected_i):
+            #     self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
+            #     self.current[0] +=1
             for n in range(num_undetected_a):
                 self.people[len(self.people)] = Person(0, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
                 self.current[1] +=1
@@ -215,11 +218,13 @@ class Forecast:
         else:
             #reinitialised, so add these cases back onto cases
              #Add each undetected case into people
-            for n in range(num_undetected_i):
-                new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
-                self.infected_queue.append(len(self.people))
-                self.people[len(self.people)] = new_person
-                self.cases[max(0,ceil(new_person.infection_time)),0] +=1
+
+            # Init sim no longer produces more unobserved imports
+            # for n in range(num_undetected_i):
+            #     new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'I')
+            #     self.infected_queue.append(len(self.people))
+            #     self.people[len(self.people)] = new_person
+            #     self.cases[max(0,ceil(new_person.infection_time)),0] +=1
             for n in range(num_undetected_a):
                 new_person = Person(-1, curr_time-1*next(self.get_inf_time) , 0, 0, 'A')
                 self.infected_queue.append(len(self.people))
@@ -526,30 +531,32 @@ class Forecast:
                                             #remove case from original state?
         return None
 
-    def cases_detected(self,new_cases):
-        """
-        Given a tuple of new_cases generated, return the number of cases detected
-        """
-        #Number of detected cases in each class is Binomial with p = q_j
+    # This function is never called is the model run.
+    # def cases_detected(self,new_cases):
+    #     """
+    #     Given a tuple of new_cases generated, return the number of cases detected
+    #     """
+    #     #Number of detected cases in each class is Binomial with p = q_j
 
-        i_detected = binom.rvs(n=new_cases[0],p=self.qi)
-        a_detected = binom.rvs(n=new_cases[1],p=self.qa)
-        s_detected = binom.rvs(n=new_cases[2],p=self.qs)
+    #     i_detected = binom.rvs(n=new_cases[0],p=self.qi)
+    #     a_detected = binom.rvs(n=new_cases[1],p=self.qa)
+    #     s_detected = binom.rvs(n=new_cases[2],p=self.qs)
 
-        return i_detected, a_detected, s_detected
+    #     return i_detected, a_detected, s_detected
 
-    def import_arrival(self,period,size=1):
-        """
-        Poisson likelihood of arrivals of imported cases, with a Gamma
-        prior on the mean of Poisson, results in a posterior predictive
-        distribution of imported cases a Neg Binom
-        """
-        a = self.a_dict[self.state][period]
-        b = self.b_dict[period]
-        if size==1:
-            return nbinom.rvs(a, 1-1/(b+1))
-        else:
-            return nbinom.rvs(a, 1-1/(b+1),size=size)
+    # This has been deprecated as imports are now a moving average
+    # def import_arrival(self,period,size=1):
+    #     """
+    #     Poisson likelihood of arrivals of imported cases, with a Gamma
+    #     prior on the mean of Poisson, results in a posterior predictive
+    #     distribution of imported cases a Neg Binom
+    #     """
+    #     a = self.a_dict[self.state][period]
+    #     b = self.b_dict[period]
+    #     if size==1:
+    #         return nbinom.rvs(a, 1-1/(b+1))
+    #     else:
+    #         return nbinom.rvs(a, 1-1/(b+1),size=size)
 
     def simulate(self, end_time,sim,seed):
         """
@@ -575,46 +582,22 @@ class Forecast:
 
         #Record day 0 cases
         self.cases[0,:] = self.current.copy()
+
         # Generate imported cases
-        num_days={
-            1: 6,
-            2: 8,
-            3: 4,
-            4: 5,
-            5: 22,#min(end_time - self.quarantine_change_date -7, 24 ),
-            6: 276,
-            7: max(0, end_time-6-8-4-5-22-276),
-        }
-        qi = {
-            1:self.qi *self.qua_qi_factor,
-            2:self.qi,
-            3:self.qi,
-            4:0.95,
-            5:0.98,
-            6:0.98,
-            7:0.98,
-        }
         new_imports = []
         unobs_imports =[]
-        if self.start_date > pd.to_datetime("2021-01-16"): 
-            # If the pandemic is lasting long enough for this to be called then it's been really bad
-            import_start_period = 7
-            num_days[7] = end_time
-        elif self.start_date>pd.to_datetime("2020-04-15"): # In case the start date is changed in future
-            import_start_period = 6
-            num_days[6] = (pd.to_datetime("2021-01-16") - self.start_date).days
-            num_days[7] = end_time - num_days[6]
-        else:
-            import_start_period = 1
-        for period in range(import_start_period,8): 
-            obs_cases = self.import_arrival(
-                period=period, size=num_days[period])
-            #generate undetected people
-            #if obs_cases includes 0.... then add one for nbinom
-            nbinom_var = [o+1 if o ==0 else o for o in obs_cases ]
-            unobs = nbinom.rvs(nbinom_var, p=qi[period])#modify qi here
-            unobs_imports.extend(unobs)
-            new_imports.extend(obs_cases + unobs)
+        for day in range(end_time):
+            # Values for a and b are initialised in import_cases_model() which is called by read_in_cases() during setup.
+            a = self.a_dict[day]
+            b = self.b_dict[day]
+            # Dij = number of observed imported infectious individuals
+            Dij = nbinom.rvs(a, 1-1/(b+1))
+            # Uij = number of *unobserved* imported infectious individuals
+            unobserved_a = 1 if Dij == 0 else Dij 
+            Uij = nbinom.rvs(unobserved_a, p=self.qi) 
+
+            unobs_imports.append(Uij)
+            new_imports.append(Dij + Uij)
 
         for day, imports in enumerate(new_imports):
             self.cases[day,0] = imports
@@ -892,109 +875,110 @@ class Forecast:
             }
             )
 
-    def simulate_many(self, end_time, n_sims):
-        """
-        Simulate multiple times
-        """
-        self.end_time = end_time
-        # Read in actual cases from NNDSS
-        self.read_in_cases()
-        import_sims = np.zeros(shape=(end_time, n_sims), dtype=float)
-        import_sims_obs = np.zeros_like(import_sims)
+    # Simulate_many is no longer being maintained in favour of parallel calling of simulate
+    # def simulate_many(self, end_time, n_sims):
+    #     """
+    #     Simulate multiple times
+    #     """
+    #     self.end_time = end_time
+    #     # Read in actual cases from NNDSS
+    #     self.read_in_cases()
+    #     import_sims = np.zeros(shape=(end_time, n_sims), dtype=float)
+    #     import_sims_obs = np.zeros_like(import_sims)
 
 
-        import_inci = np.zeros_like(import_sims)
-        import_inci_obs = np.zeros_like(import_sims)
+    #     import_inci = np.zeros_like(import_sims)
+    #     import_inci_obs = np.zeros_like(import_sims)
 
-        asymp_inci = np.zeros_like(import_sims)
-        asymp_inci_obs = np.zeros_like(import_sims)
+    #     asymp_inci = np.zeros_like(import_sims)
+    #     asymp_inci_obs = np.zeros_like(import_sims)
 
-        symp_inci = np.zeros_like(import_sims)
-        symp_inci_obs = np.zeros_like(import_sims)
+    #     symp_inci = np.zeros_like(import_sims)
+    #     symp_inci_obs = np.zeros_like(import_sims)
 
-        bad_sim = np.zeros(shape=(n_sims),dtype=int)
+    #     bad_sim = np.zeros(shape=(n_sims),dtype=int)
 
-        #ABC parameters
-        metrics = np.zeros(shape=(n_sims),dtype=float)
-        qs = np.zeros(shape=(n_sims),dtype=float)
-        qa = np.zeros_like(qs)
-        qi = np.zeros_like(qs)
-        alpha_a = np.zeros_like(qs)
-        alpha_s = np.zeros_like(qs)
-        accept = np.zeros_like(qs)
-        ps = np.zeros_like(qs)
-
-
-        #extinction prop
-        cases_after = np.empty_like(metrics) #dtype int
-        self.cross_border_seeds = np.zeros(shape=(end_time,n_sims),dtype=int)
-        self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
-        self.num_bad_sims = 0
-        self.num_too_many = 0
-        for n in range(n_sims):
-            if n%(n_sims//10)==0:
-                print("{} simulation number %i of %i".format(self.state) % (n,n_sims))
-
-            inci, inci_obs, param_dict = self.simulate(end_time, n,n)
-            if self.bad_sim:
-                bad_sim[n] = 1
-                print("Sim "+str(n)+" of "+self.state+" is a bad sim")
-                self.num_bad_sims +=1
-            else:
-                #good sims
-                ## record all parameters and metric
-                metrics[n] = self.metric
-                qs[n] = self.qs
-                qa[n] = self.qa
-                qi[n] = self.qi
-                alpha_a[n] = self.alpha_a
-                alpha_s[n] = self.alpha_s
-                accept[n] = int(self.metric>=0.8)
-                cases_after[n] = self.cases_after
-                ps[n] =self.ps
+    #     #ABC parameters
+    #     metrics = np.zeros(shape=(n_sims),dtype=float)
+    #     qs = np.zeros(shape=(n_sims),dtype=float)
+    #     qa = np.zeros_like(qs)
+    #     qi = np.zeros_like(qs)
+    #     alpha_a = np.zeros_like(qs)
+    #     alpha_s = np.zeros_like(qs)
+    #     accept = np.zeros_like(qs)
+    #     ps = np.zeros_like(qs)
 
 
+    #     #extinction prop
+    #     cases_after = np.empty_like(metrics) #dtype int
+    #     self.cross_border_seeds = np.zeros(shape=(end_time,n_sims),dtype=int)
+    #     self.cross_border_state_cases = np.zeros_like(self.cross_border_seeds)
+    #     self.num_bad_sims = 0
+    #     self.num_too_many = 0
+    #     for n in range(n_sims):
+    #         if n%(n_sims//10)==0:
+    #             print("{} simulation number %i of %i".format(self.state) % (n,n_sims))
 
-            import_inci[:,n] = inci[:,0]
-            asymp_inci[:,n] = inci[:,1]
-            symp_inci[:,n] = inci[:,2]
+    #         inci, inci_obs, param_dict = self.simulate(end_time, n,n)
+    #         if self.bad_sim:
+    #             bad_sim[n] = 1
+    #             print("Sim "+str(n)+" of "+self.state+" is a bad sim")
+    #             self.num_bad_sims +=1
+    #         else:
+    #             #good sims
+    #             ## record all parameters and metric
+    #             metrics[n] = self.metric
+    #             qs[n] = self.qs
+    #             qa[n] = self.qa
+    #             qi[n] = self.qi
+    #             alpha_a[n] = self.alpha_a
+    #             alpha_s[n] = self.alpha_s
+    #             accept[n] = int(self.metric>=0.8)
+    #             cases_after[n] = self.cases_after
+    #             ps[n] =self.ps
 
-            import_inci_obs[:,n] = inci_obs[:,0]
-            asymp_inci_obs[:,n] = inci_obs[:,1]
-            symp_inci_obs[:,n] = inci_obs[:,2]
 
-        #Apply sim metric here and record
-        #dict of arrays n_days by sim columns
-        results = {
-            'imports_inci': import_inci,
-            'imports_inci_obs': import_inci_obs,
-            'asymp_inci': asymp_inci,
-            'asymp_inci_obs': asymp_inci_obs,
-            'symp_inci': symp_inci,
-            'symp_inci_obs': symp_inci_obs,
-            'total_inci_obs': symp_inci_obs + asymp_inci_obs,
-            'total_inci': symp_inci + asymp_inci,
-            'all_inci': symp_inci + asymp_inci + import_inci,
-            'bad_sim': bad_sim,
-            'metrics': metrics,
-            'accept': accept,
-            'qs':qs,
-            'qa':qa,
-            'qi':qi,
-            'alpha_a':alpha_a,
-            'alpha_s':alpha_s,
-            'cases_after':cases_after,
-            'travel_seeds': self.cross_border_seeds,
-            'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,
-            'ps':ps,
-        }
 
-        self.results = self.to_df(results)
-        print("Number of bad sims is %i" % self.num_bad_sims)
-        print("Number of sims in "+self.state\
-            +" exceeding "+\
-                str(self.max_cases//1000)+"k cases is "+str(self.num_too_many))
-        return self.state,self.results
+    #         import_inci[:,n] = inci[:,0]
+    #         asymp_inci[:,n] = inci[:,1]
+    #         symp_inci[:,n] = inci[:,2]
+
+    #         import_inci_obs[:,n] = inci_obs[:,0]
+    #         asymp_inci_obs[:,n] = inci_obs[:,1]
+    #         symp_inci_obs[:,n] = inci_obs[:,2]
+
+    #     #Apply sim metric here and record
+    #     #dict of arrays n_days by sim columns
+    #     results = {
+    #         'imports_inci': import_inci,
+    #         'imports_inci_obs': import_inci_obs,
+    #         'asymp_inci': asymp_inci,
+    #         'asymp_inci_obs': asymp_inci_obs,
+    #         'symp_inci': symp_inci,
+    #         'symp_inci_obs': symp_inci_obs,
+    #         'total_inci_obs': symp_inci_obs + asymp_inci_obs,
+    #         'total_inci': symp_inci + asymp_inci,
+    #         'all_inci': symp_inci + asymp_inci + import_inci,
+    #         'bad_sim': bad_sim,
+    #         'metrics': metrics,
+    #         'accept': accept,
+    #         'qs':qs,
+    #         'qa':qa,
+    #         'qi':qi,
+    #         'alpha_a':alpha_a,
+    #         'alpha_s':alpha_s,
+    #         'cases_after':cases_after,
+    #         'travel_seeds': self.cross_border_seeds,
+    #         'travel_induced_cases'+str(self.cross_border_state):self.cross_border_state_cases,
+    #         'ps':ps,
+    #     }
+
+    #     self.results = self.to_df(results)
+    #     print("Number of bad sims is %i" % self.num_bad_sims)
+    #     print("Number of sims in "+self.state\
+    #         +" exceeding "+\
+    #             str(self.max_cases//1000)+"k cases is "+str(self.num_too_many))
+    #     return self.state,self.results
 
 
     def to_df(self,results):
@@ -1149,6 +1133,9 @@ class Forecast:
             if len(glob.glob(path)) >1:
                 print("Using an arbritary file")
 
+        # Fixes errors in updated python versions
+        df.TRUE_ONSET_DATE = pd.to_datetime(df.TRUE_ONSET_DATE, errors='coerce') 
+        df.NOTIFICATION_DATE = pd.to_datetime(df.NOTIFICATION_DATE, errors='coerce') 
         df['date_inferred'] = df.TRUE_ONSET_DATE
         df.loc[df.TRUE_ONSET_DATE.isna(),'date_inferred'] = df.loc[df.TRUE_ONSET_DATE.isna()].NOTIFICATION_DATE - timedelta(days=5)
         df.loc[df.date_inferred.isna(),'date_inferred'] = df.loc[df.date_inferred.isna()].NOTIFICATION_RECEIVE_DATE - timedelta(days=6)
@@ -1206,50 +1193,38 @@ class Forecast:
         """
         Generate model for imports
         """
-        days = self.end_time
-        def period_dates(date):
-            from datetime import timedelta
+        from datetime import timedelta
+        def get_date_index(date):
             #subtract 4 from date to infer period of entry when infected
             date = date-timedelta(days=4)
-            if date <= pd.to_datetime('2020-03-01',format='%Y-%m-%d'):
-                return 0
-            elif date <= pd.to_datetime('2020-03-06',format='%Y-%m-%d'):
-                return 1
-            elif date <= pd.to_datetime('2020-03-13',format='%Y-%m-%d'):
-                return 2
-            elif date <= pd.to_datetime('2020-03-18',format='%Y-%m-%d'):
-                return 3
-            elif date <= pd.to_datetime('2020-03-23',format='%Y-%m-%d'):
-                return 4
-            elif date <= pd.to_datetime('2020-04-14',format='%Y-%m-%d'):
-                return 5
-            elif date <= pd.to_datetime('2021-01-15', format='%Y-%m-%d'):
-                return 6
-            else:
-                return 7
+            n_days_into_sim = (date - self.start_date).days
+            return  n_days_into_sim
 
-        df ['period'] = df.date_inferred.apply(period_dates)
-        prior = [1,1/5]
-        days_since_last = self.end_time-((pd.to_datetime("2021-01-16") - self.start_date).days)
-        num_days = [6,7,5,5,22,276, days_since_last]
-        alphas = df.groupby(['STATE','period']).imported.sum() + prior[0]
+        prior_alpha = 0.5 # Changed from 1 to lower prior (26/03/2021)
+        prior_beta = 1/5
 
-        new_index= ((x,y)
-        for x in ('NSW','VIC','SA','TAS','QLD','NT','ACT','WA')
-            for y in (0,1,2,3,4,5,6,7))
-        alphas = alphas.reindex(
-            new_index, fill_value=1 #fill with 1 to include prior
-        )
-        betas = prior[1]+np.array(num_days)
-        self.a_dict = {
-            self.state : {
-                i+1 : alphas.loc[(self.state, i+1)] for i in range(len(betas))
-            }
-        }
+        df['date_index'] = df.date_inferred.apply(get_date_index)
+        df_state = df[df['STATE'] == self.state] 
+        counts_by_date = df_state.groupby('date_index').imported.sum()
 
-        self.b_dict = { i+1: betas[i] for i in range(len(betas))
-        }
-        return None
+        # Replace our value for $a$ with an exponential moving average
+        moving_average_a = {}
+        smoothing_factor = 0.1
+        current_ema =  counts_by_date.get(-11, default = 0) # exponential moving average start
+        # Loop through each day up to forecast - 4 (as recent imports are not discovered yet)
+        for j in range(-10, self.forecast_date-4):
+            count_on_day = counts_by_date.get(j, default = 0)
+            current_ema = smoothing_factor*count_on_day + (1-smoothing_factor)*current_ema 
+            moving_average_a[j] = prior_alpha+current_ema
+
+        # Set the imports moving forward to match last window
+        for j in range(self.forecast_date-4, self.end_time):
+            moving_average_a[j] = prior_alpha+current_ema
+
+        self.a_dict = moving_average_a
+
+        # Set all betas to prior plus effective period size of 1
+        self.b_dict = {i:prior_beta+1 for i in range(self.end_time)} 
 
 
     def p_travel(self):

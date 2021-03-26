@@ -538,18 +538,19 @@ class Forecast:
 
         return i_detected, a_detected, s_detected
 
-    def import_arrival(self,period,size=1):
-        """
-        Poisson likelihood of arrivals of imported cases, with a Gamma
-        prior on the mean of Poisson, results in a posterior predictive
-        distribution of imported cases a Neg Binom
-        """
-        a = self.a_dict[self.state][period]
-        b = self.b_dict[period]
-        if size==1:
-            return nbinom.rvs(a, 1-1/(b+1))
-        else:
-            return nbinom.rvs(a, 1-1/(b+1),size=size)
+    # This has been deprecated as imports are now a moving average
+    # def import_arrival(self,period,size=1):
+    #     """
+    #     Poisson likelihood of arrivals of imported cases, with a Gamma
+    #     prior on the mean of Poisson, results in a posterior predictive
+    #     distribution of imported cases a Neg Binom
+    #     """
+    #     a = self.a_dict[self.state][period]
+    #     b = self.b_dict[period]
+    #     if size==1:
+    #         return nbinom.rvs(a, 1-1/(b+1))
+    #     else:
+    #         return nbinom.rvs(a, 1-1/(b+1),size=size)
 
     def simulate(self, end_time,sim,seed):
         """
@@ -575,46 +576,22 @@ class Forecast:
 
         #Record day 0 cases
         self.cases[0,:] = self.current.copy()
+
         # Generate imported cases
-        num_days={
-            1: 6,
-            2: 8,
-            3: 4,
-            4: 5,
-            5: 22,#min(end_time - self.quarantine_change_date -7, 24 ),
-            6: 276,
-            7: max(0, end_time-6-8-4-5-22-276),
-        }
-        qi = {
-            1:self.qi *self.qua_qi_factor,
-            2:self.qi,
-            3:self.qi,
-            4:0.95,
-            5:0.98,
-            6:0.98,
-            7:0.98,
-        }
         new_imports = []
         unobs_imports =[]
-        if self.start_date > pd.to_datetime("2021-01-16"): 
-            # If the pandemic is lasting long enough for this to be called then it's been really bad
-            import_start_period = 7
-            num_days[7] = end_time
-        elif self.start_date>pd.to_datetime("2020-04-15"): # In case the start date is changed in future
-            import_start_period = 6
-            num_days[6] = (pd.to_datetime("2021-01-16") - self.start_date).days
-            num_days[7] = end_time - num_days[6]
-        else:
-            import_start_period = 1
-        for period in range(import_start_period,8): 
-            obs_cases = self.import_arrival(
-                period=period, size=num_days[period])
-            #generate undetected people
-            #if obs_cases includes 0.... then add one for nbinom
-            nbinom_var = [o+1 if o ==0 else o for o in obs_cases ]
-            unobs = nbinom.rvs(nbinom_var, p=qi[period])#modify qi here
-            unobs_imports.extend(unobs)
-            new_imports.extend(obs_cases + unobs)
+        for day in range(end_time):
+            # Values for a and b are initialised in import_cases_model() which is called by read_in_cases() during setup.
+            a = self.a_dict[day]
+            b = self.b_dict[day]
+            # Dij = number of observed imported infectious individuals
+            Dij = nbinom.rvs(a, 1-1/(b+1))
+            # Uij = number of *unobserved* imported infectious individuals
+            unobserved_a = 1 if Dij == 0 else Dij 
+            Uij = nbinom.rvs(unobserved_a, p=self.qi) 
+
+            unobs_imports.append(Uij)
+            new_imports.append(Dij + Uij)
 
         for day, imports in enumerate(new_imports):
             self.cases[day,0] = imports
@@ -1206,50 +1183,38 @@ class Forecast:
         """
         Generate model for imports
         """
-        days = self.end_time
-        def period_dates(date):
-            from datetime import timedelta
+        from datetime import timedelta
+        def get_date_index(date):
             #subtract 4 from date to infer period of entry when infected
             date = date-timedelta(days=4)
-            if date <= pd.to_datetime('2020-03-01',format='%Y-%m-%d'):
-                return 0
-            elif date <= pd.to_datetime('2020-03-06',format='%Y-%m-%d'):
-                return 1
-            elif date <= pd.to_datetime('2020-03-13',format='%Y-%m-%d'):
-                return 2
-            elif date <= pd.to_datetime('2020-03-18',format='%Y-%m-%d'):
-                return 3
-            elif date <= pd.to_datetime('2020-03-23',format='%Y-%m-%d'):
-                return 4
-            elif date <= pd.to_datetime('2020-04-14',format='%Y-%m-%d'):
-                return 5
-            elif date <= pd.to_datetime('2021-01-15', format='%Y-%m-%d'):
-                return 6
-            else:
-                return 7
+            n_days_into_sim = (date - self.start_date).days
+            return  n_days_into_sim
 
-        df ['period'] = df.date_inferred.apply(period_dates)
-        prior = [1,1/5]
-        days_since_last = self.end_time-((pd.to_datetime("2021-01-16") - self.start_date).days)
-        num_days = [6,7,5,5,22,276, days_since_last]
-        alphas = df.groupby(['STATE','period']).imported.sum() + prior[0]
+        prior_alpha = 0.5 # Changed from 1 to lower prior (26/03/2021)
+        prior_beta = 1/5
 
-        new_index= ((x,y)
-        for x in ('NSW','VIC','SA','TAS','QLD','NT','ACT','WA')
-            for y in (0,1,2,3,4,5,6,7))
-        alphas = alphas.reindex(
-            new_index, fill_value=1 #fill with 1 to include prior
-        )
-        betas = prior[1]+np.array(num_days)
-        self.a_dict = {
-            self.state : {
-                i+1 : alphas.loc[(self.state, i+1)] for i in range(len(betas))
-            }
-        }
+        df['date_index'] = df.date_inferred.apply(get_date_index)
+        df_state = df[df['STATE'] == self.state] 
+        counts_by_date = df_state.groupby('date_index').imported.sum()
 
-        self.b_dict = { i+1: betas[i] for i in range(len(betas))
-        }
-        return None
+        # Replace our value for $a$ with an exponential moving average
+        moving_average_a = {}
+        smoothing_factor = 0.1
+        current_ema =  counts_by_date.get(-11, default = 0) # exponential moving average start
+        # Loop through each day up to forecast - 4 (as recent imports are not discovered yet)
+        for j in range(-10, self.forecast_date-4):
+            count_on_day = counts_by_date.get(j, default = 0)
+            current_ema = smoothing_factor*count_on_day + (1-smoothing_factor)*current_ema 
+            moving_average_a[j] = prior_alpha+current_ema
+
+        # Set the imports moving forward to match last window
+        for j in range(self.forecast_date-4, self.end_time):
+            moving_average_a[j] = prior_alpha+current_ema
+
+        self.a_dict = moving_average_a
+
+        # Set all betas to prior plus effective period size of 1
+        self.b_dict = {i:prior_beta+1 for i in range(self.end_time)} 
 
 
     def p_travel(self):

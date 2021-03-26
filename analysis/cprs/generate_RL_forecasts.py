@@ -15,7 +15,7 @@ from Reff_functions import *
 
 import matplotlib.dates as mdates
 locator =mdates.MonthLocator()
-df_google_all = read_in_google(Aus_only=True,moving=True,local=True)
+df_google_all = read_in_google(Aus_only=True,moving=True,local=False)
 states = ['NSW','QLD','SA','VIC','TAS','WA','ACT','NT']#,'AUS']
 plot_states = states.copy()
 #plot_states.remove('AUS')
@@ -29,7 +29,7 @@ surveys = pd.DataFrame()
 ##Improve this to read by glob.glob and get all of them
 
 
-path = "data/md/Barometer wave*.csv"
+path = "../../data/md/Barometer wave*.csv"
 for file in glob.glob(path):
     surveys = surveys.append(pd.read_csv(file,parse_dates=['date']))
 surveys = surveys.sort_values(by='date')

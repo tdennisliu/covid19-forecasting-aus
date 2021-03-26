@@ -12,7 +12,7 @@ def worker(arg):
     return getattr(obj,methname)(*arg[2:])
 
 n_sims=int(argv[1]) #number of sims
-time_end = int(argv[2]) 
+end_time = int(argv[2]) 
 if len(argv)>=3:
     forecast_type = 'R_L'#argv[3]
     states = [argv[4]]
@@ -199,7 +199,7 @@ for state in states:
 if __name__ =="__main__":
     ##initialise arrays
 
-    import_sims = np.zeros(shape=(time_end, n_sims), dtype=float)
+    import_sims = np.zeros(shape=(end_time, n_sims), dtype=float)
     import_sims_obs = np.zeros_like(import_sims)
     
 
@@ -214,7 +214,7 @@ if __name__ =="__main__":
 
     bad_sim = np.zeros(shape=(n_sims),dtype=int)
 
-    travel_seeds = np.zeros(shape=(time_end,n_sims),dtype=int)
+    travel_seeds = np.zeros(shape=(end_time,n_sims),dtype=int)
     travel_induced_cases = np.zeros_like(travel_seeds)
 
     #ABC parameters
@@ -231,9 +231,9 @@ if __name__ =="__main__":
 
     for key,item in forecast_dict.items():
         #item.read_in_Reff() #now in simulate method
-        item.end_time = time_end
+        item.end_time = end_time
         item.read_in_cases()
-        item.cross_border_seeds = np.zeros(shape=(time_end,n_sims),dtype=int)
+        item.cross_border_seeds = np.zeros(shape=(end_time,n_sims),dtype=int)
         item.cross_border_state_cases = np.zeros_like(item.cross_border_seeds)
 
         item.num_bad_sims = 0
@@ -241,7 +241,7 @@ if __name__ =="__main__":
     pool = mp.Pool(12)
     with tqdm(total=n_sims) as pbar:
         for cases, obs_cases, param_dict in pool.imap_unordered(worker,
-        [(forecast_dict[states[0]],'simulate',time_end,n,n) 
+        [(forecast_dict[states[0]],'simulate',end_time,n,n) 
         for n in range(n_sims)] #n is the seed
                         ):
             #cycle through all results and record into arrays 

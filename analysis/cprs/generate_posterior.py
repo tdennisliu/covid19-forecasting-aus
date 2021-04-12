@@ -237,7 +237,7 @@ cprs_dates = cprs_all_dates[cprs_all_dates!='2020-09-09']
 for data_date in cprs_dates:
     print(data_date)
     print(data_date.strftime('%d%b%Y'))
-#data_date =  pd.to_datetime('2020-08-17')
+    #data_date =  pd.to_datetime('2020-08-17')
 
     ## also filter Reff by 10 days!
     ## need to truncate most recent days of Reff
@@ -530,7 +530,7 @@ for data_date in cprs_dates:
     #plot marginal distributions
     fig,ax = plt.subplots(figsize=(12,9))
     samples_mov_gamma['R_L_prior'] = np.random.gamma(
-    2.4**2/0.2, 0.2/2.4, size=samples_mov_gamma.shape[0])
+    1.8*1.8/0.05,0.05/1.8, size=samples_mov_gamma.shape[0])
 
     samples_mov_gamma['R_I_prior'] = np.random.gamma(
     0.5**2/0.2, .2/0.5, size=samples_mov_gamma.shape[0])

@@ -155,23 +155,33 @@ for data_date in cprs_dates:
             #cap min and max at historical or (-50,0)
         minRmed_array = np.minimum(-50,np.amin(Rmed_array, axis = 0)) #1 by predictors by mob_samples size
         maxRmed_array = np.maximum(0,np.amax(Rmed_array, axis=0))
+
         sims  =  np.zeros(shape=(n_forecast,len(predictors),mob_samples)) # days by predictors by samples
-        for n in range(mob_samples):
+        for n in range(mob_samples): # Loop through simulations
             Rmed = Rmed_array[:,:,n]
             minRmed = minRmed_array[:,n]
             maxRmed = maxRmed_array[:,n]
 
+            R_baseline_mean = np.mean(Rmed[:-n_training,:])
             R_diffs = np.diff(Rmed[-n_training:,:], axis=0)
-
-
             mu = np.mean(R_diffs, axis=0)
             cov = np.cov(R_diffs, rowvar=False) #columns are vars, rows are obs
-            sims[:,:,n] = np.minimum(maxRmed,np.mean(Rmed[-7:,:],axis=0) + np.cumsum(np.random.multivariate_normal(mu,
-                                cov,
-                                size=(n_forecast)),
-                                                    axis=0))#rows are sim, dates are columns
-            sims[:,:,n] = np.maximum(minRmed, sims[:,:,n])
-                #dates of forecast to enter
+
+            # Forecast mobility forward sequentially by day.
+            current  = np.mean(Rmed[-7:,:],axis=0) # Start from last valid day
+            for i in range(n_forecast):
+                p_force = (n_forecast-i)/n_forecast # Proportion of trend_force to regression_to_baseline_force
+
+                trend_force = np.random.multivariate_normal(mu, cov) # Generate a single forward realisation of trend
+                regression_to_baseline_force = np.random.multivariate_normal(0.05*(R_baseline_mean - current), cov) # Generate a single forward realisation of baseline regression
+                    
+                new_forcast_points = current+p_force*trend_force +(1-p_force)*regression_to_baseline_force # Find overall simulation step
+            
+                # Apply minimum and maximum
+                new_forcast_points = np.maximum(minRmed, new_forcast_points)
+                new_forcast_points = np.minimum(maxRmed, new_forcast_points)
+
+                sims[i,:,n] = new_forcast_points # Set this day in this simulation to the forecast realisation
 
         dd = [dates.tolist()[-1] + timedelta(days=x) for x in range(1,n_forecast+1)]
 
@@ -183,16 +193,25 @@ for data_date in cprs_dates:
 
         ##forecast mircodistancing
         if state!='AUS':
+            mu_overall = np.mean(prop[state].values[:-n_training]) # Get a baseline value of microdistancing
             md_diffs = np.diff(prop[state].values[-n_training:])
-            mu = np.mean(md_diffs)
-            std = np.std(md_diffs)
+            mu_diffs = np.mean(md_diffs)
+            std_diffs = np.std(md_diffs)
+
             extra_days_md = pd.to_datetime(df_google.date.values[-1]).dayofyear - pd.to_datetime(
                 prop[state].index.values[-1]).dayofyear
-            md_sims = np.minimum(1,prop[state].values[-1] + np.cumsum(
-                np.random.normal(mu,std, size=(n_forecast + extra_days_md, 1000)),
-                                axis=0
-            )
-                                )
+
+            current = [prop[state].values[-1]] * 1000 # Set all values to current value.
+            new_md_forecast = []
+            # Forecast mobility forward sequentially by day.
+            for i in range(n_forecast + extra_days_md):
+                p_force = (n_forecast+extra_days_md-i)/(n_forecast+extra_days_md) # Proportion of trend_force to regression_to_baseline_force
+                trend_force = np.random.normal(mu_diffs, std_diffs, size=1000) # Generate step realisations in training trend direction
+                regression_to_baseline_force = np.random.normal(0.05*(mu_overall - current), std_diffs)  # Generate realisations that draw closer to baseline
+                current = current+p_force*trend_force +(1-p_force)*regression_to_baseline_force # Balance forces
+                new_md_forecast.append(current)
+            md_sims = np.vstack(new_md_forecast) # Put forecast days together
+            md_sims = np.minimum(1, md_sims)
             md_sims = np.maximum(0, md_sims)
             #get dates
             dd_md = [prop[state].index[-1] + timedelta(days=x) for x in range(1,n_forecast+extra_days_md+1)]

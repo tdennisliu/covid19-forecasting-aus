@@ -1142,7 +1142,7 @@ class Forecast:
 
         #Set imported cases, local cases have 1101 as first 4 digits
         df.PLACE_OF_ACQUISITION.fillna('00038888',inplace=True) #Fill blanks with simply unknown
-        df['imported'] = df.PLACE_OF_ACQUISITION.apply(lambda x: 1 if x[-4:]=='8888' and x != '00038888' else 0)
+        df['imported'] = df.PLACE_OF_ACQUISITION.apply(lambda x: 1 if x[:4]!='1101' else 0)
         df['local'] = 1 - df.imported
 
         self.import_cases_model(df)

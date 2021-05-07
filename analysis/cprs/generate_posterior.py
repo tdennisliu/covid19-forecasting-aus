@@ -179,10 +179,9 @@ model {
 
 
 
-    R_L ~ gamma(1.8*1.8/0.01,1.8/0.01); //hyper-prior
-    //R_temp ~ gamma(0.5*0.5/.2,0.5/.2); //prior on extra boost for VIC
+    R_L ~ gamma(1.8*1.8/0.05,1.8/0.05); //hyper-prior
     R_I ~ gamma(0.5*0.5/.2,0.5/.2);
-    sig ~ exponential(20); //mean is 1/5
+    sig ~ exponential(200); //mean is 1/50=0.02
     R_Li ~ gamma( R_L*R_L/sig, R_L/sig); //partial pooling of state level estimates
     for (i in 1:j) {
         for (n in 1:N){
@@ -238,7 +237,7 @@ cprs_dates = cprs_all_dates[cprs_all_dates!='2020-09-09']
 for data_date in cprs_dates:
     print(data_date)
     print(data_date.strftime('%d%b%Y'))
-#data_date =  pd.to_datetime('2020-08-17')
+    #data_date =  pd.to_datetime('2020-08-17')
 
     ## also filter Reff by 10 days!
     ## need to truncate most recent days of Reff
@@ -301,7 +300,7 @@ for data_date in cprs_dates:
     end_date = '2020-03-31'
 
     ##Second wave inputs
-    sec_states=sorted(['NSW','VIC'])
+    sec_states=sorted(['NSW'])
     sec_start_date = '2020-06-01'
     sec_end_date = '2021-01-19'
 
@@ -346,7 +345,7 @@ for data_date in cprs_dates:
     #choose dates for each state for sec wave
     sec_date_range = {
         'NSW':pd.date_range(start=sec_start_date,end=sec_end_date).values,
-        'VIC':pd.date_range(start=sec_start_date,end='2020-10-28').values
+        # 'VIC':pd.date_range(start=sec_start_date,end='2020-10-28').values
     }
     df2X['is_sec_wave'] =0
     for state in sec_states:
@@ -531,7 +530,7 @@ for data_date in cprs_dates:
     #plot marginal distributions
     fig,ax = plt.subplots(figsize=(12,9))
     samples_mov_gamma['R_L_prior'] = np.random.gamma(
-    2.4**2/0.2, 0.2/2.4, size=samples_mov_gamma.shape[0])
+    1.8*1.8/0.05,0.05/1.8, size=samples_mov_gamma.shape[0])
 
     samples_mov_gamma['R_I_prior'] = np.random.gamma(
     0.5**2/0.2, .2/0.5, size=samples_mov_gamma.shape[0])
